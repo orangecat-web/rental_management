@@ -51,15 +51,18 @@ function doPost(e) {
     let data;
     try {
       switch (call.action) {
-        case 'getTenantData': data = getTenantData(); break;
-        case 'saveTenantField': data = saveTenantField.apply(null, call.args); break;
+        case 'getTenantData': data = getTenantDataWithRoomType_(); break;
+        case 'saveTenantField':
+          data = call.args[1] === 'roomType' ? saveTenantRoomType_.apply(null, call.args) :
+            call.args[1] === 'student' ? saveTenantStudent_.apply(null, call.args) : saveTenantField.apply(null, call.args);
+          break;
         case 'saveTenantNote': data = saveTenantNote.apply(null, call.args); break;
         case 'saveTenantContract': data = saveTenantContract.apply(null, call.args); break;
         case 'getRentalSiteCapabilities': data = rentalBridgeCapabilities_(); break;
         case 'getAvailableBillingYears': data = rentalBridgeBillingYears_(); break;
         case 'getAvailableBillingMonths': data = rentalBridgeBillingMonths_(call.args[0]); break;
-        case 'getMonthlyAccounts': data = getMonthlyAccounts.apply(null, call.args); break;
-        case 'saveMonthlyAccountField': data = saveMonthlyAccountField.apply(null, call.args); break;
+        case 'getMonthlyAccounts': data = getMonthlyAccountsWithSettlement_.apply(null, call.args); break;
+        case 'saveMonthlyAccountField': data = call.args[3] === 'actualPaid' ? saveMonthlyActualPaid_.apply(null, call.args) : call.args[3] === 'receiptConfirmed' ? saveMonthlyReceiptConfirmed_.apply(null, call.args) : saveMonthlyAccountField.apply(null, call.args); break;
         case 'previewMonthlyInitialization': data = previewMonthlyInitialization.apply(null, call.args); break;
         case 'initializeMonthlyAccounts': data = initializeMonthlyAccounts.apply(null, call.args); break;
         case 'previewMonthlyAccountsSheetCreation': data = previewMonthlyAccountsSheetCreation.apply(null, call.args); break;
@@ -69,7 +72,7 @@ function doPost(e) {
         case 'saveRoomPaymentPhotoSelection': data = saveRoomPaymentPhotoSelection.apply(null, call.args); break;
         case 'getPaymentPhoto': data = getPaymentPhoto.apply(null, call.args); break;
         case 'getMeterPhoto': data = getMeterPhoto.apply(null, call.args); break;
-        case 'getRoomNoticeData': data = getRoomNoticeData.apply(null, call.args); break;
+        case 'getRoomNoticeData': data = getRoomNoticeWithSettlement_.apply(null, call.args); break;
         default: return rentalBridgeError_('AUTH');
       }
     } catch (error) {
@@ -91,7 +94,8 @@ function rentalBridgeValidCall_(action, args) {
   const file = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,200}$/.test(value);
   if (['getTenantData', 'getRentalSiteCapabilities', 'getAvailableBillingYears'].includes(action)) return args.length === 0;
   if (action === 'saveTenantField') return args.length === 4 && room(args[0]) &&
-    ['name','phone','startDate','endDate','rent','cohabitant','cohabitantPhone','emergencyContact','emergencyPhone','introduction','maintenance','defaultTransferLastFive'].includes(args[1]) && text(args[2]) && expected(args[3]);
+    ['name','phone','startDate','endDate','rent','cohabitant','cohabitantPhone','emergencyContact','emergencyPhone','introduction','maintenance','defaultTransferLastFive','student','roomType'].includes(args[1]) && text(args[2]) && expected(args[3]) &&
+    (args[1] !== 'roomType' || (['','套房','雅房'].includes(args[2]) && ['','套房','雅房'].includes(args[3])));
   if (action === 'saveTenantNote') return args.length === 3 && room(args[0]) && text(args[1]) && text(args[2]);
   if (action === 'saveTenantContract') return args.length === 3 && room(args[0]) && text(args[1]) && Array.isArray(args[2]) && args[2].length <= 20 && args[2].every(v => text(v));
   if (!year(args[0])) return false;
@@ -103,7 +107,7 @@ function rentalBridgeValidCall_(action, args) {
   if (['getMeterPhoto','getRoomNoticeData'].includes(action)) return args.length === 3 && Number(args[1]) % 2 === 1;
   if (action === 'getRoomPaymentPhotoSelection') return args.length === 3;
   if (action === 'saveMonthlyAccountField') return args.length === 6 &&
-    ['transferDate','transferLastFive','notes','currentReadingDate','currentReading'].includes(args[3]) &&
+    ['transferDate','transferLastFive','notes','currentReadingDate','currentReading','actualPaid','receiptConfirmed'].includes(args[3]) &&
     (!['currentReadingDate','currentReading'].includes(args[3]) || Number(args[1]) % 2 === 1) && text(args[4]) && expected(args[5]);
   if (action === 'saveRoomPaymentPhotoSelection') return args.length === 5 && Array.isArray(args[3]) && args[3].length <= 20 &&
     args[3].every(file) && new Set(args[3]).size === args[3].length && text(args[4], 12000);

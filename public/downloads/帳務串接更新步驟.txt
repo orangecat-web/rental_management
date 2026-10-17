@@ -1,3 +1,7 @@
+房型更新補充：本版 SiteBridge 需搭配既有 StudentStatus.gs 及新增 RoomType.gs。
+請先在原 Rent_Demo 新增 RoomType.gs（同目錄 RoomType.gs.txt），再更新 SiteBridge；
+完整步驟見 repository docs/ROOM_TYPES.md，不要覆蓋整個 Apps Script 專案。
+
 原網站接上每月帳務：更新現有 SiteBridge
 
 已完成房客連線者，現在只需更新一個 Apps Script 檔案。

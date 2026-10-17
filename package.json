@@ -6,7 +6,7 @@
     "build:pages": "node scripts/build-pages-demo.cjs",
     "test:pages": "node scripts/test-pages-demo.cjs",
     "build": "bash scripts/build.sh",
-    "test": "node check.cjs && node check-cloud.cjs && node scripts/test-bridge.mjs && node scripts/test-site-dom.cjs && node scripts/test-workspace.cjs && node scripts/test-meter-worksheet.cjs && node scripts/test-payment-worksheet.cjs && node scripts/test-meter-photo-names.cjs && node scripts/test-notice-batch.cjs && node scripts/test-demo-seed.cjs && node scripts/test-student-status.cjs && node scripts/test-cash-settlement.cjs && node scripts/test-billing-vue.cjs && node scripts/test-billing-transport.cjs && node scripts/test-rental-reports.cjs && node scripts/test-auth.mjs && node scripts/test-readonly.cjs",
+    "test": "node check.cjs && node check-cloud.cjs && node scripts/test-bridge.mjs && node scripts/test-site-dom.cjs && node scripts/test-workspace.cjs && node scripts/test-meter-worksheet.cjs && node scripts/test-payment-worksheet.cjs && node scripts/test-meter-photo-names.cjs && node scripts/test-notice-batch.cjs && node scripts/test-demo-seed.cjs && node scripts/test-student-status.cjs && node scripts/test-room-type.cjs && node scripts/test-cash-settlement.cjs && node scripts/test-billing-vue.cjs && node scripts/test-billing-transport.cjs && node scripts/test-rental-reports.cjs && node scripts/test-auth.mjs && node scripts/test-readonly.cjs",
     "build:cloudflare": "node scripts/build-cloudflare.cjs",
     "check:deploy": "node scripts/preflight-cloudflare.cjs",
     "deploy:cloudflare": "node scripts/deploy-cloudflare.cjs"

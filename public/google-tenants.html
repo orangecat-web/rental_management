@@ -8,8 +8,8 @@
     * { box-sizing: border-box; }
     [v-cloak], [hidden] { display: none !important; }
     body { margin: 0; font-family: system-ui, -apple-system, "Noto Sans TC", sans-serif; color: var(--ink); background: #f4f6f1; }
-    button, input, textarea { font: inherit; }
-    button, a, input, textarea, summary { -webkit-tap-highlight-color: transparent; }
+    button, input, textarea, select { font: inherit; }
+    button, a, input, textarea, select, summary { -webkit-tap-highlight-color: transparent; }
     a { color: #35664b; text-underline-offset: .2em; }
     button { cursor: pointer; }
     button:disabled { cursor: default; opacity: .5; }
@@ -58,10 +58,10 @@
     .editor, .editor.phone, .editor.multiline, .contract-editor { display: grid; gap: .5rem; width: 100%; min-width: 0; }
     .editor.multiline { grid-column: 1 / -1; }
     .editor-label { color: #52685a; font-size: 1rem; font-weight: 600; }
-    input, textarea { display: block; width: 100%; max-width: 100%; min-width: 0; min-height: 2.8rem; padding: .65rem .8rem; border: 1px solid #d8e0d3; border-radius: .45rem; color: var(--ink); background: #fdfefb; }
-    input:focus, textarea:focus { border-color: #8fa27c; background: #fff; }
+    input, textarea, select { display: block; width: 100%; max-width: 100%; min-width: 0; min-height: 2.8rem; padding: .65rem .8rem; border: 1px solid #d8e0d3; border-radius: .45rem; color: var(--ink); background: #fdfefb; }
+    input:focus, textarea:focus, select:focus { border-color: #8fa27c; background: #fff; }
     textarea { resize: vertical; }
-    input:disabled, textarea:disabled { opacity: .7; background: #f3f4ef; }
+    input:disabled, textarea:disabled, select:disabled { opacity: .7; background: #f3f4ef; }
     .editor-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
     .editor-actions button { padding: .45rem .85rem; min-height: 2.4rem; border: 1px solid #d3dfcb; border-radius: .4rem; background: #edf3e7; color: var(--green); font-size: 1rem; }
     .editor-actions button + button { background: white; color: var(--muted); border-color: var(--line); }
@@ -103,7 +103,7 @@
       .rent-summary strong { font-size: 1.15rem; }
       .field-grid { grid-template-columns: minmax(0, 1fr); row-gap: 1rem; }
       .form-section { padding: 1.25rem; }
-      input, textarea { font-size: 16px; }
+      input, textarea, select { font-size: 16px; }
       .draft-notice { align-items: flex-start; }
     }
     .page{padding:1.5rem 0;max-width:none}body{background:transparent}
@@ -193,6 +193,11 @@
         v-model="draft" rows="3" maxlength="2000" :aria-label="label"
         :disabled="saving || blocked"></textarea>
       <label v-else-if="field.checkbox" class="student-checkbox"><input ref="inputElement" type="checkbox" :id="inputId" v-model="draft" :aria-label="label" :disabled="saving || blocked">學生</label>
+      <select v-else-if="field.options" ref="inputElement" :id="inputId" v-model="draft"
+        :aria-label="label" :disabled="saving || blocked">
+        <option value="">未設定</option>
+        <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
+      </select>
       <input v-else ref="inputElement" :id="inputId" v-model="draft"
         :type="field.type || 'text'" :aria-label="label" :disabled="saving || blocked"
         :min="field.key === 'rent' ? 0 : undefined"
@@ -305,7 +310,7 @@
               const nextValue = props.field.key === 'notes' ? result?.note : result?.value;
               const valid = props.field.key === 'rent'
                 ? nextValue === null || (typeof nextValue === 'number' && Number.isFinite(nextValue) && nextValue >= 0)
-                : typeof nextValue === 'string';
+                : typeof nextValue === 'string' && (!props.field.options || nextValue === '' || props.field.options.includes(nextValue));
               if (!valid) throw new Error('儲存回應格式不正確，請核對試算表後重新讀取。');
               savedValue.value = nextValue;
               draft.value = displayField(nextValue, props.field);
@@ -402,6 +407,7 @@
           }
           const dirtyKeys = reactive(new Set());
           const basicFields = [
+            { key: 'roomType', title: '房型', options: ['套房', '雅房'] },
             { key: 'name', title: '居住者' },
             { key: 'phone', title: '電話', type: 'tel' },
             { key: 'student', title: '學生標記', checkbox: true },

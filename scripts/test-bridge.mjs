@@ -26,7 +26,8 @@ const ctx={Date,JSON,Number,String,Array,Object,Math,Error,
  getTenantData(){calls++;assert(!locked);return [{room:'401',name:'測試',phone:'0912345678',rent:0,defaultTransferLastFive:'01234'}]},
  saveTenantField(...args){calls++;assert(!locked);return {room:args[0],field:args[1],value:args[2]}},
  saveTenantNote(){throw Error('資料已被更新，請重新讀取。')},saveTenantContract:()=>({links:[]})};
-ctx.getTenantDataWithStudent_=()=>ctx.getTenantData();
+ctx.getTenantDataWithRoomType_=()=>ctx.getTenantData();
+ctx.saveTenantRoomType_=(...args)=>({...ctx.saveTenantField(...args),roomTypeRoute:true});
 ctx.saveTenantStudent_=(...args)=>ctx.saveTenantField(...args);
 ctx.getMonthlyAccountsWithSettlement_=(...args)=>ctx.getMonthlyAccounts(...args);
 ctx.saveMonthlyActualPaid_=(...args)=>ctx.saveMonthlyAccountField(...args);
@@ -40,6 +41,8 @@ assert.equal(post(await signed({issuedAt:Date.now()-121000})).error.code,'AUTH')
 assert.equal(post(await signed({action:'setupBilling2026'})).error.code,'AUTH');
 assert.equal(post(await signed({action:'saveTenantField',args:['401','unknown','abc','']})).error.code,'AUTH');
 assert.equal(post(await signed({action:'saveTenantField',args:['401','phone','01234','']})).data.value,'01234');
+const roomTypeResult=post(await signed({action:'saveTenantField',args:['401','roomType','套房','']}));assert.equal(roomTypeResult.data.value,'套房');assert.equal(roomTypeResult.data.roomTypeRoute,true);
+assert.equal(post(await signed({action:'saveTenantField',args:['401','roomType','別墅','']})).error.code,'AUTH');
 assert.equal(post(await signed({action:'saveTenantNote',args:['401','memo','']})).error.code,'BUSINESS');
 assert.equal(JSON.parse(ctx.doGet()).ok,false);assert(!locked);
 const fetchGoogle=async(url,options)=>{

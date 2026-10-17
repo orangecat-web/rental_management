@@ -12,6 +12,8 @@ npm run dev
 
 本機預覽使用假資料；不讀取真實 Google 帳務、不執行真實寫入。
 
+房型可選「套房／雅房」，舊資料保留未設定；Google 後端更新方式見 [房型設定](docs/ROOM_TYPES.md)。
+
 ## 部署
 
 ### GitHub Pages 展示版

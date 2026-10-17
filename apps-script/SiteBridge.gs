@@ -51,8 +51,11 @@ function doPost(e) {
     let data;
     try {
       switch (call.action) {
-        case 'getTenantData': data = getTenantDataWithStudent_(); break;
-        case 'saveTenantField': data = call.args[1] === 'student' ? saveTenantStudent_.apply(null, call.args) : saveTenantField.apply(null, call.args); break;
+        case 'getTenantData': data = getTenantDataWithRoomType_(); break;
+        case 'saveTenantField':
+          data = call.args[1] === 'roomType' ? saveTenantRoomType_.apply(null, call.args) :
+            call.args[1] === 'student' ? saveTenantStudent_.apply(null, call.args) : saveTenantField.apply(null, call.args);
+          break;
         case 'saveTenantNote': data = saveTenantNote.apply(null, call.args); break;
         case 'saveTenantContract': data = saveTenantContract.apply(null, call.args); break;
         case 'getRentalSiteCapabilities': data = rentalBridgeCapabilities_(); break;
@@ -91,7 +94,8 @@ function rentalBridgeValidCall_(action, args) {
   const file = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,200}$/.test(value);
   if (['getTenantData', 'getRentalSiteCapabilities', 'getAvailableBillingYears'].includes(action)) return args.length === 0;
   if (action === 'saveTenantField') return args.length === 4 && room(args[0]) &&
-    ['name','phone','startDate','endDate','rent','cohabitant','cohabitantPhone','emergencyContact','emergencyPhone','introduction','maintenance','defaultTransferLastFive','student'].includes(args[1]) && text(args[2]) && expected(args[3]);
+    ['name','phone','startDate','endDate','rent','cohabitant','cohabitantPhone','emergencyContact','emergencyPhone','introduction','maintenance','defaultTransferLastFive','student','roomType'].includes(args[1]) && text(args[2]) && expected(args[3]) &&
+    (args[1] !== 'roomType' || (['','套房','雅房'].includes(args[2]) && ['','套房','雅房'].includes(args[3])));
   if (action === 'saveTenantNote') return args.length === 3 && room(args[0]) && text(args[1]) && text(args[2]);
   if (action === 'saveTenantContract') return args.length === 3 && room(args[0]) && text(args[1]) && Array.isArray(args[2]) && args[2].length <= 20 && args[2].every(v => text(v));
   if (!year(args[0])) return false;

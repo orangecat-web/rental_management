@@ -3,7 +3,7 @@
   const nativeFetch = window.fetch.bind(window);
   const rooms = ['401','402','403','404','405','406','407','501','502','503','504','505','506','507','508'];
   const tenants = rooms.map((room, i) => ({
-    room, name: '示範房客 ' + String.fromCharCode(65 + i),
+    room, roomType: i === 14 ? '' : i % 2 === 0 ? '套房' : '雅房', name: '示範房客 ' + String.fromCharCode(65 + i),
     phone: '09000000' + String(i).padStart(2, '0'),
     rent: room === '506' ? 0 : 5800 + (i % 4) * 200,
     student: i % 3 === 0 ? '是' : '', startDate: '2026-01-01', endDate: '2027-12-31',

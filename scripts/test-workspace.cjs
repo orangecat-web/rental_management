@@ -38,8 +38,23 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
   d.querySelector('nav button').click();await wait(()=>d.body.textContent.includes('有未儲存的修改'));assert(d.querySelector('#tenant-401-phone'));
   click(phone.closest('.editor'),'儲存');await wait(()=>phone.closest('.editor').textContent.includes('已儲存'));
   assert.deepEqual(calls.find(c=>c.action==='saveTenantField'),{url:'/api/tenant-rpc',action:'saveTenantField',args:['401','phone','0987654321','0912345678']});
+  // Optional room type: explicit enum, original-value conflict check and overview refresh.
+  const roomType=d.querySelector('#tenant-401-roomType');assert.equal(roomType.value,'');
+  assert.deepEqual([...roomType.options].map(o=>o.value),['','套房','雅房']);
+  roomType.value='套房';roomType.dispatchEvent(new w.Event('change',{bubbles:true}));
+  await wait(()=>d.querySelector('.draft-notice'));click(roomType.closest('.editor'),'儲存');
+  await wait(()=>roomType.closest('.editor').textContent.includes('已儲存'));
+  assert.deepEqual(calls.find(c=>c.args?.[1]==='roomType'),{url:'/api/tenant-rpc',action:'saveTenantField',args:['401','roomType','套房','']});
+  roomType.value='雅房';roomType.dispatchEvent(new w.Event('change',{bubbles:true}));await wait(()=>d.querySelector('.draft-notice'));
+  click(roomType.closest('.editor'),'還原');await wait(()=>roomType.value==='套房'&&!d.querySelector('.draft-notice'));
+  conflict=true;roomType.value='雅房';roomType.dispatchEvent(new w.Event('change',{bubbles:true}));await wait(()=>d.querySelector('.draft-notice'));
+  click(roomType.closest('.editor'),'儲存');await wait(()=>roomType.closest('.editor').textContent.includes('其他人已更新'));
+  assert.equal(roomType.value,'雅房');click(roomType.closest('.editor'),'還原');await wait(()=>!d.querySelector('.draft-notice'));
+  conflict=false;
   // Conflict leaves the user's draft present and blocks navigation until restore.
   conflict=true;phone.value='0900000000';phone.dispatchEvent(new w.Event('input',{bubbles:true}));await wait(()=>phone.closest('.editor').textContent.includes('還原'));click(phone.closest('.editor'),'儲存');await wait(()=>phone.closest('.editor').textContent.includes('其他人已更新'));assert.equal(phone.value,'0900000000');click(phone.closest('.editor'),'還原');await wait(()=>!d.querySelector('.draft-notice'));
+  [...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('房間總覽')).click();
+  await wait(()=>d.querySelector('[aria-label="查看 401 房"]')?.textContent.includes('套房'));
   const accountNav=[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('每月帳務'));accountNav.click();
   await wait(()=>d.querySelector('.billing-native')?.textContent.includes('已讀取 1 筆帳務'));
   assert(!d.querySelector('iframe'));assert(calls.some(c=>c.url==='/api/billing-rpc'&&c.action==='getMonthlyAccounts'));

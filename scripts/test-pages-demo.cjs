@@ -48,6 +48,9 @@ const server = http.createServer((req, res) => {
     assert.equal(w.RentalAccess.state.role, 'viewer');
     assert.equal(w.RentalAccess.canWrite, false);
     assert(d.querySelector('[aria-label="查看 506 房"]').textContent.includes('NT$ 0'));
+    assert(d.querySelector('[aria-label="查看 401 房"]').textContent.includes('套房'));
+    assert(d.querySelector('[aria-label="查看 402 房"]').textContent.includes('雅房'));
+    assert(d.querySelector('[aria-label="查看 508 房"]').textContent.includes('房型未設定'));
     assert(!d.querySelector('.access-identity form'));
     for (const el of d.querySelectorAll('script[src],link[rel="stylesheet"],a[href]')) {
       const href = el.src || el.href;
@@ -86,6 +89,9 @@ const server = http.createServer((req, res) => {
     d.querySelector('[aria-label="查看 506 房"]').click();
     await wait(() => d.querySelector('#tenant-506-rent'));
     assert(d.querySelector('#tenant-506-rent').readOnly);
+    const roomType = d.querySelector('#tenant-506-roomType');
+    assert(roomType.disabled);assert.equal(roomType.value, '套房');
+    assert.deepEqual([...roomType.options].map(o=>o.value), ['', '套房', '雅房']);
     const navigate = label => [...d.querySelectorAll('nav button')].find(b => b.textContent.includes(label)).click();
     navigate('每月帳務');
     await wait(() => d.querySelector('.billing-native')?.textContent.includes('已讀取 15 筆帳務'));

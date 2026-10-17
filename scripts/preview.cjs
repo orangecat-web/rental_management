@@ -9,7 +9,7 @@ http.createServer((req,res)=>{
  if(pathname==='/api/tenant-rpc'||pathname==='/api/billing-rpc'){
   let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{
    try{const {action,args=[]}=JSON.parse(body);let data;
-    const tenants=[{room:'401',name:'預覽房客 A',phone:'0900000000',rent:5800,startDate:'2026-09-01',endDate:'2027-08-31',notes:'',contractLinks:[]},{room:'506',name:'',rent:0,notes:'',contractLinks:[]}];
+    const tenants=[{room:'401',roomType:'套房',name:'預覽房客 A',phone:'0900000000',rent:5800,startDate:'2026-09-01',endDate:'2027-08-31',notes:'',contractLinks:[]},{room:'506',roomType:'雅房',name:'',rent:0,notes:'',contractLinks:[]}];
     if(action==='getTenantData')data=tenants;
     else if(action==='getAvailableBillingYears')data=[2026];
     else if(action==='getAvailableBillingMonths')data=[8,9,10,11,12];
