@@ -1,0 +1,49 @@
+原網站接回 Google：第一階段只接房客資料
+
+原網址：https://orange-rental-desk.orangecat1120.chatgpt.site/
+現有 Apps Script 專案：Rent_Demo（沿用 TenantData.gs 與既有設定）
+不要重新建立房客試算表，不要安裝舊版 rental-google-starter.zip。
+
+一、先備份與安裝（現在可做）
+1. 備份 Rent_Demo 的程式碼。
+2. 在整個專案搜尋 function doGet。將原本唯一的 doGet 改名為 legacyPreviewDoGet_。
+   保留原函式內容；只改名字。這是為了讓新的網站 API 不再提供 Google 裡的操作頁。
+3. 新增「指令碼」檔案，名稱 SiteBridge。將 SiteBridge.gs.txt 全部內容貼入並儲存。
+4. 在上方函式選單選 setupRentalSiteBridgeKey，執行一次。
+5. 日誌應顯示「已建立網站連線金鑰」或「已存在網站連線金鑰」。金鑰不會輸出到日誌。
+6. 到專案設定的指令碼屬性確認有 RENTAL_BRIDGE_SECRET。不要把值貼到聊天、截圖、Git 或前端。
+
+先完成這部分即可；尚未部署、尚未連線時，網站不會讀寫房客資料。
+
+二、網站 API 部署（安裝確認後再做）
+1. 檢查整個專案只有一個 doGet、一個 doPost。
+   新 doGet 必須來自 SiteBridge，且只回 JSON，不能再回傳 HtmlService 網頁。
+   此條件很重要：避免 API 部署同時暴露舊的 google.script.run 編輯頁。
+2. 建立「新的」網頁應用程式部署，命名「Rent_Demo 網站 API」。
+3. 執行身分選自己；存取選任何人（不要求 Google 登入）。
+   這只讓網站伺服器能呼叫入口，所有資料操作仍先驗證 HMAC 簽章。
+   Google 試算表與照片資料夾仍維持「受限制」。
+   原本「只有自己」的舊部署可保留，不要直接改成公開舊版本。
+4. 取得 https://script.google.com/macros/s/.../exec 網址。
+
+三、網站伺服器的兩個環境設定
+RENTAL_APPS_SCRIPT_URL：第二部分的新 /exec 部署網址。
+RENTAL_BRIDGE_SECRET：與 Apps Script 指令碼屬性同名的 64 字元值，設為 secret。
+兩者只放網站伺服器的環境設定，不放 public/app.js、HTML、網址參數或前端 VITE_ 變數。
+環境設定更新後需重新部署網站版本才能生效。
+若目前無法使用安全的環境變數輸入介面，先停在這裡，請勿改用聊天傳送金鑰。
+
+四、驗收
+1. 回原網站「Google 連線設定」→重新檢查連線。
+2. 「房客資料・Google」應讀取到真實房號，無示範房客混入。
+3. 先修改一間房的非敏感備註，儲存後確認試算表該格更新。
+4. 重新讀取，確認資料仍在。506 租金 0 必須保留；電話與後五碼開頭 0 必須保留。
+5. 兩個分頁同時編輯相同欄位：過期的編輯應被拒絕。
+
+本次範圍與限制
+- 已串接房客讀取、既有欄位修改、備註及合約資料夾。
+- 沿用既有後端的 expectedValue / expectedLinks 衝突檢查及鎖。
+- 真實房客資料只留畫面記憶體，不進 localStorage、不加入示範租約。
+- 總覽、帳務、抄表、通知與歷史頁目前仍是本機示範資料，尚未切到 Google。
+- 房東尚未授權。網站維持本人存取；示範身分選單不代表實際權限。
+- 私人照片、每月帳務與電費通知會在後續階段接上，不要把本次當成全部完工。

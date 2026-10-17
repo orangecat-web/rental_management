@@ -1,0 +1,22 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "orange-rental-desk",
+  "main": "../worker/cloudflare.mjs",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{"pattern": "rental.CHANGE_ME.example.com", "custom_domain": true}],
+  "assets": {
+    "directory": "../dist/cloudflare-assets",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/auth/*", "/google-tenants.html", "/google-accounts.html"]
+  },
+  "vars": {
+    "AUTH_MODE": "cloudflare-access",
+    "PUBLIC_ORIGIN": "https://rental.CHANGE_ME.example.com",
+    "ACCESS_TEAM_DOMAIN": "CHANGE_ME.cloudflareaccess.com",
+    "ACCESS_AUD": "CHANGE_ME",
+    "MANAGER_EMAILS": "",
+    "VIEWER_EMAILS": ""
+  }
+}

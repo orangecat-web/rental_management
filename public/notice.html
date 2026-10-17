@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>電費通知預覽</title>
+  <style>
+    :root { font-size:16px; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f1f4ef;
+      color: #294638;
+      font-family: system-ui, sans-serif;
+    }
+    nav, .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    a { color: #35664b; }
+    #download {
+      display: none;
+      padding: 12px 18px;
+      background: #294638;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      max-width: 480px;
+      height: auto;
+      background: white;
+      border-radius: 12px;
+    }
+    #status { max-width: 480px; }
+  </style>
+</head>
+<body>
+  <nav aria-label="主要選單">
+    <a href="/?view=tenants" target="_top">房客資料</a>
+    <a href="/?view=accounts" target="_top">
+      每月帳務
+    </a>
+  </nav>
+
+  <h1>電費通知預覽</h1>
+  <p id="status" role="status">正在整理電費通知與照片……</p>
+
+  <div class="actions">
+    <a id="download">下載電費通知 JPG</a>
+  </div>
+
+  <canvas id="notice" role="img" aria-label="單房電費通知"
+          hidden></canvas>
+
+  <script src="billing-transport.js"></script><script src="notice-renderer.js"></script>
+  <script>
+    const query = new URLSearchParams(location.search);
+    const request = {year: Number(query.get('year')),month: Number(query.get('month')),room: query.get('room') || ''};
+
+    const canvas = document.getElementById('notice');
+    const statusElement = document.getElementById('status');
+    const download = document.getElementById('download');
+
+    let downloadUrl = '';
+    async function showNotice(data) {
+      if (data.year !== request.year || data.month !== request.month || String(data.room) !== request.room) throw Error('回傳的房號或月份不正確。');
+      const result = await RentalNotice.render(data, {canvas});
+      canvas.hidden = false;
+      if(result.missingPhoto){statusElement.textContent='電費通知預覽已完成；尚缺本期電表照片，暫不提供下載。';return;}
+      if(downloadUrl)URL.revokeObjectURL(downloadUrl);
+      downloadUrl=URL.createObjectURL(result.blob);download.href=downloadUrl;download.download=RentalNotice.filename(data);
+      download.style.display='inline-block';statusElement.textContent='請核對房號、金額與照片，確認後下載電費通知 JPG 傳給房客。';
+    }
+    addEventListener('pagehide',()=>{if(downloadUrl)URL.revokeObjectURL(downloadUrl)});
+
+    function showError(error) {
+      download.style.display = 'none';
+      statusElement.textContent =
+        '電費通知產生失敗：' + (error?.message || String(error));
+    }
+
+    // 即使直接開啟偶數月份網址，也不產生電費通知。
+    if (request.month % 2 === 0) {
+      showError(new Error('偶數月份不提供電費通知。'));
+    } else {
+      if (!/^\d{4}$/.test(String(request.year)) || !Number.isInteger(request.month) || request.month < 1 || request.month > 12 || request.month % 2 !== 1 || !/^\d{3,8}$/.test(request.room)) {
+      showError(new Error('請從單數月份帳務選擇房間產生電費通知。'));
+    } else {
+    google.script.run
+        .withSuccessHandler(data => {
+          showNotice(data).catch(showError);
+        })
+        .withFailureHandler(showError)
+        .getRoomNoticeData(request.year, request.month, request.room);
+    }
+    }
+  </script>
+</body>
+</html>

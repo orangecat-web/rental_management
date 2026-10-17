@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>房客資料</title>
+  <style>
+    :root { font-size: 16px; color-scheme: light; --ink: #203e32; --muted: #6b7b72; --line: #e1e8df; --green: #284e3d; --paper: #fff; }
+    * { box-sizing: border-box; }
+    [v-cloak], [hidden] { display: none !important; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Noto Sans TC", sans-serif; color: var(--ink); background: #f4f6f1; }
+    button, input, textarea { font: inherit; }
+    button, a, input, textarea, summary { -webkit-tap-highlight-color: transparent; }
+    a { color: #35664b; text-underline-offset: .2em; }
+    button { cursor: pointer; }
+    button:disabled { cursor: default; opacity: .5; }
+    :focus-visible { outline: 3px solid #8fae6c; outline-offset: 3px; }
+    .site-header { background: #fff; border-bottom: 1px solid var(--line); }
+    .header-inner { max-width: 1320px; margin: auto; padding: 1.1rem 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand { display: flex; align-items: center; gap: .75rem; font-weight: 700; letter-spacing: .04em; }
+    .brand-mark { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: .7rem; background: var(--green); color: #fff; }
+    .brand-mark svg { width: 1.4rem; height: 1.4rem; }
+    nav { display: flex; gap: .45rem; flex-wrap: wrap; }
+    nav a { display: block; padding: .6rem 1rem; font-size: 1rem; text-decoration: none; border-radius: .5rem; color: var(--muted); }
+    nav a[aria-current="page"] { background: #edf3e7; color: var(--green); font-weight: 600; }
+    .page { max-width: 1320px; margin: auto; padding: 2.2rem 2rem 4rem; }
+    .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    .eyebrow { margin: 0 0 .4rem; color: var(--muted); font-size: 1rem; }
+    h1 { margin: 0; font-size: 1.85rem; letter-spacing: .02em; }
+    .reload { padding: .65rem 1rem; background: white; border: 1px solid #cfd9cc; color: var(--ink); border-radius: .5rem; min-height: 2.65rem; }
+    .status { min-height: 1.5rem; margin: 0 0 1.25rem; color: var(--muted); font-size: 1rem; }
+    .draft-notice { display: flex; align-items: center; gap: .65rem; padding: .8rem 1rem; margin-bottom: 1.25rem; border: 1px solid #ebd6ac; border-radius: .6rem; background: #fff8e9; color: #80561e; font-size: 1rem; }
+    .workspace { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 1.4rem; align-items: start; }
+    .room-panel { position: sticky; top: 1rem; padding: 1rem; background: white; border: 1px solid var(--line); border-radius: .85rem; }
+    .room-heading { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+    .room-heading h2 { margin: 0; font-size: 1rem; }
+    .room-count { padding: .2rem .5rem; border-radius: .35rem; background: #f0f3ed; color: var(--muted); font-size: 1rem; }
+    .room-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+    .room-button { display: flex; flex-direction: column; align-items: flex-start; gap: .25rem; min-width: 0; padding: .75rem .7rem; border: 1px solid var(--line); border-radius: .6rem; color: var(--ink); background: #fafbf8; text-align: left; }
+    .room-button:hover:not(:disabled) { border-color: #a2b999; background: #f0f5e9; }
+    .room-button[aria-pressed="true"] { color: white; border-color: var(--green); background: var(--green); box-shadow: 0 3px 9px #284e3d18; }
+    .room-button[aria-pressed="true"]:hover { background: var(--green); }
+    .room-number { font-size: 1.15rem; font-weight: 650; }
+    .room-name { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1rem; opacity: .7; }
+    .tenant-panel { min-width: 0; overflow: hidden; background: white; border: 1px solid var(--line); border-radius: .85rem; box-shadow: 0 6px 24px #263c2d04; }
+    .tenant-heading { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.6rem 1.75rem; background: linear-gradient(105deg, #edf3e5, #f8faf4); border-bottom: 1px solid var(--line); }
+    .room-tag { display: inline-block; margin-bottom: .45rem; color: #637858; font-size: 1rem; letter-spacing: .06em; }
+    .tenant-heading h2 { margin: 0; font-size: 1.85rem; font-weight: 650; }
+    .tenant-name { margin: .45rem 0 0; color: #5c7063; font-size: 1rem; overflow-wrap: anywhere; }
+    .rent-summary { flex: none; text-align: right; }
+    .rent-summary span { display: block; margin-bottom: .4rem; color: var(--muted); font-size: 1rem; }
+    .rent-summary strong { font-size: 1.5rem; font-weight: 650; }
+    .form-section { padding: 1.5rem 1.75rem; }
+    .form-section + .form-section { border-top: 1px solid #edf0e9; }
+    .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; }
+    .section-heading h3 { margin: 0; font-size: 1rem; }
+    .section-hint { color: var(--muted); font-size: 1rem; }
+    .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 1.75rem; row-gap: 1.15rem; }
+    .editor, .editor.phone, .editor.multiline, .contract-editor { display: grid; gap: .5rem; width: 100%; min-width: 0; }
+    .editor.multiline { grid-column: 1 / -1; }
+    .editor-label { color: #52685a; font-size: 1rem; font-weight: 600; }
+    input, textarea { display: block; width: 100%; max-width: 100%; min-width: 0; min-height: 2.8rem; padding: .65rem .8rem; border: 1px solid #d8e0d3; border-radius: .45rem; color: var(--ink); background: #fdfefb; }
+    input:focus, textarea:focus { border-color: #8fa27c; background: #fff; }
+    textarea { resize: vertical; }
+    input:disabled, textarea:disabled { opacity: .7; background: #f3f4ef; }
+    .editor-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+    .editor-actions button { padding: .45rem .85rem; min-height: 2.4rem; border: 1px solid #d3dfcb; border-radius: .4rem; background: #edf3e7; color: var(--green); font-size: 1rem; }
+    .editor-actions button + button { background: white; color: var(--muted); border-color: var(--line); }
+    .save-message { min-height: 1.1rem; color: #60735d; font-size: 1rem; white-space: normal; overflow-wrap: anywhere; }
+    .contract-links { display: flex; flex-wrap: wrap; gap: .75rem; color: var(--muted); font-size: 1rem; overflow-wrap: anywhere; }
+    .other-data { min-width: 0; }
+    .other-data summary { cursor: pointer; color: var(--ink); font-size: 1rem; font-weight: 600; }
+    .other-data[open] summary { margin-bottom: 1.3rem; }
+    .empty { padding: 2rem; border: 1px solid var(--line); border-radius: .8rem; background: white; color: var(--muted); }
+    @media (max-width: 850px) {
+      .header-inner { padding: 1rem 1.3rem; }
+      .page { padding: 1.6rem 1.3rem 3rem; }
+      .workspace { grid-template-columns: 180px minmax(0, 1fr); gap: 1rem; }
+      .room-panel { padding: .85rem; }
+      .room-button { padding: .65rem .5rem; }
+      .form-section, .tenant-heading { padding: 1.25rem; }
+      .field-grid { column-gap: 1rem; }
+      .section-hint { display: none; }
+    }
+    @media (max-width: 640px) {
+      .header-inner { padding: .85rem 1rem; gap: .5rem; }
+      .brand { gap: .5rem; font-size: 1rem; }
+      .brand-mark { width: 2rem; height: 2rem; border-radius: .5rem; }
+      nav { gap: 0; }
+      nav a { padding: .55rem .65rem; font-size: 1rem; }
+      .page { padding: 1.4rem 1rem 3rem; }
+      h1 { font-size: 1.55rem; }
+      .eyebrow { font-size: 1rem; }
+      .reload { font-size: 1rem; padding: .55rem .7rem; }
+      .workspace { display: flex; flex-direction: column; gap: 1rem; }
+      .room-panel { position: static; width: 100%; padding: .85rem; }
+      .room-heading { margin-bottom: .7rem; }
+      .room-list { display: flex; gap: .5rem; overflow-x: auto; padding: 0 0 .35rem; }
+      .room-button { flex: 0 0 5.1rem; padding: .6rem .65rem; }
+      .room-number { font-size: 1.05rem; }
+      .tenant-panel { width: 100%; }
+      .tenant-heading { gap: 1rem; }
+      .tenant-heading h2 { font-size: 1.6rem; }
+      .rent-summary strong { font-size: 1.15rem; }
+      .field-grid { grid-template-columns: minmax(0, 1fr); row-gap: 1rem; }
+      .form-section { padding: 1.25rem; }
+      input, textarea { font-size: 16px; }
+      .draft-notice { align-items: flex-start; }
+    }
+    .page{padding:1.5rem 0;max-width:none}body{background:transparent}
+  @media(max-width:640px){.page{padding:1rem 0}}
+</style>
+</head>
+<body>
+
+  <p id="boot-status" class="page" role="status">正在載入房客管理頁……</p>
+
+  <main id="tenant-app" class="page" v-cloak>
+  <div class="page-heading">
+    <div><p class="eyebrow">Google 試算表・即時讀寫</p><h1>房客資料</h1></div>
+    <button class="reload" type="button" @click="loadTenants" :disabled="loading || pendingSaves > 0 || dirtyKeys.size > 0">重新讀取</button>
+  </div>
+  <p class="status" role="status" aria-live="polite">{{ status }}</p>
+  <div v-if="pendingSaves > 0" class="draft-notice" role="status">有 {{ pendingSaves }} 筆儲存中，請稍候。</div>
+  <div v-else-if="dirtyKeys.size > 0" class="draft-notice">有 {{ dirtyKeys.size }} 個未儲存項目，請儲存或還原後再切換房間。</div>
+
+  <div v-if="tenants.length" class="workspace">
+    <aside class="room-panel" aria-label="選擇房間">
+      <div class="room-heading"><h2>房間列表</h2><span class="room-count">{{ tenants.length }} 間</span></div>
+      <div class="room-list">
+        <button v-for="tenant in tenants" :key="tenant.room" class="room-button" type="button"
+          :aria-label="'選擇 ' + tenant.room + ' 房'" :aria-pressed="selectedRoom === tenant.room"
+          :disabled="loading || pendingSaves > 0 || (dirtyKeys.size > 0 && selectedRoom !== tenant.room)"
+          @click="selectRoom(tenant.room)">
+          <span class="room-number">{{ tenant.room }}</span>
+          <span class="room-name">{{ tenant.name || '未填居住者' }} <span v-if="tenant.student==='是'" class="student-tag">學生</span></span>
+        </button>
+      </div>
+    </aside>
+
+    <article v-if="activeTenant" :key="revision + ':' + activeTenant.room" class="tenant-panel" aria-label="房客資料編輯">
+      <header class="tenant-heading">
+        <div><span class="room-tag">房間資料</span><h2>{{ activeTenant.room }} 房</h2><p class="tenant-name">{{ activeTenant.name || '尚未填寫居住者' }} <span v-if="activeTenant.student==='是'" class="student-tag">學生</span></p></div>
+        <div class="rent-summary"><span>目前房租／月</span><strong>{{ rentText(activeTenant.rent) }}</strong></div>
+      </header>
+
+      <section class="form-section" aria-label="基本與租約資料">
+        <div class="section-heading"><h3>基本與租約資料</h3><span class="section-hint">各欄位可個別儲存</span></div>
+        <div class="field-grid">
+          <tenant-field v-for="field in basicFields" :key="field.key" :tenant="activeTenant" :field="field" :blocked="loading" show-title
+            @save-start="startSave" @save-end="finishSave"
+            @saved="updateField(activeTenant, field.key, $event)"
+            @dirty-change="setDirty(activeTenant.room, field.key, $event)"></tenant-field>
+        </div>
+      </section>
+
+      <section class="form-section" aria-label="簽約資料">
+        <div class="section-heading"><h3>簽約資料</h3><span class="section-hint">Google Drive 合約資料夾</span></div>
+        <tenant-contract :tenant="activeTenant" :blocked="loading"
+          @save-start="startSave" @save-end="finishSave"
+          @saved="updateField(activeTenant, 'contractLinks', $event)"
+          @dirty-change="setDirty(activeTenant.room, 'contractLinks', $event)"></tenant-contract>
+      </section>
+
+      <section class="form-section" aria-label="管理備註">
+        <div class="section-heading"><h3>管理備註</h3></div>
+        <tenant-field :tenant="activeTenant" :field="noteField" :blocked="loading"
+          @save-start="startSave" @save-end="finishSave"
+          @saved="updateField(activeTenant, 'notes', $event)"
+          @dirty-change="setDirty(activeTenant.room, 'notes', $event)"></tenant-field>
+      </section>
+
+      <section class="form-section">
+        <details class="other-data">
+          <summary>其他聯絡與房間資料</summary>
+          <div class="field-grid">
+            <tenant-field v-for="field in extraFields" :key="field.key" :tenant="activeTenant" :field="field" :blocked="loading" show-title
+              @save-start="startSave" @save-end="finishSave"
+              @saved="updateField(activeTenant, field.key, $event)"
+              @dirty-change="setDirty(activeTenant.room, field.key, $event)"></tenant-field>
+          </div>
+        </details>
+      </section>
+    </article>
+  </div>
+  <p v-else-if="!loading && !loadFailed" class="empty">目前沒有房客資料。</p>
+  </main>
+
+  <!-- 模板只使用本檔固定內容；試算表資料以 v-model／文字插值綁定。 -->
+  <template id="tenant-field-template">
+    <div class="editor" :class="{ multiline: field.multiline, phone: field.type === 'tel' }">
+      <label v-if="showTitle" class="editor-label" :for="inputId">{{ field.title }}</label>
+      <textarea v-if="field.multiline" ref="inputElement" :id="inputId"
+        v-model="draft" rows="3" maxlength="2000" :aria-label="label"
+        :disabled="saving || blocked"></textarea>
+      <label v-else-if="field.checkbox" class="student-checkbox"><input ref="inputElement" type="checkbox" :id="inputId" v-model="draft" :aria-label="label" :disabled="saving || blocked">學生</label>
+      <input v-else ref="inputElement" :id="inputId" v-model="draft"
+        :type="field.type || 'text'" :aria-label="label" :disabled="saving || blocked"
+        :min="field.key === 'rent' ? 0 : undefined"
+        :max="field.key === 'rent' ? 1000000 : undefined"
+        :step="field.key === 'rent' ? '0.01' : undefined"
+        :maxlength="field.key === 'defaultTransferLastFive' ? 5 : field.type === 'date' || field.key === 'rent' ? undefined : 100"
+        :inputmode="field.key === 'defaultTransferLastFive' ? 'numeric' : undefined"
+        :pattern="field.key === 'defaultTransferLastFive' ? '[0-9]{5}' : undefined"
+        :placeholder="field.key === 'defaultTransferLastFive' ? '例如 01234' : undefined">
+      <div class="editor-actions">
+        <button type="button" @click="save" :disabled="saving || blocked">{{ saving ? '儲存中……' : '儲存' }}</button>
+        <button v-if="dirty" type="button" @click="reset" :disabled="saving || blocked">還原</button>
+      </div>
+      <div class="save-message" role="status" aria-live="polite">{{ message }}</div>
+    </div>
+  </template>
+
+  <template id="tenant-contract-template">
+    <div class="editor contract-editor">
+      <div class="contract-links">
+        <a v-for="(url, index) in safeLinks" :key="url" :href="url"
+          target="_blank" rel="noopener noreferrer">查看合約 {{ index + 1 }}</a>
+        <span v-if="!safeLinks.length">{{ savedLinks.length ? '連結格式待確認' : '尚未提供' }}</span>
+      </div>
+      <input ref="inputElement" v-model="draft" type="url" maxlength="2000"
+        placeholder="貼上 Google Drive 資料夾網址" :aria-label="tenant.room + ' 房合約資料夾'"
+        :disabled="saving || blocked || multiple">
+      <div class="editor-actions">
+        <button type="button" @click="save" :disabled="saving || blocked || multiple">{{ saving ? '儲存中……' : '儲存合約連結' }}</button>
+        <button v-if="dirty" type="button" @click="reset" :disabled="saving || blocked || multiple">還原</button>
+      </div>
+      <div class="save-message" role="status" aria-live="polite">{{ multiple ? '目前有多個連結，請先在試算表核對。' : message }}</div>
+    </div>
+  </template>
+
+  <!-- 固定 Vue 版本；使用完整正式版，支援此單檔內的元件模板。 -->
+  <script src="tenant-transport.js"></script><script src="tenant-vue.global.prod.js"></script>
+  <script>
+    (function startTenantApp() {
+      const boot = document.getElementById('boot-status');
+      if (!window.Vue) {
+        boot.textContent = '頁面程式未能載入，請確認網路後重新整理。';
+        return;
+      }
+      const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
+      const errorText = error => error?.message || String(error);
+
+      /** 把既有 Apps Script 介面包成 Promise；不更動後端名稱或參數順序。 */
+      const tenantApi = {
+        read() {
+          return new Promise((resolve, reject) => {
+            google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getTenantData();
+          });
+        },
+        saveField(room, field, value, expected) {
+          return new Promise((resolve, reject) => {
+            const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+            if (field === 'notes') runner.saveTenantNote(room, value, expected);
+            else runner.saveTenantField(room, field, value, expected);
+          });
+        },
+        saveContract(room, url, expectedLinks) {
+          return new Promise((resolve, reject) => {
+            google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)
+              .saveTenantContract(room, url, expectedLinks);
+          });
+        }
+      };
+
+      /** 只轉換輸入框顯示值；savedValue 仍保留後端原值作更新衝突檢查。 */
+      function displayField(value, field) {
+        if (field.checkbox) return value === '是';
+        const text = String(value ?? '');
+        if (field.type === 'date' && text) {
+          const match = /^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/.exec(text);
+          if (match) return match[1] + '-' + match[2].padStart(2, '0') + '-' + match[3].padStart(2, '0');
+        }
+        return text;
+      }
+
+      const TenantField = {
+        props: { tenant: Object, field: Object, blocked: Boolean, showTitle: Boolean },
+        emits: ['saved', 'save-start', 'save-end', 'dirty-change'],
+        template: document.getElementById('tenant-field-template').innerHTML,
+        setup(props, { emit }) {
+          const savedValue = ref(props.tenant[props.field.key] ?? (props.field.key === 'rent' ? null : ''));
+          const draft = ref(displayField(savedValue.value, props.field));
+          const saving = ref(false);
+          const message = ref('');
+          const inputElement = ref(null);
+          const label = computed(() => props.tenant.room + ' 房' + props.field.title);
+          const inputId = computed(() => 'tenant-' + props.tenant.room + '-' + props.field.key);
+          const dirty = computed(() => props.field.checkbox ? draft.value !== displayField(savedValue.value, props.field) : String(draft.value ?? '') !== displayField(savedValue.value, props.field));
+          watch(dirty, value => emit('dirty-change', value));
+
+          function reset() {
+            if (saving.value || props.blocked) return;
+            draft.value = displayField(savedValue.value, props.field);
+            message.value = '已還原為上次讀取或儲存的內容。';
+          }
+          async function save() {
+            if (saving.value || props.blocked || !inputElement.value.reportValidity()) return;
+            saving.value = true;
+            message.value = '儲存中……';
+            emit('save-start');
+            try {
+              const result = await tenantApi.saveField(
+                props.tenant.room, props.field.key, props.field.checkbox ? (draft.value ? '是' : '否') : String(draft.value ?? ''), savedValue.value
+              );
+              const nextValue = props.field.key === 'notes' ? result?.note : result?.value;
+              const valid = props.field.key === 'rent'
+                ? nextValue === null || (typeof nextValue === 'number' && Number.isFinite(nextValue) && nextValue >= 0)
+                : typeof nextValue === 'string';
+              if (!valid) throw new Error('儲存回應格式不正確，請核對試算表後重新讀取。');
+              savedValue.value = nextValue;
+              draft.value = displayField(nextValue, props.field);
+              emit('saved', nextValue);
+              emit('dirty-change', false);
+              message.value = '已儲存 ✓';
+            } catch (error) {
+              message.value = '儲存未完成確認：' + errorText(error);
+            } finally {
+              saving.value = false;
+              emit('save-end');
+            }
+          }
+          return { draft, saving, message, inputElement, inputId, label, dirty, reset, save };
+        }
+      };
+
+      const TenantContract = {
+        props: { tenant: Object, blocked: Boolean },
+        emits: ['saved', 'save-start', 'save-end', 'dirty-change'],
+        template: document.getElementById('tenant-contract-template').innerHTML,
+        setup(props, { emit }) {
+          const savedLinks = ref([...(props.tenant.contractLinks || [])]);
+          const draft = ref(savedLinks.value[0] || '');
+          const saving = ref(false);
+          const message = ref('');
+          const inputElement = ref(null);
+          const multiple = computed(() => savedLinks.value.length > 1);
+          const dirty = computed(() => draft.value !== (savedLinks.value[0] || ''));
+          watch(dirty, value => emit('dirty-change', value));
+          const safeLinks = computed(() => savedLinks.value.flatMap(url => {
+            try {
+              const parsed = new URL(url);
+              return parsed.protocol === 'https:' && parsed.hostname === 'drive.google.com' &&
+                !parsed.username && !parsed.password ? [parsed.href] : [];
+            } catch { return []; }
+          }));
+          function reset() {
+            if (saving.value || props.blocked || multiple.value) return;
+            draft.value = savedLinks.value[0] || '';
+            message.value = '已還原為上次讀取或儲存的連結。';
+          }
+          async function save() {
+            if (saving.value || props.blocked || multiple.value || !inputElement.value.reportValidity()) return;
+            const url = draft.value.trim();
+            const folderPattern = /^https:\/\/drive\.google\.com\/drive\/(?:u\/\d+\/)?folders\/[A-Za-z0-9_-]+\/?(?:[?#][^\s]*)?$/i;
+            if (url && !folderPattern.test(url)) {
+              message.value = '請貼上完整的 Google Drive 資料夾網址。';
+              return;
+            }
+            saving.value = true;
+            message.value = '儲存中……';
+            emit('save-start');
+            try {
+              const result = await tenantApi.saveContract(props.tenant.room, url, [...savedLinks.value]);
+              if (!result || !Array.isArray(result.links) || result.links.length > 1 ||
+                  !result.links.every(link => typeof link === 'string')) {
+                throw new Error('合約回應格式不正確，請核對試算表後重新讀取。');
+              }
+              savedLinks.value = [...result.links];
+              draft.value = savedLinks.value[0] || '';
+              emit('saved', [...savedLinks.value]);
+              emit('dirty-change', false);
+              message.value = '合約連結已儲存 ✓';
+            } catch (error) {
+              message.value = '儲存未完成確認：' + errorText(error);
+            } finally {
+              saving.value = false;
+              emit('save-end');
+            }
+          }
+          return { savedLinks, draft, saving, message, inputElement, multiple, dirty, safeLinks, reset, save };
+        }
+      };
+
+      const app = createApp({
+        components: { TenantField, TenantContract },
+        setup() {
+          const tenants = ref([]);
+          const loading = ref(false);
+          const loadFailed = ref(false);
+          const pendingSaves = ref(0);
+          const status = ref('正在讀取 Google 試算表……');
+          const revision = ref(0);
+          const selectedRoom = ref('');
+          const activeTenant = computed(() => tenants.value.find(tenant => tenant.room === selectedRoom.value) || null);
+          const rentFormat = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 2 });
+          function rentText(value) {
+            return value === null || value === undefined ? '尚未填寫' : 'NT$ ' + rentFormat.format(value);
+          }
+          function selectRoom(room) {
+            if (loading.value || pendingSaves.value > 0 || dirtyKeys.size > 0) return;
+            selectedRoom.value = room;
+          }
+          const dirtyKeys = reactive(new Set());
+          const basicFields = [
+            { key: 'name', title: '居住者' },
+            { key: 'phone', title: '電話', type: 'tel' },
+            { key: 'student', title: '學生標記', checkbox: true },
+            { key: 'startDate', title: '起租日', type: 'date' },
+            { key: 'endDate', title: '到期日', type: 'date' },
+            { key: 'rent', title: '目前房租', type: 'number' }
+          ];
+          const noteField = { key: 'notes', title: '管理備註', multiline: true };
+          const extraFields = [
+            { key: 'defaultTransferLastFive', title: '預設轉帳後五碼' },
+            { key: 'cohabitant', title: '同居人' },
+            { key: 'cohabitantPhone', title: '同居人電話', type: 'tel' },
+            { key: 'emergencyContact', title: '緊急聯絡人' },
+            { key: 'emergencyPhone', title: '聯絡人電話', type: 'tel' },
+            { key: 'introduction', title: '基本介紹', multiline: true },
+            { key: 'maintenance', title: '房間維護整修紀錄', multiline: true }
+          ];
+          function setDirty(room, field, value) {
+            const key = room + ':' + field;
+            if (value) dirtyKeys.add(key); else dirtyKeys.delete(key);
+          }
+          function startSave() { pendingSaves.value++; }
+          function finishSave() { pendingSaves.value--; }
+          function updateField(tenant, field, value) { tenant[field] = value; }
+
+          async function loadTenants() {
+            if (loading.value || pendingSaves.value > 0 || dirtyKeys.size > 0) return;
+            loading.value = true;
+            loadFailed.value = false;
+            status.value = '正在讀取 Google 試算表……';
+            try {
+              const result = await tenantApi.read();
+              if (!Array.isArray(result)) throw new Error('後端未回傳房客資料陣列。');
+              const rooms = new Set();
+              const checked = result.map(tenant => {
+                if (!tenant || typeof tenant !== 'object') throw new Error('房客資料格式不正確。');
+                const room = String(tenant.room ?? '').trim();
+                if (!/^\d+$/.test(room) || rooms.has(room)) throw new Error('房號格式不正確或重複。');
+                rooms.add(room);
+                if (tenant.rent !== null && tenant.rent !== undefined &&
+                    (typeof tenant.rent !== 'number' || !Number.isFinite(tenant.rent) || tenant.rent < 0)) {
+                  throw new Error(room + ' 房租金格式不正確。');
+                }
+                if (tenant.contractLinks !== undefined && (!Array.isArray(tenant.contractLinks) ||
+                    !tenant.contractLinks.every(link => typeof link === 'string'))) {
+                  throw new Error(room + ' 房合約資料格式不正確。');
+                }
+                return { ...tenant, room, contractLinks: tenant.contractLinks || [] };
+              });
+              tenants.value = checked;
+              if (!checked.some(tenant => tenant.room === selectedRoom.value)) {
+                selectedRoom.value = checked[0]?.room || '';
+              }
+              revision.value++;
+              dirtyKeys.clear();
+              status.value = '已從 Google 試算表讀取 ' + checked.length + ' 筆資料';
+            } catch (error) {
+              loadFailed.value = true;
+              status.value = '讀取失敗：' + errorText(error);
+            } finally {
+              loading.value = false;
+            }
+          }
+          onMounted(loadTenants);
+          return { selectedRoom, activeTenant, selectRoom, rentText, tenants, loading, loadFailed, pendingSaves, dirtyKeys, status, revision,
+            basicFields, noteField, extraFields, setDirty, startSave, finishSave, updateField, loadTenants };
+        }
+      });
+      app.config.errorHandler = () => {
+        // 不輸出房客物件或 Vue 元件內容到 console。
+        boot.hidden = false;
+        boot.textContent = '頁面顯示發生錯誤，請重新整理後再試。';
+      };
+      try {
+        app.mount('#tenant-app');
+        boot.hidden = true;
+      } catch (error) {
+        boot.hidden = false;
+        boot.textContent = '房客管理頁啟動失敗，請重新整理後再試。';
+      }
+    })();
+  </script>
+</body>
+</html>

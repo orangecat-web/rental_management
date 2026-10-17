@@ -1,0 +1,28 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM,VirtualConsole}=require('jsdom');
+const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>5000)throw Error('timeout');await new Promise(r=>setTimeout(r,5));}};
+const files=['tenant-vue.global.prod.js','access-session.js','workspace-transport.js','native-tenant.js','meter-worksheet.js','notice-renderer.js','notice-zip.js','notice-batch.js','payment-worksheet.js','native-billing.js','report-data.js','report-charts.js','rental-reports.js','workspace.js'];
+const html=fs.readFileSync('public/index.html','utf8').replace(/<script[^>]+src=[^>]+><\/script>/g,'');
+(async()=>{
+ const calls=[],errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+ const dom=new JSDOM(html,{url:'https://rental.test/',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){w.Storage.prototype.setItem=()=>{throw Error('private data persisted')};w.fetch=async(url,options)=>{if(url==='/api/session')return {ok:true,status:200,json:async()=>({ok:true,data:{authenticated:true,role:'viewer',canWrite:false,email:'viewer@example.test',provider:'sites',logoutPath:'/signout-with-chatgpt'}})};const call=JSON.parse(options.body);calls.push(call);let data;
+ if(call.action==='getTenantData')data=[{room:'401',name:'測試',phone:'0912345678',rent:5800,student:'是',contractLinks:[],notes:''}];
+ else if(call.action==='getAvailableBillingYears')data=[2026];
+ else if(call.action==='getAvailableBillingMonths')data=[11];
+ else if(call.action==='getMonthlyAccounts')data=[{year:2026,month:11,room:'401',name:'測試',rent:5800,electricityFee:600,totalDue:6400,effectivePaid:0,arrears:0,creditApplied:0,netDue:6400,unpaid:6400,overpaid:0,transferDate:'',transferLastFive:'01234',notes:'',meter:{previousReading:1000,currentReading:1120,usage:120,calculatedFee:600,previousReadingDate:'2026-09-01',currentReadingDate:'2026-11-01'}}];
+ else if(call.action==='getMeterPhoto')data={found:false,message:'未提供照片'};
+ else if(call.action==='getMonthlyPaymentPhotos')data=[];
+ else if(call.action==='getRoomPaymentPhotoSelection')data={fileIds:[],value:''};
+ else throw Error('unexpected write '+call.action);
+ return {ok:true,status:200,json:async()=>({ok:true,data})};};}});
+ const w=dom.window,d=w.document;for(const f of files)w.eval(fs.readFileSync('public/'+f,'utf8'));
+ const click=text=>{const b=[...d.querySelectorAll('button')].find(b=>b.textContent.trim()===text);assert(b,text);b.click();};
+ await wait(()=>d.querySelectorAll('.room-card').length===1);assert(d.querySelector('.access-identity').textContent.includes('檢視者'));assert(d.querySelector('#access-gate').hidden);
+ [...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('房客資料')).click();await wait(()=>d.querySelector('#tenant-401-phone'));
+ assert.equal(d.querySelector('#tenant-401-phone').readOnly,true);assert.equal(d.querySelector('.student-checkbox input').disabled,true);assert([...d.querySelectorAll('.editor-actions button')].every(b=>b.hidden));assert(!d.querySelector('.tenant-native .reload').disabled);
+ [...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('每月帳務')).click();await wait(()=>d.querySelector('.billing-native')?.textContent.includes('已讀取 1 筆帳務'));assert(d.querySelector('#toggleCreation').hidden);assert(d.querySelector('#initializeMonth').hidden);assert(!d.querySelector('#month').disabled);
+ click('電表抄錄表');await wait(()=>d.querySelector('.meter-sheet'));assert(d.querySelector('.meter-common-date').hidden);assert(d.querySelector('[aria-label="401 房本期電表"]').readOnly);const viewPhotos=[...d.querySelectorAll('button')].find(b=>b.textContent==='載入全部電表照片');assert(viewPhotos&&!viewPhotos.hidden);viewPhotos.click();await wait(()=>d.querySelector('.meter-batch-status').textContent.includes('照片處理完成'));assert(calls.some(c=>c.action==='getMeterPhoto'));assert([...d.querySelectorAll('.meter-sheet-actions button')].find(b=>b.textContent==='儲存全部抄表').hidden);
+ click('匯款截圖');await wait(()=>d.querySelector('.payment-sheet'));assert(d.querySelector('[aria-label="401 房已確認收款"]').disabled);assert(d.querySelector('[aria-label="401 房轉帳後五碼"]').readOnly);assert([...d.querySelectorAll('.payment-sheet button')].find(b=>b.textContent==='儲存全部收款資料').hidden);click('載入全部匯款截圖');await wait(()=>d.querySelector('.payment-status').textContent.includes('已載入 0 張'));
+ let denied='';await w.RentalTransport('tenant').script.run.withFailureHandler(e=>denied=e.message).saveTenantField('401','phone','000','0912345678');assert(denied.includes('檢視者'));assert(calls.every(c=>c.action.startsWith('get')));assert.deepEqual(errors,[]);dom.window.close();
+ let requests=0;const blocked=new JSDOM(html,{url:'https://rental.test/',runScripts:'dangerously',beforeParse(w){w.fetch=async()=>{requests++;return {ok:false,status:403,json:async()=>({ok:false,error:{message:'此帳號尚未授權'},auth:{loginPath:'/auth/login'}})};};}});for(const f of files)blocked.window.eval(fs.readFileSync('public/'+f,'utf8'));await wait(()=>blocked.window.document.querySelector('[data-access-message]').textContent.includes('尚未授權'));assert.equal(requests,1);assert.equal(blocked.window.document.querySelectorAll('.room-card').length,0);blocked.window.close();
+ console.log('PASS: session-before-data gate, viewer read-only fields and hidden write controls across tenants/billing/meter/payments; photos/filters usable, client write guard, unauthorized account receives no data, no localStorage.');
+})().catch(e=>{console.error(e);process.exit(1)});
