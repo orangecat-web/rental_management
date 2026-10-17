@@ -50,6 +50,8 @@ npm run dev 是本機假資料預覽，不能代替外部 Google 登入驗收。
 
 ## 下一步
 
+更新：原始碼已匯入 orangecat-web/rental_management 並推送 main。新增獨立 GitHub Pages 假資料唯讀 demo（npm run build:pages、npm run test:pages）；不代表正式 Google／Cloudflare 登入已完成。啟用 Pages 的步驟見 README.md。
+
 1. 確認使用者的 GitHub 私有倉庫名稱/帳號並推入原始碼。
 2. 確認 Cloudflare 帳號、正式網址、team domain、Access app AUD 和主要管理人的 Google email。
 3. 按 DEPLOYMENT.md 配置 Google IdP/Access allow policy 和本機部署設定，再接上原 Google server secrets。

@@ -25,6 +25,6 @@ Read README.md, docs/CODEX_HANDOFF.md and docs/DEPLOYMENT.md before changing thi
 - npm ci; npm test; npm run build:cloudflare is the cross-platform external/Codex workflow.
 - Current hosted Sites uses npm run build and dist/server/index.js; preserve .openai/hosting.json and its project identity. It remains owner-private. Do not create a replacement Site.
 - External entry is worker/cloudflare.mjs with deploy/cloudflare.local.json (ignored); run npm run check:deploy before npm run deploy:cloudflare.
-- GitHub CI only verifies; there is no GitHub Pages deployment. Do not publish this app as static-only Pages.
+- GitHub Pages is permitted only for the separate fictitious, read-only demo built by npm run build:pages and verified by npm run test:pages. Never publish real tenant records, Google configuration or credentials to Pages. The production application requires its authenticated backend; never deploy it as static-only Pages.
 - Never change sharing, add viewers, configure real cloud resources or migrate production data without the user's concrete instruction. User-authorized development/deployment within the current existing scope can continue autonomously.
 - Test the changed behavior and relevant regressions, build, and check mobile layout. Use fake fixtures for writes. Do not "test" by changing real tenants/payments.

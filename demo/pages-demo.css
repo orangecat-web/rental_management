@@ -1,0 +1,3 @@
+.pages-demo-banner{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;margin-left:280px;padding:14px 24px;background:#fff5d7;color:#443a20;border-bottom:1px solid #dbc98a;font:16px/1.6 system-ui,sans-serif;position:relative;z-index:30}
+.pages-demo-banner a{color:#294638;text-decoration:underline}
+@media(max-width:760px){.pages-demo-banner{margin-left:0;padding:12px 16px}}

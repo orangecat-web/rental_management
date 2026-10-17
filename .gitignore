@@ -11,3 +11,4 @@ exports/
 .wrangler/
 deploy/cloudflare.local.json
 dist/cloudflare-assets/
+dist/pages-demo/

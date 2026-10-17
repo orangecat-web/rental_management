@@ -14,9 +14,22 @@ npm run dev
 
 ## 部署
 
+### GitHub Pages 展示版
+
+```sh
+npm run build:pages
+npm run test:pages
+```
+
+獨立輸出至 `dist/pages-demo/`，使用 15 間虛構房間與 2026 年範例帳務，僅供瀏覽；不連接 Google、不保存修改、不需要任何金鑰。正式版本不會載入 demo transport。
+
+GitHub repository → Settings → Pages → Source 選 **GitHub Actions**。推送 `main` 後，`Deploy fictitious Pages demo` workflow 會測試、建置並部署展示版，也可由 Actions 手動執行。若尚未啟用 Pages，先完成上述設定，再重新執行 workflow。預設專案路徑為 `/rental_management/`；公開網址以部署結果為準。私有 repository 是否可使用 Pages 取決於 GitHub 方案；請勿為此自行變更 repository 可見性。Pages 網站的存取範圍與 repository 可見性不同，展示內容全部使用假資料。
+
+以下為正式版本的部署方式：
+
 - 現有 Sites：npm run build，保留 .openai/hosting.json 的 project_id，使用原私人站台。
 - 外部 GitHub + Cloudflare：npm run build:cloudflare；依 docs/DEPLOYMENT.md 設定 Google/Access 與 server secrets，再執行 npm run check:deploy、npm run deploy:cloudflare。
-- GitHub Actions 只測試，不自動發布 GitHub Pages。單純上傳 public/ 不能取代後端 gateway。
+- GitHub Actions 另提供假資料 Pages demo；單純上傳 public/ 不能取代正式版本的後端 gateway。
 - Codex 接手先讀 AGENTS.md 與 docs/CODEX_HANDOFF.md。
 
 ## 結構與安全

@@ -1,5 +1,7 @@
 # GitHub + Cloudflare 獨立部署
 
+> GitHub Pages 僅用於獨立的假資料唯讀展示版，設定方式見 README.md「GitHub Pages 展示版」。本文描述需要登入及 Google 串接的正式版本，不能改用靜態 Pages 取代後端。
+
 ## 已準備完成與尚未接上的部分
 
 程式已支援：管理人/檢視者、逐項 API 權限、登入前資料閘門、唯讀介面、Cloudflare Access JWT 驗證、登入/登出入口、跨平台建置與部署前檢查。
@@ -10,7 +12,7 @@
 
 建立私有 repository，放入本專案原始碼。不要上傳 node_modules、dist、.env、.dev.vars、deploy/cloudflare.local.json 或任何 Google/Cloudflare 金鑰。GitHub Actions 的 ci.yml 只執行檢查，沒有自動公開網站或寫入 Google。
 
-原本的 Pages 自動部署已移除：本系統包含驗證和 HMAC API，只有 public/ 靜態頁無法完整運作。
+本系統包含驗證和 HMAC API，只有 public/ 靜態頁無法完整運作。Pages workflow 僅部署 `dist/pages-demo/` 的虛構唯讀版本，不能部署正式資料與設定。
 
 ## 2. 準備 Cloudflare 網址與 Access 應用程式
 
