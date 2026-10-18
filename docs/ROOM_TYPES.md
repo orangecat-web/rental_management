@@ -9,7 +9,7 @@ GitHub Pages 為唯讀假資料展示，包含兩種房型與尚未設定的範�
 此 repo 不包含完整的 live Rent_Demo，不能整包覆蓋或安裝舊 starter。
 
 1. 備份既有 Rent_Demo 程式。在原 Apps Script 專案新增 `RoomType.gs`，貼上本 repo `apps-script/RoomType.gs`（網站下載版為 `public/downloads/RoomType.gs.txt`）。
-2. 將原 `SiteBridge.gs` 更新為本 repo 同名檔。保留既有 TenantData、StudentStatus、CashSettlement 等程式與所有指令碼屬性。
+2. 本版 `SiteBridge.gs` 同時包含初始電表功能；請一併依 `docs/INITIAL_METER.md` 安裝 `InitialMeter.gs`，再將原 `SiteBridge.gs` 更新為本 repo 同名檔。保留既有 TenantData、StudentStatus、CashSettlement 等程式與所有指令碼屬性。
 3. 更新原「Rent_Demo 網站 API」部署至新版本，維持原網址、HMAC secret 與既有存取設定；不要新建金鑰或另一套資料。
 4. 正式網站須使用本版前端與 Worker，才能讀寫房型。僅更新 GitHub Pages 不會更新正式 Google／Cloudflare／Sites。
 

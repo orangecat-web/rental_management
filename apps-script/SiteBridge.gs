@@ -51,9 +51,9 @@ function doPost(e) {
     let data;
     try {
       switch (call.action) {
-        case 'getTenantData': data = getTenantDataWithRoomType_(); break;
+        case 'getTenantData': data = getTenantDataWithInitialMeter_(); break;
         case 'saveTenantField':
-          data = call.args[1] === 'roomType' ? saveTenantRoomType_.apply(null, call.args) :
+          data = ['initialMeterReading','contractDate'].includes(call.args[1]) ? saveTenantLeaseMeter_.apply(null,call.args) : call.args[1] === 'roomType' ? saveTenantRoomType_.apply(null, call.args) :
             call.args[1] === 'student' ? saveTenantStudent_.apply(null, call.args) : saveTenantField.apply(null, call.args);
           break;
         case 'saveTenantNote': data = saveTenantNote.apply(null, call.args); break;
@@ -63,8 +63,8 @@ function doPost(e) {
         case 'getAvailableBillingMonths': data = rentalBridgeBillingMonths_(call.args[0]); break;
         case 'getMonthlyAccounts': data = getMonthlyAccountsWithSettlement_.apply(null, call.args); break;
         case 'saveMonthlyAccountField': data = call.args[3] === 'actualPaid' ? saveMonthlyActualPaid_.apply(null, call.args) : call.args[3] === 'receiptConfirmed' ? saveMonthlyReceiptConfirmed_.apply(null, call.args) : saveMonthlyAccountField.apply(null, call.args); break;
-        case 'previewMonthlyInitialization': data = previewMonthlyInitialization.apply(null, call.args); break;
-        case 'initializeMonthlyAccounts': data = initializeMonthlyAccounts.apply(null, call.args); break;
+        case 'previewMonthlyInitialization': data = previewMonthlyInitializationWithInitialMeter_.apply(null, call.args); break;
+        case 'initializeMonthlyAccounts': data = initializeMonthlyAccountsWithInitialMeter_.apply(null, call.args); break;
         case 'previewMonthlyAccountsSheetCreation': data = previewMonthlyAccountsSheetCreation.apply(null, call.args); break;
         case 'createMonthlyAccountsSheet': data = createMonthlyAccountsSheet.apply(null, call.args); break;
         case 'getMonthlyPaymentPhotos': data = getMonthlyPaymentPhotos.apply(null, call.args); break;
@@ -92,10 +92,13 @@ function rentalBridgeValidCall_(action, args) {
   const month = value => ['number', 'string'].includes(typeof value) && Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= 12;
   const expected = value => value === null || (typeof value === 'number' && Number.isFinite(value)) || text(value);
   const file = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,200}$/.test(value);
+  const leaseDate = value => value === '' || typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value+'T00:00:00Z')) && new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
   if (['getTenantData', 'getRentalSiteCapabilities', 'getAvailableBillingYears'].includes(action)) return args.length === 0;
   if (action === 'saveTenantField') return args.length === 4 && room(args[0]) &&
-    ['name','phone','startDate','endDate','rent','cohabitant','cohabitantPhone','emergencyContact','emergencyPhone','introduction','maintenance','defaultTransferLastFive','student','roomType'].includes(args[1]) && text(args[2]) && expected(args[3]) &&
-    (args[1] !== 'roomType' || (['','套房','雅房'].includes(args[2]) && ['','套房','雅房'].includes(args[3])));
+    ['name','phone','startDate','endDate','rent','cohabitant','cohabitantPhone','emergencyContact','emergencyPhone','introduction','maintenance','defaultTransferLastFive','student','roomType','initialMeterReading','contractDate'].includes(args[1]) && text(args[2]) && expected(args[3]) &&
+    (args[1] !== 'roomType' || (['','套房','雅房'].includes(args[2]) && ['','套房','雅房'].includes(args[3]))) &&
+    (args[1] !== 'contractDate' || leaseDate(args[2]) && leaseDate(args[3])) &&
+    (args[1] !== 'initialMeterReading' || (args[2] === '' || /^\d+(?:\.\d+)?$/.test(args[2]) && Number(args[2])<=100000000) && (args[3] === null || typeof args[3] === 'number' && Number.isFinite(args[3]) && args[3]>=0 && args[3]<=100000000));
   if (action === 'saveTenantNote') return args.length === 3 && room(args[0]) && text(args[1]) && text(args[2]);
   if (action === 'saveTenantContract') return args.length === 3 && room(args[0]) && text(args[1]) && Array.isArray(args[2]) && args[2].length <= 20 && args[2].every(v => text(v));
   if (!year(args[0])) return false;

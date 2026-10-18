@@ -26,7 +26,7 @@ const ctx={Date,JSON,Number,String,Array,Object,Math,Error,
  getTenantData(){calls++;assert(!locked);return [{room:'401',name:'測試',phone:'0912345678',rent:0,defaultTransferLastFive:'01234'}]},
  saveTenantField(...args){calls++;assert(!locked);return {room:args[0],field:args[1],value:args[2]}},
  saveTenantNote(){throw Error('資料已被更新，請重新讀取。')},saveTenantContract:()=>({links:[]})};
-ctx.getTenantDataWithRoomType_=()=>ctx.getTenantData();
+ctx.getTenantDataWithInitialMeter_=()=>ctx.getTenantData();
 ctx.saveTenantRoomType_=(...args)=>({...ctx.saveTenantField(...args),roomTypeRoute:true});
 ctx.saveTenantStudent_=(...args)=>ctx.saveTenantField(...args);
 ctx.getMonthlyAccountsWithSettlement_=(...args)=>ctx.getMonthlyAccounts(...args);

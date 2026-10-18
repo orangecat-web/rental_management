@@ -1,3 +1,5 @@
+初始電表更新補充：本版 SiteBridge 同時需要 InitialMeter.gs；請依 repository docs/INITIAL_METER.md 完整安裝，保留既有程式與金鑰。
+
 房型更新補充：本版 SiteBridge 需搭配既有 StudentStatus.gs 及新增 RoomType.gs。
 請先在原 Rent_Demo 新增 RoomType.gs（同目錄 RoomType.gs.txt），再更新 SiteBridge；
 完整步驟見 repository docs/ROOM_TYPES.md，不要覆蓋整個 Apps Script 專案。

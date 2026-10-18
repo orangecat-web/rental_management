@@ -62,6 +62,11 @@ const server = http.createServer((req, res) => {
     };
     const first = await rpc('getMonthlyAccounts', [2026, 1]);
     assert.equal(first.result.data.length, 15);
+    const initialBill=await rpc('getMonthlyAccounts',[2026,9]);
+    const newTenant=initialBill.result.data.find(a=>a.room==='401');assert.equal(newTenant.meter.previousReading,1000);assert.equal(newTenant.meter.previousReadingDate,'2026-08-15');assert.equal(newTenant.meter.previousReadingSource,'initial');
+    const laterBill=await rpc('getMonthlyAccounts',[2026,11]);assert.notEqual(laterBill.result.data[0].meter.previousReadingDate,'2026-08-15');assert.equal(laterBill.result.data[0].meter.previousReading,newTenant.meter.currentReading);
+    const zeroInitial=await rpc('getMonthlyAccounts',[2026,7]);assert.equal(zeroInitial.result.data.find(a=>a.room==='506').meter.previousReading,0);
+
     const zero = first.result.data.find(a => a.room === '506');
     assert.equal(zero.rent, 0); assert(zero.electricityFee > 0);
     assert.equal(first.result.data[0].meter.previousReadingDate, '2025-11-01');

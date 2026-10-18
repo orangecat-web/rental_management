@@ -14,6 +14,8 @@ npm run dev
 
 房型可選「套房／雅房」，舊資料保留未設定；Google 後端更新方式見 [房型設定](docs/ROOM_TYPES.md)。
 
+簽約日與初始電表的第一期帶入規則見 [初始電表](docs/INITIAL_METER.md)。
+
 ## 部署
 
 ### GitHub Pages 展示版

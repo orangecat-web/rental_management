@@ -200,9 +200,9 @@
       </select>
       <input v-else ref="inputElement" :id="inputId" v-model="draft"
         :type="field.type || 'text'" :aria-label="label" :disabled="saving || blocked"
-        :min="field.key === 'rent' ? 0 : undefined"
-        :max="field.key === 'rent' ? 1000000 : undefined"
-        :step="field.key === 'rent' ? '0.01' : undefined"
+        :min="field.type === 'number' ? 0 : undefined"
+        :max="field.key === 'rent' ? 1000000 : field.key === 'initialMeterReading' ? 100000000 : undefined"
+        :step="field.key === 'rent' ? '0.01' : field.key === 'initialMeterReading' ? 'any' : undefined"
         :maxlength="field.key === 'defaultTransferLastFive' ? 5 : field.type === 'date' || field.key === 'rent' ? undefined : 100"
         :inputmode="field.key === 'defaultTransferLastFive' ? 'numeric' : undefined"
         :pattern="field.key === 'defaultTransferLastFive' ? '[0-9]{5}' : undefined"
@@ -283,7 +283,7 @@
         emits: ['saved', 'save-start', 'save-end', 'dirty-change'],
         template: document.getElementById('tenant-field-template').innerHTML,
         setup(props, { emit }) {
-          const savedValue = ref(props.tenant[props.field.key] ?? (props.field.key === 'rent' ? null : ''));
+          const savedValue = ref(props.tenant[props.field.key] ?? (['rent','initialMeterReading'].includes(props.field.key) ? null : ''));
           const draft = ref(displayField(savedValue.value, props.field));
           const saving = ref(false);
           const message = ref('');
@@ -308,7 +308,7 @@
                 props.tenant.room, props.field.key, props.field.checkbox ? (draft.value ? '是' : '否') : String(draft.value ?? ''), savedValue.value
               );
               const nextValue = props.field.key === 'notes' ? result?.note : result?.value;
-              const valid = props.field.key === 'rent'
+              const valid = ['rent','initialMeterReading'].includes(props.field.key)
                 ? nextValue === null || (typeof nextValue === 'number' && Number.isFinite(nextValue) && nextValue >= 0)
                 : typeof nextValue === 'string' && (!props.field.options || nextValue === '' || props.field.options.includes(nextValue));
               if (!valid) throw new Error('儲存回應格式不正確，請核對試算表後重新讀取。');
@@ -417,6 +417,8 @@
           ];
           const noteField = { key: 'notes', title: '管理備註', multiline: true };
           const extraFields = [
+            { key: 'initialMeterReading', title: '初始電表（度）', type: 'number' },
+            { key: 'contractDate', title: '簽約日', type: 'date' },
             { key: 'defaultTransferLastFive', title: '預設轉帳後五碼' },
             { key: 'cohabitant', title: '同居人' },
             { key: 'cohabitantPhone', title: '同居人電話', type: 'tel' },

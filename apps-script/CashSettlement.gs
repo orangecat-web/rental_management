@@ -54,7 +54,7 @@ function getMonthlyAccountsWithSettlement_(year, month) {
   years.forEach(y=>{const book=getBillingSpreadsheet_(y);const months=book.getSheets().map(s=>Number(s.getName())).filter(m=>Number.isInteger(m)&&m>=1&&m<=12&&(y<year||m<=month)).sort((a,b)=>a-b);months.forEach(m=>periods.push({year:y,month:m,accounts:readCashPaidAmounts_(book,m,readMonthlyAccounts_(y,m))}))});
   const target=calculateCashSettlements_(periods).find(p=>p.year===year&&p.month===month);
   if(!target)throw new Error('找不到指定月份帳務。');
-  return target.accounts;
+  return typeof markInitialMeterSources_ === 'function' ? markInitialMeterSources_(target.accounts) : target.accounts;
 }
 /** Optional human-confirmed exception; blank uses transfer-date default without writing a fabricated amount. */
 function saveMonthlyActualPaid_(year,month,room,field,value,expectedValue) {

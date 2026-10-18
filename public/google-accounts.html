@@ -632,6 +632,7 @@
               '找不到房客基本資料：' + r.missingTenants + ' 間'];
             if (r.month % 2 === 1) lines.push(prefix + '前期日期及度數：' + r.meters + ' 間', '待補電表且上期紀錄不完整：' + r.missingMeters + ' 間');
             else lines.push('偶數月只處理房租與收款資料。');
+            if (r.initialMeters !== undefined) lines.push(prefix + '新合約初始電表及簽約日：' + r.initialMeters + ' 間');
             return [...lines, ...r.warnings.map(value => '提醒：' + value)];
           });
           async function previewInitialization() {

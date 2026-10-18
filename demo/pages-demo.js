@@ -6,6 +6,7 @@
     room, roomType: i === 14 ? '' : i % 2 === 0 ? '套房' : '雅房', name: '示範房客 ' + String.fromCharCode(65 + i),
     phone: '09000000' + String(i).padStart(2, '0'),
     rent: room === '506' ? 0 : 5800 + (i % 4) * 200,
+    initialMeterReading: i === 0 ? 1000 : i === 12 ? 0 : null, contractDate: i === 0 ? '2026-08-15' : i === 12 ? '2026-06-15' : '',
     student: i % 3 === 0 ? '是' : '', startDate: '2026-01-01', endDate: '2027-12-31',
     notes: '虛構展示資料，非真實房客。', contractLinks: []
   }));
@@ -14,7 +15,13 @@
   function accounts(year, month) {
     return tenants.map((t, i) => {
       const odd = month % 2 === 1, usage = 80 + i * 6 + month * 2;
-      const previousReading = 1000 + i * 100 + Math.floor(month / 2) * 200;
+      const firstMeterMonth = t.initialMeterReading === null ? null : months.find(m=>m%2===1 && t.contractDate>=date(year,m-2) && t.contractDate<date(year,m));
+      const useInitial = odd && month === firstMeterMonth;
+      let previousReading = 1000 + i * 100 + Math.floor(month / 2) * 200;
+      if (odd && firstMeterMonth && month >= firstMeterMonth) {
+        previousReading = t.initialMeterReading;
+        for (let prior = firstMeterMonth; prior < month; prior += 2) previousReading += 80 + i * 6 + prior * 2;
+      }
       const fee = odd ? usage * 5 : 0, totalDue = t.rent + fee;
       const isReceived = (i + month) % 4 !== 0;
       // Independent monthly fixtures: unpaid claims are settled in the following month.
@@ -30,7 +37,7 @@
         transferLastFive: '0' + String(1000 + i), paymentScreenshot: '', notes: '虛構展示帳務',
         paymentStatus: isReceived ? '已收' : '未收',
         meter: odd ? { previousReading, currentReading: previousReading + usage,
-          previousReadingDate: date(year, month - 2), currentReadingDate: date(year, month),
+          previousReadingDate: useInitial ? t.contractDate : date(year, month - 2), previousReadingSource: useInitial ? 'initial' : '', currentReadingDate: date(year, month),
           usage, calculatedFee: fee } : null
       };
     });

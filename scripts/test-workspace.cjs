@@ -16,7 +16,7 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
       if(call.action==='getTenantData') data=rows;
       else if(call.action==='saveTenantField') {
         if(conflict)return {ok:false,json:async()=>({ok:false,error:{message:'其他人已更新，請重新讀取'}})};
-        rows.find(t=>t.room===call.args[0])[call.args[1]]=call.args[2]; data={value:call.args[2]};
+        const value=call.args[1]==='initialMeterReading'?(call.args[2]===''?null:Number(call.args[2])):call.args[2];rows.find(t=>t.room===call.args[0])[call.args[1]]=value; data={value};
       } else if(call.action==='getAvailableBillingYears')data=[2026];
       else if(call.action==='getAvailableBillingMonths')data=[10,11,12];
       else if(call.action==='getMonthlyAccounts')data=[{year:call.args[0],month:call.args[1],room:'401',name:'測試甲',rent:5800,electricityFee:600,totalDue:6400,transferDate:'',transferLastFive:'01234',notes:'',meter:call.args[1]%2?{previousReading:1000,currentReading:1120,previousReadingDate:'2026-09-01',currentReadingDate:'2026-11-01',usage:120,calculatedFee:600}:null}];
@@ -51,6 +51,11 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
   click(roomType.closest('.editor'),'儲存');await wait(()=>roomType.closest('.editor').textContent.includes('其他人已更新'));
   assert.equal(roomType.value,'雅房');click(roomType.closest('.editor'),'還原');await wait(()=>!d.querySelector('.draft-notice'));
   conflict=false;
+  const initial=d.querySelector('#tenant-401-initialMeterReading');assert(initial);assert.equal(initial.value,'');
+  initial.value='0';initial.dispatchEvent(new w.Event('input',{bubbles:true}));await wait(()=>d.querySelector('.draft-notice'));click(initial.closest('.editor'),'儲存');await wait(()=>initial.closest('.editor').textContent.includes('已儲存'));
+  assert.deepEqual(calls.find(c=>c.args?.[1]==='initialMeterReading').args,['401','initialMeterReading','0',null]);assert.equal(rows[0].initialMeterReading,0);
+  const signing=d.querySelector('#tenant-401-contractDate');signing.value='2026-08-15';signing.dispatchEvent(new w.Event('input',{bubbles:true}));await wait(()=>d.querySelector('.draft-notice'));click(signing.closest('.editor'),'儲存');await wait(()=>signing.closest('.editor').textContent.includes('已儲存'));
+  assert.deepEqual(calls.find(c=>c.args?.[1]==='contractDate').args,['401','contractDate','2026-08-15','']);
   // Conflict leaves the user's draft present and blocks navigation until restore.
   conflict=true;phone.value='0900000000';phone.dispatchEvent(new w.Event('input',{bubbles:true}));await wait(()=>phone.closest('.editor').textContent.includes('還原'));click(phone.closest('.editor'),'儲存');await wait(()=>phone.closest('.editor').textContent.includes('其他人已更新'));assert.equal(phone.value,'0900000000');click(phone.closest('.editor'),'還原');await wait(()=>!d.querySelector('.draft-notice'));
   [...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('房間總覽')).click();

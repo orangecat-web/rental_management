@@ -24,7 +24,7 @@ window.RentalComponents.meterWorksheet = function (api) {
     <article v-for="entry in entries" :key="entry.room" class="meter-sheet-row" role="row" :aria-label="entry.room+' 房電表'">
       <div class="meter-room-title"><h2>{{entry.room}} 房</h2><span>{{entry.name||'未填居住者'}}</span><span v-if="entry.conflict" class="meter-field-error">試算表已有其他修改，請還原此房或重新輸入後再儲存。</span></div>
       <div class="meter-row-values">
-        <div class="meter-previous"><span>前期電表</span><strong>{{format(entry.previousReading)}} 度</strong><span>{{entry.previousDate||'前期日期待補'}}</span></div>
+        <div class="meter-previous"><span>前期電表</span><strong>{{format(entry.previousReading)}} 度</strong><span>{{entry.previousSource==='initial'?'簽約日：':''}}{{entry.previousDate||'前期日期待補'}}</span></div>
         <label class="meter-current">本期電表<input type="number" step="any" :min="entry.previousReading ?? 0" v-model="entry.draft" :disabled="locked || entry.previousReading===null" @input="entry.conflict=false;entry.message=''" :aria-label="entry.room+' 房本期電表'"><span>試算表目前：{{format(entry.savedReading)}} 度</span></label>
         <div class="meter-amount"><span>本期使用</span><strong>{{usage(entry)===null?'—':format(usage(entry))+' 度'}}</strong><span>電費 NT$ {{usage(entry)===null?'—':format(usage(entry)*5)}}</span></div>
         <div class="meter-date-detail"><span>本期抄表日</span><strong>{{commonDate||entry.savedDate||'待填寫'}}</strong><span v-if="commonDate!==entry.savedDate">已儲存：{{entry.savedDate||'未填寫'}}</span></div>
@@ -61,7 +61,7 @@ window.RentalComponents.meterWorksheet = function (api) {
           const e=old.get(a.room), m=a.meter, hadDraft=e&&readingDirty(e);
           const changed=e&&m.currentReading!==e.savedReading&&String(m.currentReading??'')!==String(e.draft??'');
           return {room:a.room,name:a.name,previousReading:typeof m.previousReading==='number'?m.previousReading:null,
-            previousDate:m.previousReadingDate||'',savedDate:m.currentReadingDate||'',savedReading:m.currentReading??null,
+            previousDate:m.previousReadingDate||'',previousSource:m.previousReadingSource||'',savedDate:m.currentReadingDate||'',savedReading:m.currentReading??null,
             draft:hadDraft?e.draft:String(m.currentReading??''),conflict:!!(hadDraft&&(changed||e?.conflict)),message:e?.message||'',
             photo:e?.photo||'',photoDate:e?.photoDate||'',photoMessage:e?.photoMessage||''};
         });
