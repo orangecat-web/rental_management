@@ -54,7 +54,8 @@ function getMonthlyAccountsWithSettlement_(year, month) {
   years.forEach(y=>{const book=getBillingSpreadsheet_(y);const months=book.getSheets().map(s=>Number(s.getName())).filter(m=>Number.isInteger(m)&&m>=1&&m<=12&&(y<year||m<=month)).sort((a,b)=>a-b);months.forEach(m=>periods.push({year:y,month:m,accounts:readCashPaidAmounts_(book,m,readMonthlyAccounts_(y,m))}))});
   const target=calculateCashSettlements_(periods).find(p=>p.year===year&&p.month===month);
   if(!target)throw new Error('找不到指定月份帳務。');
-  return typeof markInitialMeterSources_ === 'function' ? markInitialMeterSources_(target.accounts) : target.accounts;
+  const accounts=target.accounts.map(account=>withDefaultRentDueDate_(account,year,month));
+  return typeof markInitialMeterSources_ === 'function' ? markInitialMeterSources_(accounts) : accounts;
 }
 /** Optional human-confirmed exception; blank uses transfer-date default without writing a fabricated amount. */
 function saveMonthlyActualPaid_(year,month,room,field,value,expectedValue) {
@@ -77,7 +78,7 @@ function saveMonthlyActualPaid_(year,month,room,field,value,expectedValue) {
 function getRoomNoticeWithSettlement_(year,month,room) {
   const notice=getRoomNoticeData(year,month,room),account=getMonthlyAccountsWithSettlement_(year,month).find(a=>a.room===String(room));
   if(!account||account.netDue===null)throw new Error('本期應收金額尚未完整。');
-  return Object.assign({},notice,{total:account.netDue,creditApplied:account.creditApplied,arrears:account.arrears,creditWarning:account.creditWarning});
+  return Object.assign({},notice,{dueDate:notice.dueDate&&String(notice.dueDate).trim()?notice.dueDate:account.dueDate,total:account.netDue,creditApplied:account.creditApplied,arrears:account.arrears,creditWarning:account.creditWarning});
 }
 
 function normalizeReceiptConfirmation_(value){if(value===''||value===null||value===undefined)return '';if(value===true||value==='是')return '是';if(value===false||value==='否')return '否';throw new Error('收款確認請使用是、否或核取方塊。')}
@@ -86,4 +87,12 @@ function saveMonthlyReceiptConfirmed_(year,month,room,field,value,expectedValue)
  const lock=LockService.getScriptLock();lock.waitLock(20000);
  try{const sheet=getBillingSpreadsheet_(year).getSheetByName(String(Number(month)));if(!sheet)throw new Error('找不到月份帳務。');const rows=sheet.getDataRange().getValues(),headers=rows[0].map(v=>String(v).trim());if(headers.filter(h=>h==='房號').length!==1||headers.filter(h=>h==='收款確認').length>1)throw new Error('收款確認或房號表頭缺少或重複。');const roomColumn=headers.indexOf('房號'),matches=[];rows.slice(1).forEach((r,i)=>{if(String(r[roomColumn]).trim()===String(room))matches.push(i+2)});if(matches.length!==1)throw new Error('房號不存在或重複。');let column=headers.indexOf('收款確認');const current=column<0?'':normalizeReceiptConfirmation_(rows[matches[0]-1][column]);if(current!==expectedValue)throw new Error('收款確認已被更新，請重新讀取。');if(column<0){column=sheet.getLastColumn();if(column>=sheet.getMaxColumns())sheet.insertColumnAfter(column);sheet.getRange(1,column+1).setValue('收款確認')}const cell=sheet.getRange(matches[0],column+1);if(cell.getFormula()||cell.isPartOfMerge())throw new Error('收款確認含公式或合併格，暫不更新。');cell.setValue(value);SpreadsheetApp.flush();return {value};
  }finally{lock.releaseLock()}
+}
+
+/** Reference payment date only. Never infer receipt, lateness, fees, or write historical cells. */
+function withDefaultRentDueDate_(account,year,month) {
+  if(account.dueDate!==null&&account.dueDate!==undefined&&!(typeof account.dueDate==='string'&&!account.dueDate.trim()))return account;
+  year=Number(year);month=Number(month);
+  if(!Number.isInteger(year)||year<1900||year>9999||!Number.isInteger(month)||month<1||month>12)throw new Error('應繳日期的年份或月份不正確。');
+  return Object.assign({},account,{dueDate:year+'-'+String(month).padStart(2,'0')+'-10'});
 }

@@ -15,7 +15,7 @@ http.createServer((req,res)=>{
     else if(action==='getAvailableBillingMonths')data=[8,9,10,11,12];
     else if(action==='getMonthlyAccounts')data=tenants.map(t=>{
      const m=args[1],fee=m%2?600:0,prior=t.name?(m-8)*t.rent+[9,11].filter(v=>v<m).length*600:0;
-     return {year:args[0],month:m,room:t.room,name:t.name,rent:t.rent,actualPaid:null,receiptConfirmed:'',isReceived:false,effectivePaid:0,openingCredit:0,creditApplied:0,arrears:prior,netDue:t.rent+fee+prior,unpaid:t.rent+fee+prior,overpaid:0,paymentStatus:t.rent+fee+prior>0?'未收':'無應收',electricityFee:m%2?600:null,totalDue:t.rent+fee,transferDate:'',transferLastFive:'01234',notes:'',meter:m%2?{previousReading:1000,currentReading:1120,previousReadingDate:`2026-${String(m-2).padStart(2,'0')}-01`,currentReadingDate:`2026-${String(m).padStart(2,'0')}-01`,usage:120,calculatedFee:600}:null};
+     return {year:args[0],month:m,dueDate:args[0]+'-'+String(m).padStart(2,'0')+'-10',room:t.room,name:t.name,rent:t.rent,actualPaid:null,receiptConfirmed:'',isReceived:false,effectivePaid:0,openingCredit:0,creditApplied:0,arrears:prior,netDue:t.rent+fee+prior,unpaid:t.rent+fee+prior,overpaid:0,paymentStatus:t.rent+fee+prior>0?'未收':'無應收',electricityFee:m%2?600:null,totalDue:t.rent+fee,transferDate:'',transferLastFive:'01234',notes:'',meter:m%2?{previousReading:1000,currentReading:1120,previousReadingDate:`2026-${String(m-2).padStart(2,'0')}-01`,currentReadingDate:`2026-${String(m).padStart(2,'0')}-01`,usage:120,calculatedFee:600}:null};
     });
     else throw Error('內部預覽不執行寫入或讀取私人照片。');
     res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({ok:true,data}));

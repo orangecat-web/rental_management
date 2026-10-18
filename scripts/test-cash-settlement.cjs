@@ -19,3 +19,12 @@ ctx.getBillingSpreadsheet_=()=>({getSheetByName:()=>sheet});ctx.LockService={get
 assert.equal(ctx.saveMonthlyActualPaid_(2026,10,'401','actualPaid','0',null).value,0);assert.equal(rows[0][2],'實收金額');assert.equal(rows[1][2],0);assert.throws(()=>ctx.saveMonthlyActualPaid_(2026,10,'401','actualPaid','100',null),/更新/);assert(!locked);assert.equal(ctx.saveMonthlyActualPaid_(2026,10,'401','actualPaid','6000',0).value,6000);formula=true;assert.throws(()=>ctx.saveMonthlyActualPaid_(2026,10,'401','actualPaid','0',6000),/公式/);formula=false;merged=true;assert.throws(()=>ctx.saveMonthlyActualPaid_(2026,10,'401','actualPaid','0',6000),/合併/);merged=false;assert.equal(ctx.saveMonthlyActualPaid_(2026,10,'401','actualPaid','',6000).value,null);assert(!locked);
 assert.equal(ctx.saveMonthlyReceiptConfirmed_(2026,10,'401','receiptConfirmed','是','').value,'是');assert.equal(rows[0][3],'收款確認');assert.throws(()=>ctx.saveMonthlyReceiptConfirmed_(2026,10,'401','receiptConfirmed','否',''),/更新/);assert.equal(ctx.saveMonthlyReceiptConfirmed_(2026,10,'401','receiptConfirmed','否','是').value,'否');const base=[{room:'401',transferDate:'2026-10-05'}];let read=ctx.readCashPaidAmounts_({getSheetByName:()=>sheet},10,base);assert.equal(read[0].isReceived,false);rows[1][3]='';read=ctx.readCashPaidAmounts_({getSheetByName:()=>sheet},10,base);assert.equal(read[0].isReceived,true);assert(!locked);
 console.log('PASS: explicit receipt checkbox, default full amount versus manual exception; arrears and credit auto-roll forward/cross years; surplus spanning months; tenant/gap guards; cents; recomputation after corrections without double application; manual save conflicts/formula/merge protection.');
+
+// The tenth is a read-only default, independent of payment confirmation or payment date.
+const blankDue={room:'401',dueDate:'',transferDate:'2026-11-15',isReceived:true};
+const defaultDue=ctx.withDefaultRentDueDate_(blankDue,2026,11);assert.equal(defaultDue.dueDate,'2026-11-10');assert.equal(blankDue.dueDate,'');assert.equal(defaultDue.transferDate,'2026-11-15');assert.equal(defaultDue.isReceived,true);
+assert.equal(ctx.withDefaultRentDueDate_({dueDate:'2026-11-12'},2026,11).dueDate,'2026-11-12');
+assert.equal(ctx.withDefaultRentDueDate_({dueDate:null},2028,2).dueDate,'2028-02-10');
+assert.equal(ctx.withDefaultRentDueDate_({dueDate:'  '},2027,1).dueDate,'2027-01-10');
+assert.equal(ctx.withDefaultRentDueDate_({},2026,12).dueDate,'2026-12-10');
+assert.throws(()=>ctx.withDefaultRentDueDate_({},2026,13));

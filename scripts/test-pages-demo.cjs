@@ -61,7 +61,7 @@ const server = http.createServer((req, res) => {
       return { response, result: await response.json() };
     };
     const first = await rpc('getMonthlyAccounts', [2026, 1]);
-    assert.equal(first.result.data.length, 15);
+    assert.equal(first.result.data.length, 15);assert(first.result.data.every(a=>a.dueDate==='2026-01-10'));
     const initialBill=await rpc('getMonthlyAccounts',[2026,9]);
     const newTenant=initialBill.result.data.find(a=>a.room==='401');assert.equal(newTenant.meter.previousReading,1000);assert.equal(newTenant.meter.previousReadingDate,'2026-08-15');assert.equal(newTenant.meter.previousReadingSource,'initial');
     const laterBill=await rpc('getMonthlyAccounts',[2026,11]);assert.notEqual(laterBill.result.data[0].meter.previousReadingDate,'2026-08-15');assert.equal(laterBill.result.data[0].meter.previousReading,newTenant.meter.currentReading);
@@ -73,6 +73,7 @@ const server = http.createServer((req, res) => {
     const prepared = [];
     for (let month = 1; month <= 12; month++) {
       const { result } = await rpc('getMonthlyAccounts', [2026, month]);
+      assert(result.data.every(a=>a.dueDate==='2026-'+String(month).padStart(2,'0')+'-10'));
       prepared.push(w.RentalReportData.prepare(2026, month, result.data));
       for (const a of result.data) {
         assert.equal(a.netDue, a.totalDue + a.arrears);
@@ -82,7 +83,7 @@ const server = http.createServer((req, res) => {
     }
     assert(w.RentalReportData.rentCohorts(prepared).every(row => row.valid));
     const notice = await rpc('getRoomNoticeData', [2026, 11, '506']);
-    w.RentalNotice.validate(notice.result.data);
+    w.RentalNotice.validate(notice.result.data);assert.equal(notice.result.data.dueDate,'2026-11-10');
     assert(notice.result.data.photo.dataUrl.startsWith('data:image/png;base64,'));
     const write = await rpc('saveTenantField', ['401', 'name', 'changed', ''], 'tenant');
     assert.equal(write.response.status, 403);

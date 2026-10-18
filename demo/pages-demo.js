@@ -29,7 +29,7 @@
       const arrears = month > 1 && (i + priorMonth) % 4 === 0 ? t.rent + priorFee : 0;
       const netDue = totalDue + arrears, effectivePaid = isReceived ? netDue : 0;
       return {
-        year, month, room: t.room, name: t.name, rent: t.rent,
+        year, month, room: t.room, name: t.name, rent: t.rent, dueDate: date(year, month).slice(0,8)+'10',
         electricityFee: odd ? fee : null, totalDue, arrears, creditApplied: 0, openingCredit: 0,
         netDue, actualPaid: null, effectivePaid, unpaid: netDue - effectivePaid, overpaid: 0,
         isReceived, receiptConfirmed: isReceived ? '是' : '',
@@ -69,7 +69,7 @@
       const photo = { found: true, name: room + '-demo.png', readingDate: date(year, month), dataUrl: samplePhoto(room) };
       if (action === 'getMeterPhoto') return photo;
       return { year, month, room, rent: a.rent, arrears: a.arrears, creditApplied: 0, total: a.netDue,
-        dueDate: date(year, month).slice(0, 8) + '05', photo,
+        dueDate: a.dueDate, photo,
         electricity: { previousDate: a.meter.previousReadingDate, currentDate: a.meter.currentReadingDate,
           previousReading: a.meter.previousReading, currentReading: a.meter.currentReading,
           usage: a.meter.usage, unitPrice: 5, fee: a.electricityFee } };

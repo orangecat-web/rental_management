@@ -101,6 +101,7 @@
       <ul><li v-for="(line, index) in initializationLines" :key="index">{{ line }}</li></ul>
     </section>
     <p id="status" class="status" role="status" aria-live="polite">{{ status }}</p>
+    <p class="billing-due-note">預設應繳日為每月 10 日，收款仍依實際日期紀錄。</p>
     <section v-if="accounts.length" class="cash-summary" aria-label="每月收款摘要"><div><span>應收（含前期餘額）</span><strong>NT$ {{numberFormat.format(cashSummary.due)}}</strong></div><div><span>確認未收</span><strong>NT$ {{numberFormat.format(cashSummary.unpaid)}}</strong></div><div><span>多收餘額</span><strong>NT$ {{numberFormat.format(cashSummary.overpaid)}}</strong></div><p>待補應收 {{cashSummary.pending}} 間。勾選已確認收款即預設收足；未勾選列未收。多收或少收再調整實收金額。</p><label>篩選房間<select v-model="accountFilter" aria-label="收款狀態篩選"><option value="all">全部房間</option><option value="unpaid">未收房間</option><option value="overpaid">多收房間</option><option value="pending">待補應收房間</option></select></label></section>
     <div v-if="accounts.length" class="table-wrap">
       <table aria-label="每月帳務資料">
@@ -516,6 +517,9 @@
               // 舊版介面可能以空字串或省略欄位表示未填。
               // 一律轉為 null 供畫面顯示「—」；數字 0 保留為 0。
               const normalized = { ...account, room: String(account.room) };
+              if (account.dueDate === null || account.dueDate === undefined || typeof account.dueDate === 'string' && !account.dueDate.trim()) {
+                normalized.dueDate = year.value + '-' + String(selectedMonth).padStart(2,'0') + '-10';
+              }
               const amountTitles = { rent: '房租', electricityFee: '電費', totalDue: '本期金額', netDue: '應收金額', actualPaid: '手動實收', effectivePaid: '實收金額', unpaid: '未收金額', overpaid: '多收餘額' };
               Object.entries(amountTitles).forEach(([key, title]) => {
                 const value = key==='netDue' ? (account.netDue??account.totalDue) : account[key];

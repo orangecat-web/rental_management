@@ -65,6 +65,7 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
   assert(!d.querySelector('iframe'));assert(calls.some(c=>c.url==='/api/billing-rpc'&&c.action==='getMonthlyAccounts'));
   let month=d.querySelector('#month');month.value='11';month.dispatchEvent(new w.Event('change',{bubbles:true}));
   await wait(()=>d.querySelector('.billing-native')?.textContent.includes('11 月｜已讀取'));
+  assert(d.querySelector('.billing-native').textContent.includes('2026-11-10'));assert(d.querySelector('.billing-due-note').textContent.includes('依實際日期'));
   assert(d.querySelector('.billing-native').textContent.includes('電表抄錄表'));assert(!d.querySelector('[aria-label="401 房本期電表"]'));
   assert(d.querySelector('.billing-native a[href*="notice.html"]').href.includes('room=401'));
   click(d,'匯款截圖');await wait(()=>d.querySelector('.payment-sheet'));
