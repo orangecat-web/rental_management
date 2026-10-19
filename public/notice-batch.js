@@ -34,7 +34,7 @@ window.RentalComponents.noticeBatch = function(api) {
      finally{processed.value++;if(rendered?.canvas){rendered.canvas.width=1;rendered.canvas.height=1}}
     }
     if(!alive)return;
-    const skipped=rooms.length-results.value.length;
+    const skipped=Math.max(0,totalTasks.value-processed.value);
     if(files.length){
      const report=results.value.map(r=>r.room+' 房：'+r.message).join('\r\n')+(skipped?'\r\n尚未處理：'+skipped+' 間':'');
      files.push({name:'產生結果.txt',blob:new Blob([report],{type:'text/plain;charset=utf-8'})});
