@@ -27,6 +27,7 @@ button('重新讀取核對，保留未完成輸入').click();await wait(()=>d.qu
 assert(d.querySelector('[aria-label="403 房電表"]').textContent.includes('試算表已有其他修改'));assert.equal(d.querySelector('[aria-label="404 房本期電表"]').value,String(records[3].meter.currentReading+5));
 input('本期共同抄表日','2026-11-03');await new Promise(r=>setTimeout(r,5));assert(d.querySelector('[aria-label="403 房電表"]').textContent.includes('試算表已有其他修改'));
 d.querySelector('[aria-label="403 房電表"] button').click();await new Promise(r=>setTimeout(r,5));button('儲存全部抄表').click();await wait(()=>!dirty&&!controller.busy.value);assert.equal(calls.length,before+2+12,'do not resend already confirmed rooms');
+input('本期共同抄表日','2026-12-02');await wait(()=>dirty);button('儲存全部抄表').click();await wait(()=>!dirty&&!controller.busy.value);assert(records.every(a=>a.meter.currentReadingDate==='2026-12-02'));
 assert.deepEqual(errors,[]);dom.window.close();
 console.log('PASS: one date for 15 rooms, one-click all photos with 2 concurrent reads, missing/date-mismatched photos, degree drafts retained, 15-room save with original expected values, preflight lower-reading rejection, no write retry after uncertainty, reconciliation/conflict protection, resume pending rooms only.');
 })().catch(e=>{console.error(e);process.exit(1)});

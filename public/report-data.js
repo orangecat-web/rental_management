@@ -15,7 +15,6 @@
     if (usage < 0) return {valid:false,reason:'本期度數小於前期，請核對'};
     const start = day(m.previousReadingDate), end = day(m.currentReadingDate);
     if (start === null || end === null || end <= start) return {valid:false,reason:'抄表日期待補或期間不正確'};
-    if (Number(m.currentReadingDate.slice(0,4)) !== account.year || Number(m.currentReadingDate.slice(5,7)) !== account.month) return {valid:false,reason:'本期抄表日與帳務月份不符'};
     if (m.usage !== null && m.usage !== undefined && (!number(m.usage) || Math.abs(m.usage-usage) > .000001)) return {valid:false,reason:'使用電度與電表差值不一致'};
     return {valid:true,usage,days:end-start,daily:usage/(end-start),previousDate:m.previousReadingDate,currentDate:m.currentReadingDate};
   }

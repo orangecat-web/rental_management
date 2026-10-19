@@ -1,6 +1,6 @@
 /** Same-origin transport for the original Site; private data stays in memory. */
 (() => {
-  const allowed = new Set(['getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract']);
+  const allowed = new Set(['getRoomSettings','saveTenantChanges','checkoutTenant','saveRoomSetting','getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract']);
   function runner(success = () => {}, failure = () => {}) {
     const chain = {
       withSuccessHandler(callback) { return runner(callback, failure); },

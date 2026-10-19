@@ -33,3 +33,7 @@
 
 /* Keep the rent timeline in one chart row; wrap only complete paid/unpaid labels. */
 .single-row-chart{overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:8px}.chart-column-caption .chart-cash-detail{display:flex;flex-wrap:wrap;justify-content:center;column-gap:8px;row-gap:0}.chart-cash-detail>span{white-space:nowrap}
+
+.room-card h3{font-size:36px;line-height:1.4;overflow-wrap:anywhere}.paid-dot{background:rgba(101,158,222,.17)!important;border:1px solid #659ede}.unpaid-dot{background:rgba(236,128,150,.17)!important;border:1px solid #ec8096}
+
+.line-chart{min-width:0}.line-chart-scroll{overflow-x:auto}.line-chart svg{display:block;width:100%;min-width:940px;height:auto}.line-chart text{font:18px system-ui,sans-serif;fill:#52685c}.line-chart-values{display:flex;flex-wrap:wrap;gap:12px}.line-chart-values>div{display:grid;gap:6px;min-width:100px;padding:12px;background:#f5f7f3}.line-chart-values span{font-size:16px}@media(max-width:650px){.line-chart svg{min-width:940px}}

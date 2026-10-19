@@ -9,7 +9,7 @@ window.RentalNotice = (() => {
     if(![data.arrears??0,data.creditApplied??0].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0)||((data.creditApplied||0)>data.rent+(m?.fee||0)+(data.arrears||0)))throw Error('前期餘額格式不正確。');
     if(!m || ![data.rent,data.total,m.previousReading,m.currentReading,m.usage,m.unitPrice,m.fee].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0)) throw Error('房租或電表資料尚未完整。');
     if(m.currentReading<m.previousReading || m.unitPrice!==5 || !close(m.usage,m.currentReading-m.previousReading) || !close(m.fee,m.usage*m.unitPrice) || !close(data.total,data.rent+m.fee+(data.arrears||0)-(data.creditApplied||0))) throw Error('電費或應繳金額與抄表紀錄不一致。');
-    if(!validDate(m.previousDate) || !validDate(m.currentDate) || m.currentDate.slice(0,7)!==data.year+'-'+String(data.month).padStart(2,'0') || m.previousDate>m.currentDate) throw Error('抄表日期尚未完整或不符合本期月份。');
+    if(!validDate(m.previousDate) || !validDate(m.currentDate) || m.previousDate>m.currentDate) throw Error('抄表日期尚未完整或先後順序不正確。');
   }
   function loadImage(dataUrl) {
     return new Promise((resolve,reject)=>{

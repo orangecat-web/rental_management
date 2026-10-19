@@ -1,7 +1,7 @@
 /** Session metadata only; tokens/cookies remain outside JavaScript and never enter localStorage. */
 (() => {
  const state=Vue.reactive({authenticated:false,canWrite:false,role:'',email:'',provider:'',loginPath:'/auth/login',logoutPath:'/auth/logout'});
- const writeHandlers=new Set(['save','reset','saveAll','resetAll','resetEntry','matchNames','applyDateAndPhotos','restore','restoreEntry','previewInitialization','initializeMonth','toggleCreationPanel','previewNewMonth','createNewMonth']);
+ const writeHandlers=new Set(['checkout','saveRoom','addRoom','confirmRoomAction','addContact','save','reset','saveAll','resetAll','resetEntry','matchNames','applyDateAndPhotos','restore','restoreEntry','previewInitialization','initializeMonth','toggleCreationPanel','previewNewMonth','createNewMonth']);
  function decorateTemplate(template){
   return template.replace(/<(button|input|textarea|select)\b/g,(prefix,tag,offset)=>{
    // Read to the closing bracket outside quoted attributes (arrow functions contain >).
@@ -10,7 +10,7 @@
    const model=attrs.match(/v-model(?:\.[\w]+)*="([^"]*)"/)?.[1]||'';
    const change=attrs.match(/@change="([^"]*)"/)?.[1]||'';
    if(tag==='button'&&(writeHandlers.has(click.match(/^\w+/)?.[0])||click.includes('entry.ids='))&&!attrs.includes('v-write'))return prefix+' v-write';
-   if(tag!=='button'&&(model==='draft'||model==='commonDate'||model==='newMonth'||model.startsWith('entry.')||/^(toggle|addPhoto)\(/.test(change))&&!attrs.includes('v-write-field'))return prefix+' v-write-field';
+   if(tag!=='button'&&(model==='draft'||model==='commonDate'||model==='newMonth'||model.startsWith('entry.')||model.startsWith('contact.')||model.startsWith('r.next')||['newRoom','newRoomType'].includes(model)||/^(toggle|addPhoto)\(/.test(change))&&!attrs.includes('v-write-field'))return prefix+' v-write-field';
    return prefix;
   });
  }

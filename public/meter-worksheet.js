@@ -8,7 +8,7 @@ window.RentalComponents.meterWorksheet = function (api) {
     template: `
 <section class="meter-sheet" aria-label="整月電表抄錄表">
   <div class="meter-sheet-toolbar">
-    <label v-write class="meter-common-date">本期共同抄表日<input type="date" v-model="commonDate" :min="minDate" :max="maxDate" :disabled="locked" @input="acknowledgeDate" aria-label="本期共同抄表日"></label>
+    <label v-write class="meter-common-date">本期共同抄表日<input type="date" v-model="commonDate" :disabled="locked" @input="acknowledgeDate" aria-label="本期共同抄表日"></label>
     <div class="meter-sheet-actions">
       <button v-viewer-only type="button" class="secondary" @click="loadPhotos" :disabled="locked">載入全部電表照片</button>
       <button type="button" class="primary" @click="applyDateAndPhotos" :disabled="locked || reviewRequired || !validDate">{{photoBusy?'正在載入照片……':'套用日期並載入全部照片'}}</button>
@@ -18,7 +18,7 @@ window.RentalComponents.meterWorksheet = function (api) {
     </div>
   </div>
   <p class="meter-sheet-hint">日期只填一次。照片以已儲存的抄表日配對；度數填完後按「儲存全部抄表」。空間不足會換行。</p>
-  <p v-if="!validDate" class="meter-sheet-hint">請選擇本月份的共同抄表日期；原有日期仍顯示在各房資料中。</p>
+  <p v-if="!validDate" class="meter-sheet-hint">請選擇有效的共同抄表日期（可與帳務月份不同）；原有日期仍顯示在各房資料中。</p>
   <p class="meter-batch-status" role="status" aria-live="polite">{{status}}</p>
   <div class="meter-sheet-rows" role="table" aria-label="各房電表度數">
     <article v-for="entry in entries" :key="entry.room" class="meter-sheet-row" role="row" :aria-label="entry.room+' 房電表'">
@@ -46,7 +46,7 @@ window.RentalComponents.meterWorksheet = function (api) {
       const format = v => v === null || v === undefined || v === '' ? '—' : new Intl.NumberFormat('zh-TW',{maximumFractionDigits:2}).format(v);
       const minDate = computed(()=>props.year+'-'+String(props.month).padStart(2,'0')+'-01');
       const maxDate = computed(()=>props.year+'-'+String(props.month).padStart(2,'0')+'-'+new Date(props.year,props.month,0).getDate());
-      const validDate = computed(()=>/^\d{4}-\d{2}-\d{2}$/.test(commonDate.value) && commonDate.value>=minDate.value && commonDate.value<=maxDate.value);
+      const validDate = computed(()=>/^\d{4}-\d{2}-\d{2}$/.test(commonDate.value) && Number.isFinite(Date.parse(commonDate.value+'T00:00:00Z')) && new Date(commonDate.value+'T00:00:00Z').toISOString().slice(0,10)===commonDate.value);
       const locked = computed(()=>props.blocked || working.value || photoBusy.value);
       const rawDraft = entry => entry.draft === '' ? null : Number(entry.draft);
       const readingDirty = entry => String(entry.draft ?? '') !== String(entry.savedReading ?? '');

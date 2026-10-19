@@ -18,6 +18,7 @@
       const money = value => value === null || value === undefined || value === '' ? '未填寫' : new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 2 }).format(value);
       const totalRent = computed(() => tenants.value.reduce((sum, t) => sum + (typeof t.rent === 'number' ? t.rent : 0), 0));
       const missingRent = computed(() => tenants.value.filter(t => t.rent === null || t.rent === undefined).length);
+      const vacantRooms=computed(()=>tenants.value.filter(t=>t.vacant===true));
       const withContract = computed(() => tenants.value.filter(t => t.contractLinks?.length).length);
       const withName = computed(() => tenants.value.filter(t => t.name?.trim()).length);
       const filteredRooms = computed(() => {
@@ -58,7 +59,7 @@
         window.addEventListener('beforeunload', event => { if (editorBusy.value) { event.preventDefault(); event.returnValue = ''; } });
       });
       return { access:RentalAccess.state, roomPayment, paymentPeriod, page, nav, title, subtitles, tenants, search, selectedRoom, editorBusy, navigationMessage, loading, loaded, status,
-        money, totalRent, missingRent, withContract, withName, filteredRooms, acceptTenants, loadOverview, navigate };
+        money, vacantRooms, totalRent, missingRent, withContract, withName, filteredRooms, acceptTenants, loadOverview, navigate };
     }
   });
   app.config.errorHandler = () => { document.getElementById('workspace-error').hidden = false; };

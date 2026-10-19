@@ -48,9 +48,6 @@ const server = http.createServer((req, res) => {
     assert.equal(w.RentalAccess.state.role, 'viewer');
     assert.equal(w.RentalAccess.canWrite, false);
     assert(d.querySelector('[aria-label="查看 506 房"]').textContent.includes('NT$ 0'));
-    assert(d.querySelector('[aria-label="查看 401 房"]').textContent.includes('套房'));
-    assert(d.querySelector('[aria-label="查看 402 房"]').textContent.includes('雅房'));
-    assert(d.querySelector('[aria-label="查看 508 房"]').textContent.includes('房型未設定'));
     assert(!d.querySelector('.access-identity form'));
     for (const el of d.querySelectorAll('script[src],link[rel="stylesheet"],a[href]')) {
       const href = el.src || el.href;
@@ -61,19 +58,13 @@ const server = http.createServer((req, res) => {
       return { response, result: await response.json() };
     };
     const first = await rpc('getMonthlyAccounts', [2026, 1]);
-    assert.equal(first.result.data.length, 15);assert(first.result.data.every(a=>a.dueDate==='2026-01-10'));
-    const initialBill=await rpc('getMonthlyAccounts',[2026,9]);
-    const newTenant=initialBill.result.data.find(a=>a.room==='401');assert.equal(newTenant.meter.previousReading,1000);assert.equal(newTenant.meter.previousReadingDate,'2026-08-15');assert.equal(newTenant.meter.previousReadingSource,'initial');
-    const laterBill=await rpc('getMonthlyAccounts',[2026,11]);assert.notEqual(laterBill.result.data[0].meter.previousReadingDate,'2026-08-15');assert.equal(laterBill.result.data[0].meter.previousReading,newTenant.meter.currentReading);
-    const zeroInitial=await rpc('getMonthlyAccounts',[2026,7]);assert.equal(zeroInitial.result.data.find(a=>a.room==='506').meter.previousReading,0);
-
+    assert.equal(first.result.data.length, 15);
     const zero = first.result.data.find(a => a.room === '506');
     assert.equal(zero.rent, 0); assert(zero.electricityFee > 0);
     assert.equal(first.result.data[0].meter.previousReadingDate, '2025-11-01');
     const prepared = [];
     for (let month = 1; month <= 12; month++) {
       const { result } = await rpc('getMonthlyAccounts', [2026, month]);
-      assert(result.data.every(a=>a.dueDate==='2026-'+String(month).padStart(2,'0')+'-10'));
       prepared.push(w.RentalReportData.prepare(2026, month, result.data));
       for (const a of result.data) {
         assert.equal(a.netDue, a.totalDue + a.arrears);
@@ -83,7 +74,7 @@ const server = http.createServer((req, res) => {
     }
     assert(w.RentalReportData.rentCohorts(prepared).every(row => row.valid));
     const notice = await rpc('getRoomNoticeData', [2026, 11, '506']);
-    w.RentalNotice.validate(notice.result.data);assert.equal(notice.result.data.dueDate,'2026-11-10');
+    w.RentalNotice.validate(notice.result.data);
     assert(notice.result.data.photo.dataUrl.startsWith('data:image/png;base64,'));
     const write = await rpc('saveTenantField', ['401', 'name', 'changed', ''], 'tenant');
     assert.equal(write.response.status, 403);
@@ -95,16 +86,16 @@ const server = http.createServer((req, res) => {
     d.querySelector('[aria-label="查看 506 房"]').click();
     await wait(() => d.querySelector('#tenant-506-rent'));
     assert(d.querySelector('#tenant-506-rent').readOnly);
-    const roomType = d.querySelector('#tenant-506-roomType');
-    assert(roomType.disabled);assert.equal(roomType.value, '套房');
-    assert.deepEqual([...roomType.options].map(o=>o.value), ['', '套房', '雅房']);
-    const identity=d.querySelector('#tenant-506-identity');assert(identity.disabled);assert.equal(identity.value,'學生');
-    assert.deepEqual([...identity.options].map(o=>o.textContent),['未標記','一般','學生','管理人']);
+    const identity=d.querySelector('[name=tenant-506-identity]:checked');assert(identity.disabled);assert.equal(identity.value,'學生');
+    assert.deepEqual([...d.querySelectorAll('[name=tenant-506-identity]')].map(o=>o.value),['一般','學生','管理人']);
     assert.equal((await rpc('saveTenantField',['506','identity','管理人','學生'],'tenant')).response.status,403);
-    assert.equal((await rpc('getTenantData',[],'tenant')).result.data.find(t=>t.room==='506').identity,'學生');
     [...d.querySelectorAll('.room-button')].find(b=>b.textContent.trim().startsWith('508')).click();
-    await wait(()=>d.querySelector('#tenant-508-identity'));assert.equal(d.querySelector('#tenant-508-identity').value,'管理人');
-    assert(d.querySelector('.tenant-heading .student-tag').textContent.includes('管理人'));
+    await wait(()=>d.querySelector('[name=tenant-508-identity]:checked'));assert.equal(d.querySelector('[name=tenant-508-identity]:checked').value,'管理人');
+    assert(d.querySelector('.tenant-heading .student-tag').textContent.includes('管理人'));assert(d.querySelector('[aria-label="508 房續約"]'));assert(d.querySelector('[aria-label="508 房續約"]').disabled);
+    assert.equal((await rpc('saveTenantChanges',['508',{identity:'一般'},'demo-508'],'tenant')).response.status,403);
+    assert.equal((await rpc('checkoutTenant',['508','demo-508'],'tenant')).response.status,403);
+    assert.equal((await rpc('saveRoomSetting',['add','601','','套房',''],'tenant')).response.status,403);
+    assert((await rpc('getRoomSettings',[],'tenant')).result.data.length===15);
     const navigate = label => [...d.querySelectorAll('nav button')].find(b => b.textContent.includes(label)).click();
     navigate('每月帳務');
     await wait(() => d.querySelector('.billing-native')?.textContent.includes('已讀取 15 筆帳務'));

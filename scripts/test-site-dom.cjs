@@ -1,33 +1,32 @@
-const fs=require('node:fs'),assert=require('node:assert/strict');
-const {JSDOM,VirtualConsole}=require('jsdom');
-const vue=fs.readFileSync('public/tenant-vue.global.prod.js','utf8');
-const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>3000)throw Error('timeout');await new Promise(r=>setTimeout(r,5));}};
+const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM,VirtualConsole}=require('jsdom');
+const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>4000)throw Error('timeout');await new Promise(r=>setTimeout(r,5));}};
 const button=(d,text)=>[...d.querySelectorAll('button')].find(b=>b.textContent.trim()===text);
-const errors=[];const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
 (async()=>{
- let row={room:'401',name:'測試資料',phone:'0912345678',rent:0,startDate:'2026-09-01',endDate:'2027-08-31',notes:'',contractLinks:[],defaultTransferLastFive:'01234'};
- const calls=[];let fail=false,storageWrites=0;
+ const errors=[],calls=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));let fail=false,storageWrites=0;
+ let row={room:'401',version:'v1',name:'測試資料',identity:'一般',phone:'0912345678',rent:0,roomType:'套房',initialReading:0,signingDate:'2026-08-15',startDate:'2026-09-01',endDate:'2027-08-31',contractKind:'',emergencyContacts:[],notes:'',maintenance:'保留維修',contractLinks:[],defaultTransferLastFive:'01234'};
  const html=fs.readFileSync('public/google-tenants.html','utf8').replace(/<script[^>]+src=[^>]+><\/script>/g,'');
  const editor=new JSDOM(html,{url:'https://rent.test/google-tenants.html',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){
-  w.eval(vue);w.fetch=async(url,options)=>{const call=JSON.parse(options.body);calls.push(call);if(fail)return {ok:false,json:async()=>({ok:false,error:{message:'已被更新，請重新讀取'}})};let data;if(call.action==='getTenantData')data=[row];else{row[call.args[1]]=call.args[2];data={room:call.args[0],field:call.args[1],value:call.args[2]};}return {ok:true,json:async()=>JSON.parse(JSON.stringify({ok:true,data}))};};
-  w.Storage.prototype.setItem=()=>{storageWrites++};w.eval(fs.readFileSync('public/tenant-transport.js','utf8'));
- }});const ed=editor.window.document;
- await wait(()=>ed.querySelector('#tenant-401-phone'));
- assert.equal(ed.querySelector('#tenant-401-rent').value,'0');
- const identity=ed.querySelector('#tenant-401-identity');assert(identity);assert.equal(identity.tagName,'SELECT');assert.equal(identity.value,'');assert.equal(ed.querySelectorAll('.student-tag').length,0);
- assert.deepEqual([...identity.options].map(o=>o.textContent),['未標記','一般','學生','管理人']);
- for(const [next,expected] of [['學生',''],['管理人','學生'],['一般','管理人']]){
-  identity.value=next;identity.dispatchEvent(new editor.window.Event('change',{bubbles:true}));await new Promise(r=>setTimeout(r,0));button(identity.closest('.editor'),'儲存').click();await wait(()=>row.identity===next);
-  await wait(()=>button(identity.closest('.editor'),'儲存')?.disabled===false && (next==='一般'?ed.querySelectorAll('.student-tag').length===0:ed.querySelectorAll('.student-tag').length===2 && [...ed.querySelectorAll('.student-tag')].every(t=>t.textContent===next)));
-  assert.deepEqual(calls.at(-1),{action:'saveTenantField',args:['401','identity',next,expected]});
- }
- const phone=ed.querySelector('#tenant-401-phone');phone.value='0987654321';phone.dispatchEvent(new editor.window.Event('input',{bubbles:true}));await wait(()=>button(phone.closest('.editor'),'儲存').disabled===false);button(phone.closest('.editor'),'儲存').click();await wait(()=>phone.closest('.editor').textContent.includes('已儲存'));
- assert.deepEqual(calls.at(-1),{action:'saveTenantField',args:['401','phone','0987654321','0912345678']});
- fail=true;phone.value='0900000000';phone.dispatchEvent(new editor.window.Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,0));button(phone.closest('.editor'),'儲存').click();await wait(()=>phone.closest('.editor').textContent.includes('已被更新'));
- assert.equal(storageWrites,0);assert.equal(ed.querySelector('a[href^="javascript:"]'),null);
- assert.deepEqual(errors,[]);editor.window.close();
- for(const file of ['public/style.css','public/google-tenants.html','public/google-accounts.html','public/notice.html']){
-  const css=fs.readFileSync(file,'utf8');for(const m of css.matchAll(/font-size:\s*([\d.]+)(px|rem)/g))assert(Number(m[1])*(m[2]==='rem'?16:1)>=16,file+' small font '+m[0]);
- }
- console.log('PASS: tested tenant editor source; same-origin Google editor; signed-API transport; expected original value; zero rent; leading zeros; conflict display; no private localStorage writes; all declared interface font sizes >=16px.');
+  w.eval(fs.readFileSync('public/tenant-vue.global.prod.js','utf8'));w.Storage.prototype.setItem=()=>storageWrites++;
+  w.fetch=async(url,options)=>{const c=JSON.parse(options.body);calls.push(c);if(fail)return {ok:false,json:async()=>({ok:false,error:{message:'已被更新，請重新讀取'}})};let data;
+   if(c.action==='getTenantData')data=[row];
+   else if(c.action==='saveTenantChanges'){assert.equal(c.args[0],'401');assert.equal(c.args[2],row.version);for(const [key,v] of Object.entries(c.args[1]))row[key]=['rent','initialReading'].includes(key)?v===''?null:Number(v):v;row.version+='x';data=row;}
+   else if(c.action==='checkoutTenant'){assert.equal(c.args[1],row.version);row={room:row.room,roomType:row.roomType,maintenance:row.maintenance,version:row.version+'x',name:'',rent:null,contractLinks:[],emergencyContacts:[]};data=row;}
+   else if(c.action==='getRoomSettings')data=[{room:'401',roomType:'套房',version:row.version,occupied:!!row.name,inactive:false}];
+   else throw Error('unexpected action '+c.action);
+   return {ok:true,json:async()=>JSON.parse(JSON.stringify({ok:true,data}))};};w.eval(fs.readFileSync('public/tenant-transport.js','utf8'));
+ }});const w=editor.window,d=w.document;
+ const input=async(selector,value,event='input')=>{const el=d.querySelector(selector);assert(el,selector);el.value=value;el.dispatchEvent(new w.Event(event,{bubbles:true}));await w.Vue.nextTick();};
+ await wait(()=>d.querySelector('#tenant-401-phone'));assert.equal(d.querySelector('#tenant-401-rent').value,'0');assert.equal(d.querySelector('#tenant-401-initialReading').value,'0');
+ assert.deepEqual([...d.querySelectorAll('[name=tenant-401-roomType]')].map(i=>i.value),['套房','雅房']);assert.deepEqual([...d.querySelectorAll('[name=tenant-401-identity]')].map(i=>i.value),['一般','學生','管理人']);
+ d.querySelector('[name=tenant-401-identity][value=管理人]').click();await w.Vue.nextTick();await input('#tenant-401-phone','000123');await input('#tenant-401-initialReading','20.5');
+ button(d,'新增緊急聯絡人').click();await w.Vue.nextTick();await input('[aria-label="緊急聯絡人 1 姓名"]','甲');await input('[aria-label="緊急聯絡人 1 電話"]','00123');button(d,'新增緊急聯絡人').click();await w.Vue.nextTick();await input('[aria-label="緊急聯絡人 2 姓名"]','乙');await input('[aria-label="緊急聯絡人 2 電話"]','00456');
+ d.querySelector('[aria-label="401 房續約"]').click();await w.Vue.nextTick();d.querySelector('[aria-label="401 房新約"]').click();await w.Vue.nextTick();assert(!d.querySelector('[aria-label="401 房續約"]').checked);assert(d.querySelector('[aria-label="401 房新約"]').checked);
+ assert.equal(calls.filter(c=>c.action.startsWith('save')).length,0,'drafts never autosave');button(d,'儲存全部修改').click();await wait(()=>d.querySelector('.status').textContent.includes('全部修改已儲存'));
+ const saved=calls.find(c=>c.action==='saveTenantChanges');assert.equal(saved.args[2],'v1');assert.equal(saved.args[1].identity,'管理人');assert.equal(saved.args[1].phone,'000123');assert.equal(saved.args[1].emergencyContacts.length,2);assert.equal(saved.args[1].contractKind,'新約');assert.equal(row.initialReading,20.5);assert(d.querySelector('.tenant-heading .student-tag').textContent.includes('管理人'));
+ await input('#tenant-401-startDate','2027-01-01');await w.Vue.nextTick();assert.equal(d.querySelector('#tenant-401-endDate').value,'2027-12-31');button(d,'還原全部未儲存').click();await w.Vue.nextTick();
+ fail=true;await input('#tenant-401-phone','0900000000');button(d,'儲存全部修改').click();await wait(()=>d.querySelector('.status').textContent.includes('已被更新'));const attempts=calls.length;await new Promise(r=>setTimeout(r,50));assert.equal(calls.length,attempts,'uncertain writes are not automatically retried');assert.equal(d.querySelector('#tenant-401-phone').value,'0900000000');assert.equal(row.phone,'000123');
+ fail=false;button(d,'還原全部未儲存').click();await w.Vue.nextTick();button(d,'退租').click();await w.Vue.nextTick();assert.equal(calls.filter(c=>c.action==='checkoutTenant').length,0,'checkout requires concrete confirmation');button(d,'確認退租並清空').click();await wait(()=>d.querySelector('.status').textContent.includes('已退租'));assert.equal(row.maintenance,'保留維修');assert.equal(row.roomType,'套房');assert.equal(d.querySelector('#tenant-401-phone').value,'');assert.equal(d.querySelector('[name=tenant-401-identity]:checked').value,'一般');
+ assert.equal(storageWrites,0);assert(!d.querySelector('a[href^="javascript:"]'));assert.deepEqual(errors,[]);editor.window.close();
+ for(const file of ['public/style.css','public/google-tenants.html','public/google-accounts.html','public/notice.html'])for(const m of fs.readFileSync(file,'utf8').matchAll(/font-size:\s*([\d.]+)(px|rem)/g))assert(Number(m[1])*(m[2]==='rem'?16:1)>=16,file+' small font '+m[0]);
+ console.log('PASS: actual Vue whole-draft save, radio choices/default, independent contract checkboxes, one-year dates, multiple contacts, revision conflict, no automatic retry, confirmed checkout, zero readings/rent, leading zeros, no private storage, 16px minimum.');
 })().catch(e=>{console.error(e);process.exit(1)});

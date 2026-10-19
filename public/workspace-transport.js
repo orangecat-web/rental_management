@@ -1,7 +1,7 @@
 /** Private same-origin RPC. Only memory holds returned tenant and account records. */
 window.RentalTransport = function (scope) {
   const allowed = scope === 'tenant'
-    ? new Set(['getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract'])
+    ? new Set(['getRoomSettings','saveTenantChanges','checkoutTenant','saveRoomSetting','getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract'])
     : new Set(['getAvailableBillingYears', 'getAvailableBillingMonths', 'getMonthlyAccounts', 'saveMonthlyAccountField', 'previewMonthlyInitialization', 'initializeMonthlyAccounts', 'previewMonthlyAccountsSheetCreation', 'createMonthlyAccountsSheet', 'getMonthlyPaymentPhotos', 'getRoomPaymentPhotoSelection', 'saveRoomPaymentPhotoSelection', 'getPaymentPhoto', 'getMeterPhoto', 'getRoomNoticeData']);
   function runner(success = () => {}, failure = () => {}) {
     const chain = { withSuccessHandler: callback => runner(callback, failure), withFailureHandler: callback => runner(success, callback) };

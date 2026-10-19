@@ -3,12 +3,12 @@
   const nativeFetch = window.fetch.bind(window);
   const rooms = ['401','402','403','404','405','406','407','501','502','503','504','505','506','507','508'];
   const tenants = rooms.map((room, i) => ({
-    room, roomType: i === 14 ? '' : i % 2 === 0 ? '套房' : '雅房', name: '示範房客 ' + String.fromCharCode(65 + i),
+    vacant:false,version:'demo-'+room,contractKind:i%2?'新約':'續約',emergencyContacts:i===0?[{name:'示範聯絡人甲',phone:'0900000001'},{name:'示範聯絡人乙',phone:'0900000002'}]:[],room, roomType: i === 14 ? '' : i % 2 === 0 ? '套房' : '雅房', name: '示範房客 ' + String.fromCharCode(65 + i),
     phone: '09000000' + String(i).padStart(2, '0'),
     rent: room === '506' ? 0 : 5800 + (i % 4) * 200,
     initialMeterReading: i === 0 ? 1000 : i === 12 ? 0 : null, contractDate: i === 0 ? '2026-08-15' : i === 12 ? '2026-06-15' : '',
     identity: i === 14 ? '管理人' : i % 3 === 0 ? '學生' : '一般',
-    student: i % 3 === 0 ? '是' : '', startDate: '2026-01-01', endDate: '2027-12-31',
+    student: i % 3 === 0 ? '是' : '', startDate: '2026-01-01', endDate: '2026-12-31',
     notes: '虛構展示資料，非真實房客。', contractLinks: []
   })).map(tenant=>({...tenant,initialReading:tenant.initialMeterReading,signingDate:tenant.contractDate}));
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -54,6 +54,7 @@
   }
   function rpc(action, args, scope) {
     if (scope === 'tenant' && action === 'getTenantData') return tenants;
+    if(scope==='tenant'&&action==='getRoomSettings')return tenants.map(t=>({room:t.room,roomType:t.roomType,inactive:false,occupied:!!t.name,version:t.version}));
     if (scope !== 'billing') throw Error('展示版不提供此操作。');
     if (action === 'getRentalSiteCapabilities') return { version: 2, billing: true };
     if (action === 'getAvailableBillingYears') return [2026];

@@ -3,11 +3,12 @@ window.RentalComponents ||= {};
 window.RentalComponents.noticeBatch = function(api) {
  const {ref,computed,watch,onBeforeUnmount}=Vue;
  return {props:{accounts:Array,year:Number,month:Number,blocked:Boolean},emits:['busy-change'],
- template:`<section class="notice-batch" aria-label="批次電費通知"><h2>批次電費通知</h2><p>勾選房間，一次產生各房 JPG 並打包下載。解壓縮後，將各房圖片分別傳給房客。</p><div class="batch-actions"><button type="button" @click="selectAll" :disabled="locked">全選房間</button><button type="button" @click="selected=[]" :disabled="locked">取消全選</button><button type="button" class="primary" @click="generate" :disabled="locked||!selected.length||month%2!==1">批次產生通知（{{selected.length}} 間）</button><button v-if="working" type="button" @click="stop=true" :disabled="stop">{{stop?'正在停止……':'停止後續產生'}}</button><a v-if="zipUrl" class="batch-download" :href="zipUrl" :download="zipName">下載 ZIP（{{successCount}} 張 JPG）</a></div><p role="status" class="batch-notice-status">{{message}}</p><div class="notice-room-choices"><label v-for="account in accounts" :key="account.room"><input type="checkbox" :value="account.room" v-model="selected" :disabled="locked">{{account.room}} 房</label></div><ul v-if="results.length" class="notice-results"><li v-for="item in results" :key="item.room"><strong>{{item.room}} 房</strong><span>{{item.message}}</span><a v-if="item.url" :href="item.url" target="_blank" rel="noopener">預覽 JPG</a></li></ul></section>`,
+ template:`<section class="notice-batch" aria-label="批次電費通知"><h2>批次電費通知</h2><p>勾選房間，一次產生各房 JPG 並打包下載。解壓縮後，將各房圖片分別傳給房客。</p><div class="batch-actions"><button type="button" @click="selectAll" :disabled="locked">全選房間</button><button type="button" @click="selected=[]" :disabled="locked">取消全選</button><button type="button" class="primary" @click="generate" :disabled="locked||!selected.length||month%2!==1">批次產生通知（{{selected.length}} 間）</button><button v-if="working" type="button" @click="stop=true" :disabled="stop">{{stop?'正在停止……':'停止後續產生'}}</button><a v-if="zipUrl" class="batch-download" :href="zipUrl" :download="zipName" @click="releaseAfterDownload">下載 ZIP（{{successCount}} 張 JPG）</a></div><p role="status" class="batch-notice-status">{{message}}</p><div class="notice-room-choices"><label v-for="account in accounts" :key="account.room"><input type="checkbox" :value="account.room" v-model="selected" :disabled="locked">{{account.room}} 房</label></div><ul v-if="results.length" class="notice-results"><li v-for="item in results" :key="item.room"><strong>{{item.room}} 房</strong><span>{{item.message}}</span><a v-if="item.url" :href="item.url" target="_blank" rel="noopener">預覽 JPG</a></li></ul></section>`,
  setup(props,{emit}) {
-  const selected=ref([]),working=ref(false),stop=ref(false),message=ref('請先核對本月電表資料與照片。'),results=ref([]),zipUrl=ref('');let alive=true;
+  const selected=ref([]),working=ref(false),stop=ref(false),message=ref('請先核對本月電表資料與照片。'),results=ref([]),zipUrl=ref('');let alive=true,releaseTimer;
   const locked=computed(()=>working.value||props.blocked),successCount=computed(()=>results.value.filter(r=>r.url).length),zipName=computed(()=>props.year+'-'+String(props.month).padStart(2,'0')+'_電費通知.zip');
-  function clear(){if(zipUrl.value)URL.revokeObjectURL(zipUrl.value);zipUrl.value='';for(const r of results.value)if(r.url)URL.revokeObjectURL(r.url);results.value=[]}
+  function releaseAfterDownload(){clearTimeout(releaseTimer);releaseTimer=setTimeout(()=>{clear();message.value='下載已啟動，瀏覽器暫存圖片與 ZIP 已釋放；需要時可重新產生。';},1500);}
+  function clear(){clearTimeout(releaseTimer);if(zipUrl.value)URL.revokeObjectURL(zipUrl.value);zipUrl.value='';for(const r of results.value)if(r.url)URL.revokeObjectURL(r.url);results.value=[]}
   function selectAll(){selected.value=props.accounts.map(a=>a.room)}
   watch(()=>[props.year,props.month],()=>{clear();selectAll();message.value='請先核對本月電表資料與照片。'},{immediate:true});
   async function generate(){
@@ -40,7 +41,7 @@ window.RentalComponents.noticeBatch = function(api) {
    }catch(error){if(alive)message.value='打包失敗：'+(error?.message||String(error))+'；已完成圖片仍可逐張預覽。'}
    finally{working.value=false;emit('busy-change',false)}
   }
-  onBeforeUnmount(()=>{alive=false;stop.value=true;clear()});
-  return{selected,working,stop,message,results,zipUrl,locked,successCount,zipName,selectAll,generate};
+  onBeforeUnmount(()=>{clearTimeout(releaseTimer);alive=false;stop.value=true;clear()});
+  return{releaseAfterDownload,selected,working,stop,message,results,zipUrl,locked,successCount,zipName,selectAll,generate};
  }};
 };

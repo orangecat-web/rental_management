@@ -76,6 +76,7 @@
       downloadUrl=URL.createObjectURL(result.blob);download.href=downloadUrl;download.download=RentalNotice.filename(data);
       download.style.display='inline-block';statusElement.textContent='請核對房號、金額與照片，確認後下載電費通知 JPG 傳給房客。';
     }
+    download.addEventListener('click',()=>setTimeout(()=>{if(downloadUrl)URL.revokeObjectURL(downloadUrl);downloadUrl='';download.style.display='none';const canvas=document.querySelector('canvas');if(canvas){canvas.width=1;canvas.height=1;canvas.remove();}statusElement.textContent='下載已啟動，瀏覽器暫存已釋放；重新整理可重新產生。';},1500));
     addEventListener('pagehide',()=>{if(downloadUrl)URL.revokeObjectURL(downloadUrl)});
 
     function showError(error) {
