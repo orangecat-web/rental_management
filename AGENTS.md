@@ -13,6 +13,7 @@ Read README.md, docs/CODEX_HANDOFF.md and docs/DEPLOYMENT.md before changing thi
 - No private records, photos or login tokens in localStorage, source, exports, logs or URLs. Do not auto-retry uncertain writes.
 
 ## Architecture
+- Shared interface features must be synchronized between the production UI and the fictitious Demo, including fixture data and read-only checks. Follow docs/DEMO_SYNC.md; keep production records, connection settings, secrets and access lists out of the public Demo. Preserve each repository's newer independent changes.
 - public/ contains the Vue workspace. Edit google-tenants.html and google-accounts.html for native editor source; scripts/build-native-workspace.cjs generates native-*.js and native-editors.css. Do not hand-edit generated files.
 - worker/permissions.mjs is default-deny RPC policy. New actions must declare read/write there and pass worker/api.mjs argument validation. Every write requires server-side manager authorization.
 - worker/auth.mjs provides Sites identity and independently verified Cloudflare Access JWT identity. External workers never accept Sites identity headers. Missing settings/unknown accounts fail closed.

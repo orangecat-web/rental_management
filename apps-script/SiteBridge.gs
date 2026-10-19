@@ -54,7 +54,7 @@ function doPost(e) {
         case 'getTenantData': data = getTenantDataWithInitialMeter_(); break;
         case 'saveTenantField':
           data = ['initialMeterReading','contractDate'].includes(call.args[1]) ? saveTenantLeaseMeter_.apply(null,call.args) : call.args[1] === 'roomType' ? saveTenantRoomType_.apply(null, call.args) :
-            call.args[1] === 'student' ? saveTenantStudent_.apply(null, call.args) : saveTenantField.apply(null, call.args);
+            ['student','identity'].includes(call.args[1]) ? saveTenantStudent_.apply(null, call.args) : saveTenantField.apply(null, call.args);
           break;
         case 'saveTenantNote': data = saveTenantNote.apply(null, call.args); break;
         case 'saveTenantContract': data = saveTenantContract.apply(null, call.args); break;
@@ -95,7 +95,7 @@ function rentalBridgeValidCall_(action, args) {
   const leaseDate = value => value === '' || typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value+'T00:00:00Z')) && new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
   if (['getTenantData', 'getRentalSiteCapabilities', 'getAvailableBillingYears'].includes(action)) return args.length === 0;
   if (action === 'saveTenantField') return args.length === 4 && room(args[0]) &&
-    ['name','phone','startDate','endDate','rent','cohabitant','cohabitantPhone','emergencyContact','emergencyPhone','introduction','maintenance','defaultTransferLastFive','student','roomType','initialMeterReading','contractDate'].includes(args[1]) && text(args[2]) && expected(args[3]) &&
+    ['name','phone','startDate','endDate','rent','cohabitant','cohabitantPhone','emergencyContact','emergencyPhone','introduction','maintenance','defaultTransferLastFive','student','identity','roomType','initialMeterReading','contractDate'].includes(args[1]) && text(args[2]) && expected(args[3]) &&
     (args[1] !== 'roomType' || (['','套房','雅房'].includes(args[2]) && ['','套房','雅房'].includes(args[3]))) &&
     (args[1] !== 'contractDate' || leaseDate(args[2]) && leaseDate(args[3])) &&
     (args[1] !== 'initialMeterReading' || (args[2] === '' || /^\d+(?:\.\d+)?$/.test(args[2]) && Number(args[2])<=100000000) && (args[3] === null || typeof args[3] === 'number' && Number.isFinite(args[3]) && args[3]>=0 && args[3]<=100000000));

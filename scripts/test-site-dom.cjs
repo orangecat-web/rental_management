@@ -14,8 +14,13 @@ const errors=[];const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(
  }});const ed=editor.window.document;
  await wait(()=>ed.querySelector('#tenant-401-phone'));
  assert.equal(ed.querySelector('#tenant-401-rent').value,'0');
- const student=ed.querySelector('#tenant-401-student');assert(student);assert.equal(student.type,'checkbox');assert.equal(student.checked,false);assert.equal(ed.querySelectorAll('.student-tag').length,0);
- student.click();await new Promise(r=>setTimeout(r,0));button(student.closest('.editor'),'儲存').click();await wait(()=>row.student==='是');await wait(()=>ed.querySelectorAll('.student-tag').length===2);assert.deepEqual(calls.at(-1),{action:'saveTenantField',args:['401','student','是','']});student.click();await new Promise(r=>setTimeout(r,0));button(student.closest('.editor'),'儲存').click();await wait(()=>row.student==='否');await wait(()=>ed.querySelectorAll('.student-tag').length===0);
+ const identity=ed.querySelector('#tenant-401-identity');assert(identity);assert.equal(identity.tagName,'SELECT');assert.equal(identity.value,'');assert.equal(ed.querySelectorAll('.student-tag').length,0);
+ assert.deepEqual([...identity.options].map(o=>o.textContent),['未標記','一般','學生','管理人']);
+ for(const [next,expected] of [['學生',''],['管理人','學生'],['一般','管理人']]){
+  identity.value=next;identity.dispatchEvent(new editor.window.Event('change',{bubbles:true}));await new Promise(r=>setTimeout(r,0));button(identity.closest('.editor'),'儲存').click();await wait(()=>row.identity===next);
+  await wait(()=>button(identity.closest('.editor'),'儲存')?.disabled===false && (next==='一般'?ed.querySelectorAll('.student-tag').length===0:ed.querySelectorAll('.student-tag').length===2 && [...ed.querySelectorAll('.student-tag')].every(t=>t.textContent===next)));
+  assert.deepEqual(calls.at(-1),{action:'saveTenantField',args:['401','identity',next,expected]});
+ }
  const phone=ed.querySelector('#tenant-401-phone');phone.value='0987654321';phone.dispatchEvent(new editor.window.Event('input',{bubbles:true}));await wait(()=>button(phone.closest('.editor'),'儲存').disabled===false);button(phone.closest('.editor'),'儲存').click();await wait(()=>phone.closest('.editor').textContent.includes('已儲存'));
  assert.deepEqual(calls.at(-1),{action:'saveTenantField',args:['401','phone','0987654321','0912345678']});
  fail=true;phone.value='0900000000';phone.dispatchEvent(new editor.window.Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,0));button(phone.closest('.editor'),'儲存').click();await wait(()=>phone.closest('.editor').textContent.includes('已被更新'));

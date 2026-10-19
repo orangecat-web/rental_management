@@ -7,9 +7,10 @@
     phone: '09000000' + String(i).padStart(2, '0'),
     rent: room === '506' ? 0 : 5800 + (i % 4) * 200,
     initialMeterReading: i === 0 ? 1000 : i === 12 ? 0 : null, contractDate: i === 0 ? '2026-08-15' : i === 12 ? '2026-06-15' : '',
+    identity: i === 14 ? '管理人' : i % 3 === 0 ? '學生' : '一般',
     student: i % 3 === 0 ? '是' : '', startDate: '2026-01-01', endDate: '2027-12-31',
     notes: '虛構展示資料，非真實房客。', contractLinks: []
-  }));
+  })).map(tenant=>({...tenant,initialReading:tenant.initialMeterReading,signingDate:tenant.contractDate}));
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const date = (year, month) => new Date(Date.UTC(year, month - 1, 1)).toISOString().slice(0, 10);
   function accounts(year, month) {

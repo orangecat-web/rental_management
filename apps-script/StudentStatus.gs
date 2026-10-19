@@ -1,7 +1,13 @@
 /** Student status is explicit: empty = unknown, 是 = student, 否 = not student.
  * The old demo's fictional student assignments are never imported.
  */
+function normalizeTenantIdentity_(value) {
+  if(value==='管理人')return '管理人';
+  const student=normalizeTenantStudent_(value);return student==='是'?'學生':student==='否'?'一般':'';
+}
 function normalizeTenantStudent_(value) {
+  if(value==='管理人')return '否';
+  if(value==='一般')return '否';
   if (value === '' || value === null || value === undefined) return '';
   if (value === true || value === '是' || value === '學生') return '是';
   if (value === false || value === '否' || value === '非學生') return '否';
@@ -23,13 +29,15 @@ function getTenantDataWithStudent_() {
     const matches = table.rows.slice(1).filter(row => String(row[table.roomColumn]).trim() === tenant.room);
     if (matches.length !== 1) throw new Error('房號不存在或重複。');
     const student = table.studentColumn < 0 ? '' : normalizeTenantStudent_(matches[0][table.studentColumn]);
-    return Object.assign({}, tenant, { student });
+    return Object.assign({}, tenant, { student, identity: table.studentColumn < 0 ? '' : normalizeTenantIdentity_(matches[0][table.studentColumn]) });
   });
 }
 /** Signed bridge only; same optimistic comparison and lock as the existing editors. */
 function saveTenantStudent_(room, field, value, expectedValue) {
-  if (field !== 'student' || typeof room !== 'string' || !/^\d{3,8}$/.test(room) ||
-      !['', '是', '否'].includes(value) || !['', '是', '否'].includes(expectedValue)) throw new Error('學生身分格式不正確。');
+  const identityField=field==='identity';
+  if(identityField){if(!['','一般','學生','管理人'].includes(value)||!['','一般','學生','管理人'].includes(expectedValue))throw Error('身份格式不正確。');}
+  if ((!identityField && field !== 'student') || typeof room !== 'string' || !/^\d{3,8}$/.test(room) ||
+      (!identityField && (!['', '是', '否'].includes(value) || !['', '是', '否'].includes(expectedValue)))) throw new Error('學生身分格式不正確。');
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     const table = tenantStudentTable_();
@@ -37,7 +45,9 @@ function saveTenantStudent_(room, field, value, expectedValue) {
     table.rows.slice(1).forEach((row, i) => { if (String(row[table.roomColumn]).trim() === room) matches.push(i + 2); });
     if (matches.length !== 1) throw new Error('房號不存在或重複。');
     let column = table.studentColumn;
-    const current = column < 0 ? '' : normalizeTenantStudent_(table.rows[matches[0] - 1][column]);
+    const raw=column<0?'':table.rows[matches[0]-1][column];
+    if(!identityField && raw==='管理人')throw Error('請使用身份選單。');
+    const current = identityField ? normalizeTenantIdentity_(raw) : normalizeTenantStudent_(raw);
     if (current !== expectedValue) throw new Error('學生身分已被其他操作更新，請重新讀取。');
     // Add the optional column only when an explicit selection is saved.
     if (column < 0) {
@@ -49,7 +59,7 @@ function saveTenantStudent_(room, field, value, expectedValue) {
     const cell = table.sheet.getRange(matches[0], column + 1);
     if (cell.getFormula() || cell.isPartOfMerge()) throw new Error('學生欄位含公式或合併格，暫不更新。');
     if (!value) cell.clearContent();
-    else cell.setRichTextValue(SpreadsheetApp.newRichTextValue().setText(value).build());
+    else cell.setRichTextValue(SpreadsheetApp.newRichTextValue().setText(identityField?(value==='學生'?'是':value==='一般'?'否':value):value).build());
     SpreadsheetApp.flush();
     return { room, value };
   } finally { lock.releaseLock(); }

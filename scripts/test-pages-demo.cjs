@@ -98,6 +98,13 @@ const server = http.createServer((req, res) => {
     const roomType = d.querySelector('#tenant-506-roomType');
     assert(roomType.disabled);assert.equal(roomType.value, '套房');
     assert.deepEqual([...roomType.options].map(o=>o.value), ['', '套房', '雅房']);
+    const identity=d.querySelector('#tenant-506-identity');assert(identity.disabled);assert.equal(identity.value,'學生');
+    assert.deepEqual([...identity.options].map(o=>o.textContent),['未標記','一般','學生','管理人']);
+    assert.equal((await rpc('saveTenantField',['506','identity','管理人','學生'],'tenant')).response.status,403);
+    assert.equal((await rpc('getTenantData',[],'tenant')).result.data.find(t=>t.room==='506').identity,'學生');
+    [...d.querySelectorAll('.room-button')].find(b=>b.textContent.trim().startsWith('508')).click();
+    await wait(()=>d.querySelector('#tenant-508-identity'));assert.equal(d.querySelector('#tenant-508-identity').value,'管理人');
+    assert(d.querySelector('.tenant-heading .student-tag').textContent.includes('管理人'));
     const navigate = label => [...d.querySelectorAll('nav button')].find(b => b.textContent.includes(label)).click();
     navigate('每月帳務');
     await wait(() => d.querySelector('.billing-native')?.textContent.includes('已讀取 15 筆帳務'));

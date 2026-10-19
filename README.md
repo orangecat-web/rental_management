@@ -48,3 +48,5 @@ GitHub repository → Settings → Pages → Source 選 **GitHub Actions**。推
 - apps-script/：已使用的延伸檔及歷史 starter；不是完整 live Rent_Demo。請勿直接全部覆蓋 Google 專案。
 
 畫面最小 16px，資料與照片留在 Google，角色與登入憑證由伺服器驗證。現有 Sites 保持 owner-only；尚未新增房東帳號，外部 Google 登入需依部署文件完成帳號/網域設定後驗收。
+
+共用功能同步規則見 [Demo 與正式版同步](docs/DEMO_SYNC.md)。身份選單為「未標記／一般／學生／管理人」，公開 Demo 保持假資料唯讀；房客身份不賦予網站權限。
