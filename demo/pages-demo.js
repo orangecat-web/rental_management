@@ -1,9 +1,10 @@
 /** Loaded only by the separate Pages artifact. Never used by a production Worker. */
 (() => {
+  window.RentalDemo=true;
   const nativeFetch = window.fetch.bind(window);
   const rooms = ['401','402','403','404','405','406','407','501','502','503','504','505','506','507','508'];
   const tenants = rooms.map((room, i) => ({
-    vacant:false,version:'demo-'+room,contractKind:i%2?'新約':'續約',emergencyContacts:i===0?[{name:'示範聯絡人甲',phone:'0900000001'},{name:'示範聯絡人乙',phone:'0900000002'}]:[],room, roomType: i === 14 ? '' : i % 2 === 0 ? '套房' : '雅房', name: '示範房客 ' + String.fromCharCode(65 + i),
+    registeredAddress:'示範市範例區虛構路 1 號',nationalId:'DEMO-INVALID',birthDate:'2000-01-01',guarantorName:'示範保證人',guarantorAddress:'示範地址（非真實）',guarantorId:'DEMO-INVALID',guarantorBirthDate:'1970-01-01',guarantorPhone:'0900000099',vacant:false,version:'demo-'+room,contractKind:i%2?'新約':'續約',emergencyContacts:i===0?[{name:'示範聯絡人甲',phone:'0900000001'},{name:'示範聯絡人乙',phone:'0900000002'}]:[],room, roomType: i === 14 ? '' : i % 2 === 0 ? '套房' : '雅房', name: '示範房客 ' + String.fromCharCode(65 + i),
     phone: '09000000' + String(i).padStart(2, '0'),
     rent: room === '506' ? 0 : 5800 + (i % 4) * 200,
     initialMeterReading: i === 0 ? 1000 : i === 12 ? 0 : null, contractDate: i === 0 ? '2026-08-15' : i === 12 ? '2026-06-15' : '',
@@ -52,7 +53,13 @@
     ctx.fillText('電表示意圖・非真實照片', 320, 210);
     return canvas.toDataURL('image/png');
   }
-  function rpc(action, args, scope) {
+  const demoProperty='p-00000000-0000-4000-8000-000000000002';
+  const demoProperties={revision:0,workspaceName:'假資料展示工作區',items:[{id:'default',name:'示範房產 A',archived:false,folderUrl:''},{id:demoProperty,name:'示範房產 B',archived:false,folderUrl:''}]};
+  function rpc(action, args, scope, propertyId='default') {
+    if(action==='getRentalProperties')return demoProperties;
+    if(!['default',demoProperty].includes(propertyId))throw Error('展示房產不存在。');
+    if(propertyId===demoProperty){if(action==='getTenantData')return tenants.slice(0,2).map((t,i)=>({...t,room:String(601+i),name:'示範房產 B 房客 '+(i+1)}));if(action==='getRoomSettings')return [{room:'601',roomType:'套房',inactive:false,occupied:true,version:'demo-b-601'},{room:'602',roomType:'雅房',inactive:false,occupied:true,version:'demo-b-602'}];if(action==='getAvailableBillingYears')return [2026];if(action==='getAvailableBillingMonths')return [];if(action==='getRentalSiteCapabilities')return {version:2,billing:true};throw Error('此示範房產尚無帳務資料。');}
+
     if (scope === 'tenant' && action === 'getTenantData') return tenants;
     if(scope==='tenant'&&action==='getRoomSettings')return tenants.map(t=>({room:t.room,roomType:t.roomType,inactive:false,occupied:!!t.name,version:t.version}));
     if (scope !== 'billing') throw Error('展示版不提供此操作。');
@@ -61,6 +68,8 @@
     const [year, month, room] = args;
     if (year !== 2026) throw Error('展示版提供 2026 年資料。');
     if (action === 'getAvailableBillingMonths') return months;
+    if(action==='getXingwuCollectionReport'){const rows=months.flatMap(m=>accounts(year,m));const count=rows.length;const cash=rows.reduce((s,a)=>s+(a.effectivePaid||0),0);return {version:1,year,receiptCount:count,unknownReceiptCount:0,cashTotal:cash,knownCashTotal:cash,combinedReceipts:0,depositScope:'虛構簽約款，僅供介面展示',signing:[{month:1,room:'401',rent:5800,deposit:11600,contractTotal:17400,cash:17400}],months:months.map(m=>{const a=accounts(year,m),rent=a.reduce((s,r)=>s+r.rent,0),electricity=a.reduce((s,r)=>s+(r.electricityFee||0),0);return {month:m,rent,electricity,settledRent:rent,settledElectricity:electricity,historicalCredit:0,vacantRooms:[]};})};}
+
     if (!Number.isInteger(month) || month < 1 || month > 12) throw Error('月份不正確。');
     if (action === 'getMonthlyAccounts') return accounts(year, month);
     if (action === 'getMonthlyPaymentPhotos') return [];
@@ -95,9 +104,9 @@
       const match = url.pathname.match(/^\/api\/(tenant|billing)-rpc$/);
       if (match && method === 'POST') {
         try {
-          const { action, args = [] } = JSON.parse(options.body || '{}');
+          const { action, args = [],propertyId='default' } = JSON.parse(options.body || '{}');
           if (!Array.isArray(args)) throw Error('參數不正確。');
-          return reply({ ok: true, data: rpc(action, args, match[1]) });
+          return reply({ ok: true, data: rpc(action, args, match[1],propertyId) });
         } catch (error) { return reply({ ok: false, error: { message: error.message } }, 403); }
       }
       return reply({ ok: false, error: { message: '展示版不提供此 API。' } }, 403);

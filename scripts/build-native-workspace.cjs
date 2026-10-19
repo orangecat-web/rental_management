@@ -59,8 +59,8 @@ for (const [kind, file] of [['tenant','google-tenants.html'], ['billing','google
       onMounted(loadTenants);`);
   } else {
     root = root.replace('components: { AccountField, PaymentPhotoPicker, MeterPhotoViewer }', 'components: { AccountField, PaymentPhotoPicker, MeterPhotoViewer, MeterWorksheet: RentalComponents.meterWorksheet(api), NoticeBatch: RentalComponents.noticeBatch(api), PaymentWorksheet: RentalComponents.paymentWorksheet(api) }');
-    root = root.replace('const year = ref(0)', "const billingView = ref('accounts');\n const year = ref(0)");
-    root = root.replace('return { numberFormat, accountFilter, filteredAccounts, cashSummary, year, years,', 'return { numberFormat, accountFilter, filteredAccounts, cashSummary, billingView, onPaymentFieldSaved, onPaymentSelectionSaved, onMeterFieldSaved, onMeterReconciled, refreshAfterMeter, year, years,');
+    root = root.replace('const year = ref(0)', "const billingView = ref(new URLSearchParams(location.search).has('billingMonth')?'payments':'accounts');\n const year = ref(0)");
+    root = root.replace('return { historicalMode, numberFormat, accountFilter, filteredAccounts, cashSummary, year, years,', 'return { historicalMode, numberFormat, accountFilter, filteredAccounts, cashSummary, billingView, onPaymentFieldSaved, onPaymentSelectionSaved, onMeterFieldSaved, onMeterReconciled, refreshAfterMeter, year, years,');
     root = root.replace('onMounted(loadYears);', `function onPaymentFieldSaved(change){const account=accounts.value.find(a=>a.room===change.room);if(account)account[change.field]=change.value;}
     function onPaymentSelectionSaved(change){const account=accounts.value.find(a=>a.room===change.room);if(account)account.paymentScreenshot=change.value;}
     function onMeterFieldSaved(change) {

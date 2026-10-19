@@ -11,6 +11,8 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
       });
       /** 所有讀寫仍透過原有 Apps Script 介面；沒有直接讀取公開試算表。 */
       const api = {
+        drivePreview: !window.RentalDemo&&!!window.RentalAccess,
+        meterPhotoReference: (...args) => rpc(r => r.getMeterPhotoReference(...args)),
         years: () => rpc(r => r.getAvailableBillingYears()),
         months: year => rpc(r => r.getAvailableBillingMonths(year)),
         previewNewMonth: (year, month) => rpc(r => r.previewMonthlyAccountsSheetCreation(year, month)),
@@ -161,7 +163,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
 
       const MeterPhotoViewer = {
         props: { account: Object, blocked: Boolean },
-        template: "\n    <div class=\"meter-photo\">\n      <button type=\"button\" @click=\"load\" :disabled=\"loading || blocked\">{{ imageUrl ? '重新載入照片' : '載入照片' }}</button>\n      <div class=\"save-message\" role=\"status\">{{ message }}</div>\n      <img v-if=\"imageUrl\" class=\"photo-image\" :src=\"imageUrl\" :alt=\"account.room + ' 房本期電表照片'\" @error=\"imageError\">\n    </div>\n  ",
+        template: "\n    <div class=\"meter-photo\">\n      <button type=\"button\" @click=\"load\" :disabled=\"loading || blocked\">{{ imageUrl ? '重新載入照片' : '載入照片' }}</button>\n      <div class=\"save-message\" role=\"status\">{{ message }}</div>\n      <template v-if=\"imageUrl.startsWith('https://drive.google.com/file/d/')\"><iframe :src=\"imageUrl\" :title=\"account.room+' 房本期電表照片'\" loading=\"lazy\" referrerpolicy=\"no-referrer\"></iframe><a :href=\"imageUrl.replace(/preview$/,'view')\" target=\"_blank\" rel=\"noopener noreferrer\">Google Drive 原圖</a>",
         setup(props) {
           const loading = ref(false), message = ref(''), imageUrl = ref('');
           watch(() => props.account.meter?.currentReadingDate, () => {
@@ -171,12 +173,11 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
             if (loading.value || props.blocked) return;
             loading.value = true; imageUrl.value = ''; message.value = '照片讀取中……';
             try {
-              const a = props.account, result = await api.meterPhoto(a.year, a.month, a.room);
+              const a = props.account, result = await (api.drivePreview?api.meterPhotoReference(a.year,a.month,a.room):api.meterPhoto(a.year, a.month, a.room));
               if (!result || typeof result.found !== 'boolean') throw new Error('照片回應格式不正確。');
               if (!result.found) { message.value = result.message || '尚未提供照片。'; return; }
               if (result.readingDate !== a.meter?.currentReadingDate) throw new Error('抄表日期已變更，請重新讀取帳務。');
-              if (!validImage(result.dataUrl)) throw new Error('圖片格式不正確。');
-              imageUrl.value = result.dataUrl; message.value = '抄表日期：' + result.readingDate;
+              if(api.drivePreview){if(!/^[A-Za-z0-9_-]+$/.test(result.id||''))throw Error('照片參照不正確。');imageUrl.value='https://drive.google.com/file/d/'+result.id+'/preview';}else{if (!validImage(result.dataUrl)) throw new Error('圖片格式不正確。');imageUrl.value = result.dataUrl;} message.value = '抄表日期：' + result.readingDate;
             } catch (error) { message.value = '照片讀取失敗：' + errorText(error); }
             finally { loading.value = false; }
           }
@@ -190,8 +191,9 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
  template: "<div class=\"billing-tabs segmented\" role=\"group\" aria-label=\"帳務工作表\"><button type=\"button\" :class=\"{selected:billingView==='accounts'}\" @click=\"billingView='accounts'\" :disabled=\"controlsLocked\">帳務資料</button><button type=\"button\" :class=\"{selected:billingView==='meters'}\" @click=\"billingView='meters'\" :disabled=\"controlsLocked\">電表抄錄表</button><button type=\"button\" :class=\"{selected:billingView==='notices'}\" @click=\"billingView='notices'\" :disabled=\"controlsLocked\">電費通知</button><button type=\"button\" :class=\"{selected:billingView==='payments'}\" @click=\"billingView='payments'\" :disabled=\"controlsLocked\">匯款截圖</button></div>\n    <div class=\"controls\">\n      <label for=\"year\">年份</label>\n      <select id=\"year\" v-model.number=\"year\" @change=\"changeYear\" :disabled=\"controlsLocked\">\n        <option v-if=\"!years.length\" :value=\"0\">尚無年度來源</option>\n        <option v-for=\"value in years\" :key=\"value\" :value=\"value\">{{ value }} 年</option>\n      </select>\n      <label for=\"month\">月份</label>\n      <select id=\"month\" v-model.number=\"month\" @change=\"changeMonth\" :disabled=\"controlsLocked\">\n        <option v-if=\"!months.length\" :value=\"0\">尚無可用月份</option>\n        <option v-for=\"value in months\" :key=\"value\" :value=\"value\">{{ value }} 月</option>\n      </select>\n      <button id=\"reload\" type=\"button\" @click=\"loadYears\" :disabled=\"controlsLocked\">重新讀取</button>\n      <button id=\"toggleCreation\" type=\"button\" @click=\"toggleCreationPanel\" :disabled=\"controlsLocked || !year\"\n        :aria-expanded=\"creationPanelOpen\" aria-controls=\"creation-panel\">{{ creationPanelOpen ? '收起新增月份' : '新增月份' }}</button>\n      <button id=\"previewInitialization\" type=\"button\" @click=\"previewInitialization\" :disabled=\"busy || !accountsReady\">預覽本月初始化</button>\n      <button id=\"initializeMonth\" type=\"button\" @click=\"initializeMonth\" :disabled=\"busy || !accountsReady || dirtyKeys.size > 0 || !canInitialize\">初始化本月</button>\n    </div>\n    <section v-if=\"creationPanelOpen\" id=\"creation-panel\" class=\"initialization-summary\" aria-label=\"新增月份\">\n      <p>建立 {{ year }} 年的新月份分頁</p>\n      <div class=\"controls\">\n        <label for=\"new-month\">月份</label>\n        <select id=\"new-month\" v-model.number=\"newMonth\" @change=\"changeCreationMonth\" :disabled=\"controlsLocked\">\n          <option :value=\"0\" disabled>請選擇月份</option>\n          <option v-for=\"value in monthChoices\" :key=\"value\" :value=\"value\" :disabled=\"months.includes(value)\">\n            {{ value }} 月{{ months.includes(value) ? '（已建立）' : '' }}\n          </option>\n        </select>\n        <button id=\"previewNewMonth\" type=\"button\" @click=\"previewNewMonth\" :disabled=\"controlsLocked || !validNewMonth\">預覽新月份</button>\n        <button id=\"createNewMonth\" type=\"button\" @click=\"createNewMonth\" :disabled=\"controlsLocked || !canCreate\">建立月份分頁</button>\n      </div>\n      <ul v-if=\"creationPreview\">\n        <li>預計建立：{{ creationPreview.year }} 年 {{ creationPreview.month }} 月</li>\n        <li>房號：{{ creationPreview.rooms }} 間，來源為房客基本資料。</li>\n        <li>{{ creationPreview.odd ? '奇數月，建立電表及電費公式。' : '偶數月，應繳金額等於房租。' }}</li>\n        <li>轉帳日期、匯款截圖及本期抄表資料先留白。</li>\n        <li>建立後再使用「預覽本月初始化」補入資料。</li>\n      </ul>\n    </section>\n    <p v-if=\"creationStatus\" id=\"creation-status\" class=\"status\" role=\"status\" aria-live=\"polite\">{{ creationStatus }}</p>\n    <p v-if=\"dirtyKeys.size > 0\" class=\"draft-notice\">有 {{ dirtyKeys.size }} 個未儲存項目，請儲存或還原後再切換月份、重新讀取或初始化。</p>\n    <p v-if=\"pendingSaves > 0\" class=\"status\" role=\"status\">有 {{ pendingSaves }} 筆資料儲存中……</p>\n    <p id=\"initialization-status\" class=\"status\" role=\"status\" aria-live=\"polite\">{{ initializationStatus }}</p>\n    <section v-if=\"initializationResult\" class=\"initialization-summary\" aria-label=\"月份初始化結果\">\n      <p>{{ year }} 年 {{ initializationResult.month }} 月｜{{ initializationApplied ? '初始化結果' : '初始化預覽' }}</p>\n      <ul><li v-for=\"(line, index) in initializationLines\" :key=\"index\">{{ line }}</li></ul>\n    </section>\n    <p id=\"status\" class=\"status\" role=\"status\" aria-live=\"polite\">{{ status }}</p>\n    <p class=\"billing-due-note\">預設應繳日為每月 10 日，收款仍依實際日期紀錄。</p>\n    <section v-if=\"accounts.length\" class=\"cash-summary\" aria-label=\"每月收款摘要\"><div><span>應收（含前期餘額）</span><strong>NT$ {{numberFormat.format(cashSummary.due)}}</strong></div><div><span>確認未收</span><strong>NT$ {{numberFormat.format(cashSummary.unpaid)}}</strong></div><div><span>多收餘額</span><strong>NT$ {{numberFormat.format(cashSummary.overpaid)}}</strong></div><p>待補應收 {{cashSummary.pending}} 間。勾選已確認收款即預設收足；未勾選列未收。多收或少收再調整實收金額。</p><label>篩選房間<select v-model=\"accountFilter\" aria-label=\"收款狀態篩選\"><option value=\"all\">全部房間</option><option value=\"unpaid\">未收房間</option><option value=\"overpaid\">多收房間</option><option value=\"pending\">待補應收房間</option></select></label></section>\n    <div v-if=\"accounts.length && billingView==='accounts'\" class=\"table-wrap\">\n      <table aria-label=\"每月帳務資料\">\n        <thead><tr><th v-for=\"column in columns.filter(c=>!c.meter && c.key!=='paymentPhotos')\" :key=\"column.key\" scope=\"col\">{{ column.title }}</th></tr></thead>\n        <tbody>\n          <tr v-for=\"account in filteredAccounts\" :class=\"{'unpaid-room':account.unpaid>0}\" :key=\"revision + ':' + account.room\">\n            <template v-for=\"column in columns.filter(c=>!c.meter && c.key!=='paymentPhotos')\" :key=\"column.key\">\n              <th v-if=\"column.key === 'room'\" scope=\"row\">{{ account.room }}</th>\n              <td v-else>\n                <template v-if=\"column.key==='paymentPhotos'\"></template>\n                <template v-else-if=\"column.key === 'notice'\">\n                  <span v-if=\"staleRooms.has(account.room)\" class=\"stale\">請重新讀取以更新電費與金額。</span>\n                  <a v-else class=\"notice-link\" :href=\"noticeUrl(account)\" target=\"_blank\" rel=\"noopener noreferrer\"\n                    :aria-label=\"account.month + ' 月 ' + account.room + ' 房電費通知預覽'\">預覽電費通知</a>\n                </template>\n                <meter-photo-viewer v-else-if=\"column.key === 'meterPhoto'\" :account=\"account\" :blocked=\"editorsBlocked\"></meter-photo-viewer>\n                <account-field v-else-if=\"column.editable && !['transferDate','transferLastFive'].includes(column.key)\" :account=\"account\" :field=\"column\" :blocked=\"editorsBlocked\"\n                  @save-start=\"startSave\" @save-end=\"finishSave\"\n                  @saved=\"updateAccount(account, column, $event)\"\n                  @dirty-change=\"setDirty(account.room, column.key, $event)\"></account-field>\n                <span v-else-if=\"staleRooms.has(account.room) && column.amount\" class=\"stale\">待重新讀取</span>\n                <span v-else class=\"value\">{{ displayCell(account, column) }}</span>\n              </td>\n            </template>\n          </tr>\n        </tbody>\n      </table>\n    </div>\n  <p v-if=\"billingView==='meters' && month && month%2===0\" class=\"notice\">雙數月份不計收電費，請切換到單數月份。</p><meter-worksheet v-if=\"billingView==='meters' && month%2===1 && accounts.length\" :key=\"year+':'+month\" :accounts=\"accounts\" :year=\"year\" :month=\"month\" :blocked=\"editorsBlocked\" @dirty-change=\"setDirty('all','meterWorksheet',$event)\" @busy-change=\"operation=$event\" @field-saved=\"onMeterFieldSaved\" @reconciled=\"onMeterReconciled\" @refresh-request=\"refreshAfterMeter\"></meter-worksheet><notice-batch v-if=\"billingView==='notices' && month%2===1 && accounts.length\" :key=\"year+':'+month\" :accounts=\"accounts\" :year=\"year\" :month=\"month\" :blocked=\"editorsBlocked\" @busy-change=\"operation=$event\"></notice-batch><p v-if=\"billingView==='notices' && month && month%2===0\" class=\"notice\">雙數月份不發送電費通知，請切換到單數月份。</p><payment-worksheet v-if=\"billingView==='payments' && accounts.length\" :key=\"year+':'+month\" :accounts=\"accounts\" :year=\"year\" :month=\"month\" :blocked=\"editorsBlocked\" @busy-change=\"operation=$event\" @dirty-change=\"setDirty('all','paymentWorksheet',$event)\" @field-saved=\"onPaymentFieldSaved\" @selection-saved=\"onPaymentSelectionSaved\" @reconciled=\"onMeterReconciled\"></payment-worksheet>",
         components: { AccountField, PaymentPhotoPicker, MeterPhotoViewer, MeterWorksheet: RentalComponents.meterWorksheet(api), NoticeBatch: RentalComponents.noticeBatch(api), PaymentWorksheet: RentalComponents.paymentWorksheet(api) },
         setup(props, { emit }) {
+          const historicalMode=computed(()=>accounts.value.some(a=>a.historical));
           const accountFilter=ref('all');
-          const billingView = ref('accounts');
+          const billingView = ref(new URLSearchParams(location.search).has('billingMonth')?'payments':'accounts');
  const year = ref(0), years = ref([]), month = ref(0), months = ref([]), accounts = ref([]);
           const filteredAccounts=computed(()=>accounts.value.filter(a=>accountFilter.value==='all'||accountFilter.value==='pending'?(accountFilter.value==='all'||a.paymentStatus==='待補應收'):a[accountFilter.value]>0));
           const cashSummary=computed(()=>accounts.value.reduce((s,a)=>{s.due+=a.netDue??a.totalDue??0;s.unpaid+=a.unpaid??0;s.overpaid+=a.overpaid??0;if(a.paymentStatus==='待補應收')s.pending++;return s},{due:0,unpaid:0,overpaid:0,pending:0}));
@@ -289,7 +291,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
           }
           function noticeUrl(account) {
             const url = new URL(APP_URL);
-            url.searchParams.set('page', 'notice'); url.searchParams.set('year', String(account.year));
+            url.searchParams.set('property',window.RentalPropertyContext?.id||'default');url.searchParams.set('page', 'notice'); url.searchParams.set('year', String(account.year));
             url.searchParams.set('month', String(account.month)); url.searchParams.set('room', account.room);
             return url.href;
           }
@@ -369,7 +371,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
           /** 初次讀取與重新讀取時，同步年度來源，再載入該年度月份。 */
           async function loadYears() {
             if (controlsLocked.value) return;
-            const preferredYear = year.value;
+            const preferredYear = year.value||Number(new URLSearchParams(location.search).get('billingYear'));
             loading.value = true; accountsReady.value = false; clearInitialization();
             status.value = '正在讀取年度帳務來源……';
             let ready = false;
@@ -403,7 +405,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
 
           async function loadMonths(options = {}) {
             if (controlsLocked.value && !options.afterCreation) return false;
-            const preferred = options.preferMonth ?? month.value;
+            const preferred = options.preferMonth ?? (month.value||Number(new URLSearchParams(location.search).get('billingMonth')));
             loading.value = true; accountsReady.value = false; clearInitialization();
             status.value = '正在讀取月份清單……';
             let ready = false;
@@ -411,7 +413,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
               const list = await api.months(year.value);
               if (!Array.isArray(list) || !list.every(value => Number.isInteger(value) && value >= 1 && value <= 12) ||
                   new Set(list).size !== list.length) throw new Error('月份清單格式不正確。');
-              if (!list.length) throw new Error('此年份尚無月份分頁，請先建立月份。');
+              if (!list.length) throw new Error('此年份尚無月份，請先按「新增月份」；建立前請完成房間資料。');
               months.value = [...list].sort((a, b) => a - b);
               month.value = list.includes(preferred) ? preferred : months.value[months.value.length - 1];
               ready = true;
@@ -488,7 +490,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
     watch(controlsLocked, value => emit('busy-change', value), { immediate: true });
       watch(accounts, value => emit('update-data', { year: year.value, month: month.value, accounts: value }), { deep: true });
       onMounted(loadYears);
-          return { numberFormat, accountFilter, filteredAccounts, cashSummary, billingView, onPaymentFieldSaved, onPaymentSelectionSaved, onMeterFieldSaved, onMeterReconciled, refreshAfterMeter, year, years, loadYears, changeYear, month, months, accounts, status, loading, operation, pendingSaves, accountsReady, revision,
+          return { historicalMode, numberFormat, accountFilter, filteredAccounts, cashSummary, billingView, onPaymentFieldSaved, onPaymentSelectionSaved, onMeterFieldSaved, onMeterReconciled, refreshAfterMeter, year, years, loadYears, changeYear, month, months, accounts, status, loading, operation, pendingSaves, accountsReady, revision,
             dirtyKeys, staleRooms, controlsLocked, busy, editorsBlocked, columns, displayCell, noticeUrl,
             creationPanelOpen, newMonth, monthChoices, validNewMonth, canCreate, creationPreview, creationStatus,
             changeCreationMonth, toggleCreationPanel, previewNewMonth, createNewMonth,

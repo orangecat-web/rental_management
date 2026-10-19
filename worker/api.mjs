@@ -1,8 +1,8 @@
 import {authenticate,authenticationFailure} from './auth.mjs';
 import {canPerform} from './permissions.mjs';
 /** Server-only Google gateway. Browser requests never receive the shared key. */
-const TENANT_ACTIONS = new Set(['getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract']);
-const BILLING_ACTIONS = new Set(['getRentalSiteCapabilities', 'getAvailableBillingYears', 'getAvailableBillingMonths', 'getMonthlyAccounts', 'saveMonthlyAccountField', 'previewMonthlyInitialization', 'initializeMonthlyAccounts', 'previewMonthlyAccountsSheetCreation', 'createMonthlyAccountsSheet', 'getMonthlyPaymentPhotos', 'getRoomPaymentPhotoSelection', 'saveRoomPaymentPhotoSelection', 'getPaymentPhoto', 'getMeterPhoto', 'getRoomNoticeData']);
+const TENANT_ACTIONS = new Set(['getRentalProperties','saveRentalProperty','saveTenantChanges','previewTenantCheckout','checkoutTenant','getRoomSettings','saveRoomSetting', 'getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract']);
+const BILLING_ACTIONS = new Set(['getXingwuCollectionReport', 'getRentalSiteCapabilities', 'getAvailableBillingYears', 'getAvailableBillingMonths', 'getMonthlyAccounts', 'saveMonthlyAccountField', 'previewMonthlyInitialization', 'initializeMonthlyAccounts', 'previewMonthlyAccountsSheetCreation', 'createMonthlyAccountsSheet', 'getMonthlyPaymentPhotos', 'getRoomPaymentPhotoSelection', 'saveRoomPaymentPhotoSelection', 'getPaymentPhoto', 'getMeterPhotoReference','getMeterPhoto', 'getRoomNoticeData']);
 const MAX_BODY = 16000;
 const JSON_HEADERS = {
   'content-type': 'application/json; charset=utf-8',
@@ -28,6 +28,14 @@ export function validCall(action, args) {
   const expected = value => value === null || (typeof value === 'number' && Number.isFinite(value)) || text(value);
   const file = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,200}$/.test(value);
   const leaseDate = value => value === '' || typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value+'T00:00:00Z')) && new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
+  if(action==='getRentalProperties')return args.length===0;
+  if(action==='saveRentalProperty')return args.length===6&&['create','update','delete','restore','workspace'].includes(args[0])&&text(args[1],50)&&/^(default|p-[a-f0-9-]{36})$/i.test(args[1])&&text(args[2],100)&&text(args[3],100)&&text(args[4],500)&&Number.isSafeInteger(args[5])&&args[5]>=0;
+  if (action === 'getRoomSettings') return args.length===0;
+  if (action === 'saveTenantChanges') return args.length===3 && room(args[0]) && args[1] && typeof args[1]==='object' && !Array.isArray(args[1]) && Object.keys(args[1]).length<=40 && text(args[2],100);
+  const checkoutOptions=o=>o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).every(k=>['year','month','mode','checkoutDate','cycleStart','monthlyRent','amount','previewVersion'].includes(k))&&Number.isInteger(o.year)&&o.year>=1900&&o.year<=9999&&Number.isInteger(o.month)&&o.month>=1&&o.month<=12&&['free','daily','fixed'].includes(o.mode)&&['checkoutDate','cycleStart','monthlyRent','amount','previewVersion'].every(k=>o[k]===undefined||text(o[k],100));
+  if(action==='previewTenantCheckout')return args.length===2&&room(args[0])&&checkoutOptions(args[1]);
+  if (action === 'checkoutTenant') return [2,3].includes(args.length) && room(args[0]) && text(args[1],100)&&(args.length===2||checkoutOptions(args[2]));
+  if (action === 'saveRoomSetting') return args.length===5 && ['add','rename','retire','restore'].includes(args[0]) && room(args[1]) && (args[2]===''||room(args[2])) && ['套房','雅房'].includes(args[3]) && text(args[4],100);
   if (['getTenantData', 'getRentalSiteCapabilities', 'getAvailableBillingYears'].includes(action)) return args.length === 0;
   if (action === 'saveTenantField') return args.length === 4 && room(args[0]) &&
     ['name','phone','startDate','endDate','rent','cohabitant','cohabitantPhone','emergencyContact','emergencyPhone','introduction','maintenance','defaultTransferLastFive','student','identity','roomType','initialMeterReading','contractDate'].includes(args[1]) && text(args[2]) && expected(args[3]) &&
@@ -42,7 +50,7 @@ export function validCall(action, args) {
   if (['getMonthlyAccounts','previewMonthlyInitialization','initializeMonthlyAccounts','previewMonthlyAccountsSheetCreation','createMonthlyAccountsSheet','getMonthlyPaymentPhotos'].includes(action)) return args.length === 2;
   if (action === 'getPaymentPhoto') return args.length === 3 && file(args[2]);
   if (!room(args[2])) return false;
-  if (['getMeterPhoto','getRoomNoticeData'].includes(action)) return args.length === 3 && Number(args[1]) % 2 === 1;
+  if (['getMeterPhotoReference','getMeterPhotoReference','getMeterPhoto','getRoomNoticeData'].includes(action)) return args.length === 3 && Number(args[1]) % 2 === 1;
   if (action === 'getRoomPaymentPhotoSelection') return args.length === 3;
   if (action === 'saveMonthlyAccountField') return args.length === 6 &&
     ['transferDate','transferLastFive','notes','currentReadingDate','currentReading','actualPaid','receiptConfirmed'].includes(args[3]) &&
@@ -99,11 +107,11 @@ export async function handleApi(request, env, fetchImpl = fetch) {
     if (raw.length > MAX_BODY) return fail('SIZE', '資料過長。', 413);
     call = JSON.parse(raw);
   } catch { return fail('FORMAT', '資料格式不正確。', 400); }
-  if (!(path === '/api/tenant-rpc' ? TENANT_ACTIONS : BILLING_ACTIONS).has(call?.action) || !validCall(call?.action, call?.args)) return fail('ACTION', '不支援此欄位或資料格式。', 400);
+  if (!(path === '/api/tenant-rpc' ? TENANT_ACTIONS : BILLING_ACTIONS).has(call?.action) || !validCall(call?.action, call?.args)||(call.propertyId!==undefined&&!/^(default|p-[a-f0-9-]{36})$/i.test(call.propertyId))) return fail('ACTION', '不支援此欄位或資料格式。', 400);
   if (!canPerform(principal,call.action)) return fail('FORBIDDEN', '目前為檢視者，無法新增、修改或刪除資料。',403);
-  const payload = JSON.stringify({ version: 1, id: crypto.randomUUID(), issuedAt: Date.now(), action: call.action, args: call.args });
+  const payload = JSON.stringify({ version: 1, id: crypto.randomUUID(), issuedAt: Date.now(), action: call.action, args: call.args, propertyId:call.propertyId||'default', actor: {email: principal.email, role: principal.role} });
   try {
-    const large = ['getPaymentPhoto','getMeterPhoto','getRoomNoticeData'].includes(call.action);
+    const large = ['getPaymentPhoto','getMeterPhotoReference','getMeterPhoto','getRoomNoticeData'].includes(call.action);
     const result = await callGoogle(config.endpoint, JSON.stringify({ payload, signature: await signPayload(payload, config.secret) }), fetchImpl, (large ? 12 : 1) * 1024 * 1024);
     if (typeof result?.ok !== 'boolean') throw new Error('INVALID_RESPONSE');
     if (!result.ok) {
@@ -119,6 +127,6 @@ export async function handleApi(request, env, fetchImpl = fetch) {
       ? error.message : error?.name === 'TimeoutError' || error?.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK';
     console.error('rental-google-failure', { action: call.action, category });
     // Never automatically retry a write with an unknown result.
-    return fail('GOOGLE_UNAVAILABLE', !['saveTenantField','saveTenantNote','saveTenantContract','saveMonthlyAccountField','saveRoomPaymentPhotoSelection','initializeMonthlyAccounts','createMonthlyAccountsSheet'].includes(call.action) ? 'Google 暫時無法讀取，請稍後再試。' : '未收到儲存結果，請重新讀取確認後再操作，避免重複寫入。', 502);
+    return fail('GOOGLE_UNAVAILABLE', !['saveRentalProperty','saveTenantChanges','checkoutTenant','saveRoomSetting','saveTenantField','saveTenantNote','saveTenantContract','saveMonthlyAccountField','saveRoomPaymentPhotoSelection','initializeMonthlyAccounts','createMonthlyAccountsSheet'].includes(call.action) ? 'Google 暫時無法讀取，請稍後再試。' : '未收到儲存結果，請重新讀取確認後再操作，避免重複寫入。', 502);
   }
 }

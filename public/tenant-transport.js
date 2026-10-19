@@ -1,6 +1,6 @@
 /** Same-origin transport for the original Site; private data stays in memory. */
 (() => {
-  const allowed = new Set(['getRoomSettings','saveTenantChanges','checkoutTenant','saveRoomSetting','getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract']);
+  const allowed = new Set(['getRentalProperties','saveRentalProperty','saveTenantChanges','previewTenantCheckout','checkoutTenant','getRoomSettings','saveRoomSetting', 'getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract']);
   function runner(success = () => {}, failure = () => {}) {
     const chain = {
       withSuccessHandler(callback) { return runner(callback, failure); },
@@ -11,7 +11,7 @@
         const response = await fetch('/api/tenant-rpc', {
           method: 'POST', credentials: 'same-origin', cache: 'no-store',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ action, args }),
+          body: JSON.stringify({ action, args, propertyId:window.RentalPropertyContext?.id||new URLSearchParams(location.search).get('property')||'default' }),
         });
         const result = await response.json();
         if (!response.ok || result.ok !== true) throw new Error(result.error?.message || '資料處理失敗，請重新讀取。');

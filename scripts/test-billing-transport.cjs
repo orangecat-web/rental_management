@@ -18,6 +18,6 @@ function open(old){const calls=[],errors=[];const vc=new VirtualConsole();vc.on(
  const live=open(false),d=live.dom.window.document;await wait(()=>d.querySelector('#status').textContent.includes('已讀取'));
  assert.equal(d.querySelector('#month').value,'11');assert.equal(d.querySelector('a.notice-link')?.getAttribute('href').split('?')[0],'https://rent.test/notice.html');
  const el=d.querySelector('[aria-label="11 月 506 房轉帳後五碼"]');assert.equal(el.value,'01234');el.value='00000';el.dispatchEvent(new live.dom.window.Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,0));[...el.closest('.editor').querySelectorAll('button')].find(b=>b.textContent==='儲存').click();await wait(()=>el.closest('.editor').textContent.includes('已寫回'));
- assert.deepEqual(live.calls.at(-1),{action:'saveMonthlyAccountField',args:[2026,11,'506','transferLastFive','00000','01234']});assert.deepEqual(live.errors,[]);live.dom.window.close();
+ assert.deepEqual(live.calls.at(-1),{propertyId:'default',action:'saveMonthlyAccountField',args:[2026,11,'506','transferLastFive','00000','01234']});assert.deepEqual(live.errors,[]);live.dom.window.close();
  console.log('PASS: billing fetch transport; v1 upgrade prompt without data reads; v2 mount; exact year/month/room/expected value; leading zeros; same-origin notice URL; no-store.');
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -1,7 +1,7 @@
 /** One worksheet for all rooms. Reuses the signed APIs and optimistic field checks. */
 window.RentalComponents ||= {};
 window.RentalComponents.meterWorksheet = function (api) {
-  const { ref, computed, watch, nextTick } = Vue;
+  const { ref, computed, watch, nextTick, onMounted } = Vue;
   return {
     props: { accounts: Array, year: Number, month: Number, blocked: Boolean },
     emits: ['dirty-change','busy-change','field-saved','reconciled','refresh-request'],
@@ -32,15 +32,16 @@ window.RentalComponents.meterWorksheet = function (api) {
       <p v-if="readingError(entry)" class="meter-field-error">{{readingError(entry)}}</p>
       <p v-if="entry.message" class="meter-row-message" role="status">{{entry.message}}</p>
       <button v-if="entry.conflict" class="secondary" type="button" @click="restoreEntry(entry)" :disabled="locked">還原此房</button>
-      <div class="meter-row-photo">
+      <div class="meter-row-photo"><button v-if="!entry.photo&&entry.savedDate" type="button" @click="loadPrivatePhoto(entry)" :disabled="locked">透過網站載入本期照片</button>
         <div><span>本期電表照片</span><span class="meter-photo-message">{{entry.photoMessage||'尚未載入；上方按鈕可一次載入全部房間。'}}</span></div>
-        <div v-if="entry.photo && entry.photoDate===(commonDate||entry.savedDate)"><img :src="entry.photo" :alt="entry.room+' 房 '+entry.photoDate+' 電表照片'" loading="lazy" @error="entry.photo='';entry.photoMessage='圖片無法顯示，請核對檔案。'"></div>
+        <div v-if="entry.photo && entry.photoDate===(commonDate||entry.savedDate)"><template v-if="entry.driveLink"><iframe :src="entry.photo" :title="entry.room+' 房電表照片'" loading="lazy" referrerpolicy="no-referrer"></iframe><a :href="entry.driveLink" target="_blank" rel="noopener noreferrer">在 Google Drive 查看原圖</a><button type="button" @click="loadPrivatePhoto(entry)" :disabled="locked">改用網站預覽</button></template><img v-else :src="entry.photo" :alt="entry.room+' 房 '+entry.photoDate+' 電表照片'" loading="lazy" @error="entry.photo='';entry.photoMessage='圖片無法顯示，請核對檔案。'"></div>
         <p v-else-if="entry.photo" class="meter-sheet-hint">日期已變更，請使用上方按鈕重新載入本期照片。</p>
       </div>
     </article>
   </div>
 </section>`,
     setup(props, { emit }) {
+      const historical=Vue.computed(()=>props.accounts.some(a=>a.financialLocked&&!a.meterEditable));
       const entries = ref([]), commonDate = ref(''), status = ref(''), working = ref(false), photoBusy = ref(false), reviewRequired = ref(false);
       let currentPeriod = '', initialDate = '';
       const format = v => v === null || v === undefined || v === '' ? '—' : new Intl.NumberFormat('zh-TW',{maximumFractionDigits:2}).format(v);
@@ -63,7 +64,7 @@ window.RentalComponents.meterWorksheet = function (api) {
           return {room:a.room,name:a.name,previousReading:typeof m.previousReading==='number'?m.previousReading:null,
             previousDate:m.previousReadingDate||'',previousSource:m.previousReadingSource||'',savedDate:m.currentReadingDate||'',savedReading:m.currentReading??null,
             draft:hadDraft?e.draft:String(m.currentReading??''),conflict:!!(hadDraft&&(changed||e?.conflict)),message:e?.message||'',
-            photo:e?.photo||'',photoDate:e?.photoDate||'',photoMessage:e?.photoMessage||''};
+            driveLink:e?.driveLink||'',photo:e?.photo||'',photoDate:e?.photoDate||'',photoMessage:e?.photoMessage||''};
         });
         const dates=[...new Set(entries.value.map(e=>e.savedDate))], uniform=dates.length===1?dates[0]:'';
         if(fresh || commonDate.value===initialDate) commonDate.value=uniform;
@@ -137,19 +138,21 @@ window.RentalComponents.meterWorksheet = function (api) {
         async function worker(){while(index<queue.length){const e=queue[index++];e.photo='';e.photoMessage='載入中……';
           try{
             if(!e.savedDate){e.photoMessage='尚未儲存本期抄表日。';continue}
-            const result=await api.meterPhoto(year,month,e.room);
+            const result=await (api.drivePreview?api.meterPhotoReference(year,month,e.room):api.meterPhoto(year,month,e.room));
             if(!result||typeof result.found!=='boolean')throw Error('照片回應格式不正確。');
             if(!result.found){e.photoMessage=result.message||'尚未提供照片。';continue}
             if(result.readingDate!==e.savedDate)throw Error('照片日期與本期抄表日不一致。');
-            e.photo=await thumbnail(result.dataUrl);e.photoDate=result.readingDate;e.photoMessage='抄表日：'+result.readingDate;found++;
+            if(api.drivePreview&&!/^[A-Za-z0-9_-]+$/.test(result.id||''))throw Error('Drive 照片參照不正確。');e.photo=api.drivePreview?'https://drive.google.com/file/d/'+result.id+'/preview':await thumbnail(result.dataUrl);e.driveLink=api.drivePreview?'https://drive.google.com/file/d/'+result.id+'/view':'';e.photoDate=result.readingDate;e.photoMessage='抄表日：'+result.readingDate;found++;
           }catch(error){e.photoMessage='載入失敗：'+error.message;failed++}
           finally{completed++;status.value='照片載入中：'+completed+' / '+queue.length+' 間';}
         }}
         try{await Promise.all([worker(),worker()]);status.value='照片處理完成：'+queue.length+' 間，已載入 '+found+' 張'+(failed?'，'+failed+' 間讀取失敗':'')+'。缺圖的房間已逐一標示。';}
         finally{photoBusy.value=false}
       }
+      async function loadPrivatePhoto(entry){if(locked.value)return;photoBusy.value=true;try{const result=await api.meterPhoto(props.year,props.month,entry.room);if(!result?.found||result.readingDate!==entry.savedDate)throw Error('照片或日期不符。');entry.photo=await thumbnail(result.dataUrl);entry.photoDate=result.readingDate;entry.driveLink='';entry.photoMessage='網站預覽；原圖保留在 Drive。';}catch(e){entry.photoMessage='照片讀取失敗：'+e.message;}finally{photoBusy.value=false;}}
       async function applyDateAndPhotos(){if(await persist('date')){await nextTick();await loadPhotos()}}
-      return {entries,commonDate,status,working,photoBusy,reviewRequired,minDate,maxDate,validDate,locked,dirty,format,usage,readingError,acknowledgeDate,restoreEntry,restore,reconcile,saveAll,applyDateAndPhotos,loadPhotos};
+      onMounted(()=>{if(api.drivePreview)loadPhotos()});
+      return {loadPrivatePhoto,historical,entries,commonDate,status,working,photoBusy,reviewRequired,minDate,maxDate,validDate,locked,dirty,format,usage,readingError,acknowledgeDate,restoreEntry,restore,reconcile,saveAll,applyDateAndPhotos,loadPhotos};
     }
   };
 };

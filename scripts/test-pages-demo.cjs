@@ -43,7 +43,7 @@ const server = http.createServer((req, res) => {
       }
     });
     const w = dom.window, d = w.document;
-    await wait(() => d.querySelectorAll('.room-card').length === 15);
+    await wait(()=>d.querySelectorAll('.room-year-card').length===15);assert(d.querySelector('nav button').textContent.includes('收租統計'));[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('房間總覽')).click();await wait(() => d.querySelectorAll('.room-card').length === 15);
     assert(d.querySelector('.pages-demo-banner').textContent.includes('虛構資料'));
     assert.equal(w.RentalAccess.state.role, 'viewer');
     assert.equal(w.RentalAccess.canWrite, false);
@@ -107,6 +107,8 @@ const server = http.createServer((req, res) => {
     navigate('收租統計');
     await wait(() => d.querySelectorAll('.room-year-card').length === 15);
     assert.equal(d.querySelector('#workspace-error').hidden, true);
+    const select=d.querySelector('[aria-label="選擇房產"]');assert.equal(select.options.length,2);select.value='p-00000000-0000-4000-8000-000000000002';select.dispatchEvent(new w.Event('change',{bubbles:true}));navigate('房間總覽');await wait(()=>d.querySelectorAll('.room-card').length===2);assert(d.querySelector('.room-card').textContent.includes('601'));assert(!d.querySelector('.room-card').textContent.includes('401'));assert.equal((await rpc('saveRentalProperty',['workspace','default','','changed','',0],'tenant')).response.status,403);
+
     assert.deepEqual(networkApi, [], 'No API calls should reach even the static host');
     assert.deepEqual(errors, []);
     assert(!fs.readFileSync('public/index.html', 'utf8').includes('pages-demo.js'));

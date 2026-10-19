@@ -3,17 +3,20 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 const wait = async fn => { const start = Date.now(); while (!fn()) { if (Date.now() - start > 4000) throw Error('timeout'); await new Promise(r => setTimeout(r, 5)); } };
 const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b => b.textContent.trim() === text); assert(b, 'missing button ' + text); b.click(); };
 (async () => {
+  const properties={revision:0,workspaceName:'測試工作區',items:[{id:'default',name:'測試房產',archived:false,folderUrl:''}]};
   const calls = [], errors = []; let writes = 0, conflict = false;
   const rows = [{ room:'401',version:'v1',name:'測試甲', phone:'0912345678', rent:5800, endDate:'2027-01-01', notes:'',contractLinks:[] },
     {room:'506',name:'',phone:'',rent:0,notes:'',contractLinks:[]},{room:'408',name:'',rent:null,vacant:true,contractLinks:[]}];
   const vc = new VirtualConsole(); vc.on('jsdomError', e => errors.push(e.message));
   const html = fs.readFileSync('public/index.html','utf8').replace(/<script[^>]+src=[^>]+><\/script>/g,'');
-  const dom = new JSDOM(html,{url:'https://rent.test/',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){
+  const dom = new JSDOM(html,{url:'https://rent.test/?view=overview',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){
     w.Storage.prototype.setItem=()=>{writes++};
     w.fetch=async (url,options)=>{
       if(url==='/api/session')return {ok:true,status:200,json:async()=>({ok:true,data:{authenticated:true,canWrite:true,role:'manager',email:'owner@example.test',provider:'sites',logoutPath:'/signout-with-chatgpt'}})};
       const call=JSON.parse(options.body);calls.push({url,...call}); let data;
-      if(call.action==='getTenantData') data=rows;
+      if(call.action==='getRentalProperties')data=properties;
+ else if(call.action==='saveRentalProperty'){const [mode,id,name,workspace,folder,revision]=call.args;assert.equal(revision,properties.revision);if(mode==='workspace')properties.workspaceName=workspace;else if(mode==='create')properties.items.push({id,name,archived:false,folderUrl:folder});else if(mode==='delete')properties.items.find(p=>p.id===id).archived=true;else throw Error('unexpected property write');properties.revision++;data=properties;}
+ else if(call.action==='getTenantData') data=call.propertyId==='default'?rows:[];
       else if(call.action==='saveTenantChanges') {
         if(conflict)return {ok:false,json:async()=>({ok:false,error:{message:'其他人已更新，請重新讀取'}})};
         const row=rows.find(t=>t.room===call.args[0]);assert.equal(call.args[2],row.version);Object.assign(row,call.args[1]);row.version+='x';data=row;
@@ -30,7 +33,7 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
   assert.equal(d.querySelectorAll('nav button').length,4); assert(!d.querySelector('iframe'));
   assert(!d.body.textContent.includes('青禾'));assert(!d.body.textContent.includes('示範'));
   assert(d.querySelector('.stats').textContent.includes('408 房'));assert(!d.querySelector('.stats').textContent.includes('合約資料夾'));
-  const zeroCard=d.querySelector('[aria-label="查看 506 房"]');assert(zeroCard.textContent.includes('NT$ 0'));assert(!zeroCard.textContent.includes('空房'));
+  const zeroCard=d.querySelector('[aria-label="查看 506 房"]');assert(zeroCard.textContent.includes('NT$ 0'));assert.equal(d.querySelector('.stats article:last-child div').textContent.trim(),'1間');
   zeroCard.click();await wait(()=>d.querySelector('#tenant-506-rent'));
   assert.equal(d.querySelector('#tenant-506-rent').value,'0');
   d.querySelector('[aria-label="選擇 401 房"]').click();await wait(()=>d.querySelector('#tenant-401-phone'));
@@ -38,7 +41,7 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
   await wait(()=>d.querySelector('.draft-notice'));
   d.querySelector('nav button').click();await wait(()=>d.body.textContent.includes('有未儲存的修改'));assert(d.querySelector('#tenant-401-phone'));
   click(d,'儲存全部修改');await wait(()=>d.querySelector('.status').textContent.includes('全部修改已儲存'));phone=d.querySelector('#tenant-401-phone');
-  assert.deepEqual(calls.find(c=>c.action==='saveTenantChanges'),{url:'/api/tenant-rpc',action:'saveTenantChanges',args:['401',{phone:'0987654321',identity:'一般'},'v1']});
+  assert.deepEqual(calls.find(c=>c.action==='saveTenantChanges'),{url:'/api/tenant-rpc',propertyId:'default',action:'saveTenantChanges',args:['401',{phone:'0987654321',identity:'一般'},'v1']});
   // Conflict leaves the user's draft present and blocks navigation until restore.
   conflict=true;phone.value='0900000000';phone.dispatchEvent(new w.Event('input',{bubbles:true}));await wait(()=>d.querySelector('.draft-notice'));click(d,'儲存全部修改');await wait(()=>d.querySelector('.status').textContent.includes('其他人已更新'));assert.equal(phone.value,'0900000000');click(d,'還原全部未儲存');await wait(()=>!d.querySelector('.draft-notice'));
   const accountNav=[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('每月帳務'));accountNav.click();
@@ -48,10 +51,15 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
   await wait(()=>d.querySelector('.billing-native')?.textContent.includes('11 月｜已讀取'));
   assert(d.querySelector('.billing-native').textContent.includes('電表抄錄表'));assert(!d.querySelector('[aria-label="401 房本期電表"]'));
   assert(d.querySelector('.billing-native a[href*="notice.html"]').href.includes('room=401'));
-  click(d,'匯款截圖');await wait(()=>d.querySelector('.payment-sheet'));
+  click(d,'匯款截圖');await wait(()=>d.querySelector('.payment-sheet'));await wait(()=>!d.querySelector('[aria-label="401 房轉帳後五碼"]').disabled);
   const bank=d.querySelector('[aria-label="401 房轉帳後五碼"]');assert(bank);assert.equal(bank.value,'01234');
   bank.value='00001';bank.dispatchEvent(new w.Event('input',{bubbles:true}));await wait(()=>d.querySelector('.draft-notice'));click(d,'儲存全部收款資料');await wait(()=>d.querySelector('.payment-status').textContent.includes('已儲存 1 間'));
   assert.deepEqual(calls.find(c=>c.action==='saveMonthlyAccountField'&&c.args[3]==='transferLastFive').args,[2026,11,'401','transferLastFive','00001','01234']);
+  await wait(()=>![...d.querySelectorAll('button')].find(b=>b.textContent==='管理房產與工作區').disabled);click(d,'管理房產與工作區');await w.Vue.nextTick();assert(d.querySelector('#property-select').disabled);
+  const workspaceInput=d.querySelector('[aria-label="工作區名稱"]');workspaceInput.value='我的管理工作區';workspaceInput.dispatchEvent(new w.Event('input',{bubbles:true}));await w.Vue.nextTick();click(d,'儲存工作區名稱');await wait(()=>d.querySelector('.property-picker label').textContent==='我的管理工作區');
+  const propertyName=d.querySelector('[aria-label="新增房產名稱"]');propertyName.value='第二處測試房產';propertyName.dispatchEvent(new w.Event('input',{bubbles:true}));await w.Vue.nextTick();click(d,'新增房產');await wait(()=>d.querySelector('#property-select').options.length===2);const createdId=properties.items[1].id;assert(/^p-/.test(createdId));click(d,'關閉房產設定');await w.Vue.nextTick();
+  const propertySelect=d.querySelector('#property-select');propertySelect.value=createdId;propertySelect.dispatchEvent(new w.Event('change',{bubbles:true}));await w.Vue.nextTick();await wait(()=>![...d.querySelectorAll('button')].find(b=>b.textContent==='管理房產與工作區').disabled);[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('房間總覽')).click();await wait(()=>d.querySelector('.overview-status')?.textContent.includes('已讀取 0 間'));assert.equal(d.querySelectorAll('.room-card').length,0);assert(calls.some(c=>c.action==='getTenantData'&&c.propertyId===createdId));
+  click(d,'管理房產與工作區');await w.Vue.nextTick();const propertyRows=[...d.querySelectorAll('.property-editor article')];[...propertyRows[1].querySelectorAll('button')].find(b=>b.textContent==='刪除房產').click();await w.Vue.nextTick();click(d,'確認刪除並封存');await wait(()=>d.querySelectorAll('.room-card').length===3);assert.equal(d.querySelector('#property-select').value,'default');assert.equal(properties.items[1].archived,true);
   assert.equal(writes,0); assert.equal(d.querySelector('#workspace-error').hidden,true);assert.deepEqual(errors,[]);
   dom.window.close();
   // No duplicate UI, and old editor bookmarks route back to this workspace.

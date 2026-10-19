@@ -1,8 +1,8 @@
 /** Private same-origin RPC. Only memory holds returned tenant and account records. */
 window.RentalTransport = function (scope) {
   const allowed = scope === 'tenant'
-    ? new Set(['getRoomSettings','saveTenantChanges','checkoutTenant','saveRoomSetting','getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract'])
-    : new Set(['getAvailableBillingYears', 'getAvailableBillingMonths', 'getMonthlyAccounts', 'saveMonthlyAccountField', 'previewMonthlyInitialization', 'initializeMonthlyAccounts', 'previewMonthlyAccountsSheetCreation', 'createMonthlyAccountsSheet', 'getMonthlyPaymentPhotos', 'getRoomPaymentPhotoSelection', 'saveRoomPaymentPhotoSelection', 'getPaymentPhoto', 'getMeterPhoto', 'getRoomNoticeData']);
+    ? new Set(['getRentalProperties','saveRentalProperty','saveTenantChanges','previewTenantCheckout','checkoutTenant','getRoomSettings','saveRoomSetting', 'getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract'])
+    : new Set(['getXingwuCollectionReport', 'getAvailableBillingYears', 'getAvailableBillingMonths', 'getMonthlyAccounts', 'saveMonthlyAccountField', 'previewMonthlyInitialization', 'initializeMonthlyAccounts', 'previewMonthlyAccountsSheetCreation', 'createMonthlyAccountsSheet', 'getMonthlyPaymentPhotos', 'getRoomPaymentPhotoSelection', 'saveRoomPaymentPhotoSelection', 'getPaymentPhoto', 'getMeterPhotoReference','getMeterPhoto', 'getRoomNoticeData']);
   function runner(success = () => {}, failure = () => {}) {
     const chain = { withSuccessHandler: callback => runner(callback, failure), withFailureHandler: callback => runner(success, callback) };
     for (const action of allowed) chain[action] = async (...args) => {
@@ -10,7 +10,7 @@ window.RentalTransport = function (scope) {
         if(window.RentalAccess&&!RentalAccess.canWrite&&!RentalAccess.isReadAction(action))throw Error('目前為檢視者，無法新增、修改或刪除資料。');
         const response = await fetch('/api/' + (scope === 'tenant' ? 'tenant' : 'billing') + '-rpc', {
           method: 'POST', credentials: 'same-origin', cache: 'no-store',
-          headers: { 'content-type': 'application/json', 'x-requested-with':'XMLHttpRequest' }, body: JSON.stringify({ action, args })
+          headers: { 'content-type': 'application/json', 'x-requested-with':'XMLHttpRequest' }, body: JSON.stringify({ action, args, propertyId:window.RentalPropertyContext?.id||new URLSearchParams(location.search).get('property')||'default' })
         });
         if(window.RentalAccess)RentalAccess.noteFailure(response.status);
         const result = await response.json();

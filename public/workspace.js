@@ -7,12 +7,19 @@
     components: { TenantEditor: RentalAccess.secureComponent(RentalComponents.tenant()), BillingEditor: RentalAccess.secureComponent(RentalComponents.billing()), RentalReports: RentalComponents.reports() },
     setup() {
       const query = new URLSearchParams(location.search);
-      const page = ref(query.get('view') === 'reports' ? 'reports' : query.get('view') === 'accounts' ? 'accounts' : query.get('view') === 'tenants' ? 'tenants' : 'overview');
+      window.RentalPropertyContext={id:query.get('property')||'default'};
+      const page = ref(query.get('view') === 'reports' ? 'reports' : query.get('view') === 'accounts' ? 'accounts' : query.get('view') === 'tenants' ? 'tenants' : query.get('view') === 'overview' ? 'overview' : 'reports');
+      const propertyCompatible=ref(false),propertyReady=ref(false),propertyBusy=ref(false),propertyOpen=ref(false),propertyError=ref(''),properties=ref([]),propertyRevision=ref(0),workspaceName=ref('私人管理工作區'),workspaceDraft=ref(''),newPropertyName=ref(''),newPropertyFolder=ref(''),propertyDelete=ref(null),propertyEpoch=ref(0),activeProperty=ref(window.RentalPropertyContext.id);let newPropertyId='';
+      const propertyRpc=(action,...args)=>new Promise((resolve,reject)=>tenantApi.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[action](...args));
+      function acceptProperties(r){if(!r||!Number.isSafeInteger(r.revision)||!Array.isArray(r.items)||!r.items.every(p=>p&&typeof p.name==='string'&&typeof p.id==='string'))throw Error('房產清單格式不正確。');propertyCompatible.value=true;properties.value=r.items.map(p=>({...p,nextName:p.name,nextFolder:p.folderUrl||''}));propertyRevision.value=r.revision;workspaceName.value=workspaceDraft.value=r.workspaceName;}
+      async function loadProperties(){const previousId=activeProperty.value;propertyBusy.value=true;propertyError.value='';try{acceptProperties(await propertyRpc('getRentalProperties'));if(!properties.value.some(p=>p.id===activeProperty.value&&!p.archived)){activeProperty.value=properties.value.find(p=>!p.archived)?.id||'default';window.RentalPropertyContext.id=activeProperty.value;}window.RentalPropertyContext.name=properties.value.find(p=>p.id===activeProperty.value)?.name;if(previousId!==activeProperty.value){propertyEpoch.value++;tenants.value=[];currentAccounts.value=[];loaded.value=false;}propertyReady.value=true;}catch(e){propertyError.value='房產清單讀取失敗：'+e.message;if(activeProperty.value==='default'&&!propertyCompatible.value){properties.value=[{id:'default',name:'目前房產（待更新）',archived:false}];propertyReady.value=true;propertyError.value='請更新 Apps Script 並部署新版本，以使用房產與本次新增功能。';}else propertyReady.value=false;}finally{propertyBusy.value=false;}}
+      function switchProperty(event){const id=event.target.value;if(editorBusy.value||loading.value||propertyBusy.value||propertyOpen.value){event.target.value=activeProperty.value;navigationMessage.value='請先完成儲存或關閉房產設定。';return;}if(!properties.value.some(p=>p.id===id&&!p.archived))return;activeProperty.value=id;window.RentalPropertyContext.id=id;window.RentalPropertyContext.name=properties.value.find(p=>p.id===id)?.name;propertyEpoch.value++;tenants.value=[];currentAccounts.value=[];loaded.value=false;selectedRoom.value='';const url=new URL(location.href);url.searchParams.set('property',id);url.searchParams.delete('billingMonth');url.searchParams.delete('billingYear');history.replaceState(null,'',url.pathname+url.search);if(page.value==='overview')loadOverview();}
+      async function saveProperty(mode,p){if(!RentalAccess.canWrite||propertyBusy.value||editorBusy.value)return;propertyBusy.value=true;propertyError.value='';try{if(mode==='create'&&!newPropertyId)newPropertyId='p-'+crypto.randomUUID();const id=mode==='create'?newPropertyId:p?.id||activeProperty.value;const r=await propertyRpc('saveRentalProperty',mode,id,mode==='create'?newPropertyName.value:p?.nextName||'',workspaceDraft.value,mode==='create'?newPropertyFolder.value:p?.nextFolder||'',propertyRevision.value);acceptProperties(r);if(mode==='update'){window.RentalPropertyContext.name=properties.value.find(p=>p.id===activeProperty.value)?.name;propertyEpoch.value++;}if(mode==='create'){newPropertyName.value='';newPropertyFolder.value='';newPropertyId='';}propertyDelete.value=null;propertyError.value='房產設定已儲存。';if(!r.items.some(p=>p.id===activeProperty.value&&!p.archived)){activeProperty.value=r.items.find(p=>!p.archived).id;window.RentalPropertyContext.id=activeProperty.value;window.RentalPropertyContext.name=r.items.find(p=>p.id===activeProperty.value)?.name;const url=new URL(location.href);url.searchParams.set('property',activeProperty.value);history.replaceState(null,'',url.pathname+url.search);propertyEpoch.value++;tenants.value=[];currentAccounts.value=[];loaded.value=false;if(page.value==='overview')await loadOverview();}}catch(e){propertyError.value='設定結果待核對：'+e.message+'。請重新讀取清單確認，勿重複新增。';}finally{propertyBusy.value=false;}}
       const tenants = ref([]), loading = ref(false), loaded = ref(false), status = ref('正在讀取房間資料……');
       const currentAccounts=ref([]),paymentPeriod=ref('');
       const roomPayment=room=>currentAccounts.value.find(a=>a.room===room);
       const search = ref(''), selectedRoom = ref(''), editorBusy = ref(false), navigationMessage = ref('');
-      const nav = [{ id: 'overview', label: '房間總覽', icon: '▦' }, { id: 'tenants', label: '房客資料', icon: '♧' }, { id: 'accounts', label: '每月帳務', icon: '▤' }, { id: 'reports', label: '收租統計', icon: '▥' }];
+      const nav = [{ id: 'reports', label: '收租統計', icon: '▥' }, { id: 'overview', label: '房間總覽', icon: '▦' }, { id: 'tenants', label: '房客資料', icon: '♧' }, { id: 'accounts', label: '每月帳務', icon: '▤' }];
       const title = computed(() => nav.find(item => item.id === page.value)?.label || '租務管理');
       const subtitles = { reports: '租金收繳、全部用電與單房趨勢，在這裡一起掌握。', overview: '從房間開始，整理房客、租約與每月帳務。', tenants: '基本資料、聯絡方式與合約，在同一處查看與修改。', accounts: '收款、抄表、照片與電費通知，都從這裡處理。' };
       const money = value => value === null || value === undefined || value === '' ? '未填寫' : new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 2 }).format(value);
@@ -49,16 +56,16 @@
       }
       function navigate(next, room = '') {
         if (editorBusy.value) { navigationMessage.value = '有未儲存的修改或資料處理中，請先儲存、還原或等待完成。'; return; }
-        navigationMessage.value = ''; selectedRoom.value = room; page.value = next;
+        navigationMessage.value = ''; selectedRoom.value = room; page.value = next;if(next==='overview'&&!loaded.value)loadOverview();
         const url = new URL(location.href); url.searchParams.delete('page');
-        if (next === 'overview') url.searchParams.delete('view'); else url.searchParams.set('view', next);
+        if (next === 'reports') url.searchParams.delete('view'); else url.searchParams.set('view', next);
         history.replaceState(null, '', url.pathname + url.search);
       }
       onMounted(() => {
-        if (page.value === 'overview') loadOverview();
+        loadProperties().then(()=>{if(propertyReady.value&&page.value==='overview')loadOverview();});
         window.addEventListener('beforeunload', event => { if (editorBusy.value) { event.preventDefault(); event.returnValue = ''; } });
       });
-      return { access:RentalAccess.state, roomPayment, paymentPeriod, page, nav, title, subtitles, tenants, search, selectedRoom, editorBusy, navigationMessage, loading, loaded, status,
+      return { propertyCompatible,propertyReady,propertyBusy,propertyOpen,propertyError,properties,propertyRevision,workspaceName,workspaceDraft,newPropertyName,newPropertyFolder,propertyDelete,propertyEpoch,activeProperty,loadProperties,switchProperty,saveProperty,access:RentalAccess.state, roomPayment, paymentPeriod, page, nav, title, subtitles, tenants, search, selectedRoom, editorBusy, navigationMessage, loading, loaded, status,
         money, vacantRooms, totalRent, missingRent, withContract, withName, filteredRooms, acceptTenants, loadOverview, navigate };
     }
   });
