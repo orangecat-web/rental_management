@@ -40,7 +40,7 @@ window.RentalComponents.noticeBatch = function(api) {
      files.push({name:'產生結果.txt',blob:new Blob([report],{type:'text/plain;charset=utf-8'})});
      const zip=await RentalNoticeZip.create(files);if(!alive)return;zipUrl.value=URL.createObjectURL(zip);
     }
-    packaged.value=processed.value===totalTasks.value;message.value='處理完成：成功 '+successCount.value+' 間，未完成 '+results.value.filter(r=>!r.url).length+' 間'+(skipped?'，尚未處理 '+skipped+' 間':'')+'。'+(files.length?'請下載 ZIP，核對各房圖片後再傳送。':'請補齊資料或照片後再產生。');
+    packaged.value=processed.value===totalTasks.value;message.value='處理完成：成功 '+successCount.value+' 份，未完成 '+results.value.filter(r=>!r.url).length+' 份'+(skipped?'，尚未處理 '+skipped+' 份':'')+'。'+(files.length?'請下載 ZIP，核對各房圖片後再傳送。':'請補齊資料或照片後再產生。');
    }catch(error){if(alive)message.value='打包失敗：'+(error?.message||String(error))+'；已完成圖片仍可逐張預覽。'}
    finally{working.value=false;emit('busy-change',false)}
   }
