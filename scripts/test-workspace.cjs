@@ -9,7 +9,7 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
     {room:'506',name:'',phone:'',rent:0,notes:'',contractLinks:[]},{room:'408',name:'',rent:null,vacant:true,contractLinks:[]}];
   const vc = new VirtualConsole(); vc.on('jsdomError', e => errors.push(e.message));
   const html = fs.readFileSync('public/index.html','utf8').replace(/<script[^>]+src=[^>]+><\/script>/g,'');
-  const dom = new JSDOM(html,{url:'https://rent.test/?view=overview',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){
+  const dom = new JSDOM(html,{url:'https://rent.test/',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){
     w.Storage.prototype.setItem=()=>{writes++};
     w.fetch=async (url,options)=>{
       if(url==='/api/session')return {ok:true,status:200,json:async()=>({ok:true,data:{authenticated:true,canWrite:true,role:'manager',email:'owner@example.test',provider:'sites',logoutPath:'/signout-with-chatgpt'}})};
@@ -29,7 +29,7 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
     };
   }}); const w=dom.window,d=w.document;
   for(const file of ['tenant-vue.global.prod.js','access-session.js','workspace-transport.js','native-tenant.js','meter-worksheet.js','notice-renderer.js','notice-zip.js','notice-batch.js','payment-worksheet.js','native-billing.js','report-data.js','report-charts.js','rental-reports.js','workspace.js'])w.eval(fs.readFileSync('public/'+file,'utf8'));
-  await wait(()=>d.querySelectorAll('.room-card').length===3);
+  await wait(()=>d.querySelectorAll('.room-card').length===3);assert(d.querySelector('nav button').textContent.includes('房間總覽'),'Home defaults to overview');
   assert.equal(d.querySelectorAll('nav button').length,4); assert(!d.querySelector('iframe'));
   assert(!d.body.textContent.includes('青禾'));assert(!d.body.textContent.includes('示範'));
   assert(d.querySelector('.stats').textContent.includes('408 房'));assert(!d.querySelector('.stats').textContent.includes('合約資料夾'));

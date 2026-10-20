@@ -8,7 +8,7 @@
     setup() {
       const query = new URLSearchParams(location.search);
       window.RentalPropertyContext={id:query.get('property')||'default'};
-      const page = ref(query.get('view') === 'reports' ? 'reports' : query.get('view') === 'accounts' ? 'accounts' : query.get('view') === 'tenants' ? 'tenants' : query.get('view') === 'overview' ? 'overview' : 'reports');
+      const page = ref(query.get('view') === 'reports' ? 'reports' : query.get('view') === 'accounts' ? 'accounts' : query.get('view') === 'tenants' ? 'tenants' : 'overview');
       const propertyCompatible=ref(false),propertyReady=ref(false),propertyBusy=ref(false),propertyOpen=ref(false),propertyError=ref(''),properties=ref([]),propertyRevision=ref(0),workspaceName=ref('私人管理工作區'),workspaceDraft=ref(''),newPropertyName=ref(''),newPropertyFolder=ref(''),propertyDelete=ref(null),propertyEpoch=ref(0),activeProperty=ref(window.RentalPropertyContext.id);let newPropertyId='';
       const propertyRpc=(action,...args)=>new Promise((resolve,reject)=>tenantApi.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[action](...args));
       function acceptProperties(r){if(!r||!Number.isSafeInteger(r.revision)||!Array.isArray(r.items)||!r.items.every(p=>p&&typeof p.name==='string'&&typeof p.id==='string'))throw Error('房產清單格式不正確。');propertyCompatible.value=true;properties.value=r.items.map(p=>({...p,nextName:p.name,nextFolder:p.folderUrl||''}));propertyRevision.value=r.revision;workspaceName.value=workspaceDraft.value=r.workspaceName;}
@@ -19,7 +19,7 @@
       const currentAccounts=ref([]),paymentPeriod=ref('');
       const roomPayment=room=>currentAccounts.value.find(a=>a.room===room);
       const search = ref(''), selectedRoom = ref(''), editorBusy = ref(false), navigationMessage = ref('');
-      const nav = [{ id: 'reports', label: '收租統計', icon: '▥' }, { id: 'overview', label: '房間總覽', icon: '▦' }, { id: 'tenants', label: '房客資料', icon: '♧' }, { id: 'accounts', label: '每月帳務', icon: '▤' }];
+      const nav = [{ id: 'overview', label: '房間總覽', icon: '▦' }, { id: 'reports', label: '收租統計', icon: '▥' }, { id: 'tenants', label: '房客資料', icon: '♧' }, { id: 'accounts', label: '每月帳務', icon: '▤' }];
       const title = computed(() => nav.find(item => item.id === page.value)?.label || '租務管理');
       const subtitles = { reports: '租金收繳、全部用電與單房趨勢，在這裡一起掌握。', overview: '從房間開始，整理房客、租約與每月帳務。', tenants: '基本資料、聯絡方式與合約，在同一處查看與修改。', accounts: '收款、抄表、照片與電費通知，都從這裡處理。' };
       const money = value => value === null || value === undefined || value === '' ? '未填寫' : new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 2 }).format(value);
@@ -58,7 +58,7 @@
         if (editorBusy.value) { navigationMessage.value = '有未儲存的修改或資料處理中，請先儲存、還原或等待完成。'; return; }
         navigationMessage.value = ''; selectedRoom.value = room; page.value = next;if(next==='overview'&&!loaded.value)loadOverview();
         const url = new URL(location.href); url.searchParams.delete('page');
-        if (next === 'reports') url.searchParams.delete('view'); else url.searchParams.set('view', next);
+        if (next === 'overview') url.searchParams.delete('view'); else url.searchParams.set('view', next);
         history.replaceState(null, '', url.pathname + url.search);
       }
       onMounted(() => {

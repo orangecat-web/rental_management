@@ -43,7 +43,7 @@ const server = http.createServer((req, res) => {
       }
     });
     const w = dom.window, d = w.document;
-    await wait(()=>d.querySelectorAll('.room-year-card').length===15);assert(d.querySelector('nav button').textContent.includes('收租統計'));[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('房間總覽')).click();await wait(() => d.querySelectorAll('.room-card').length === 15);
+    await wait(() => d.querySelectorAll('.room-card').length === 15);assert(d.querySelector('nav button').textContent.includes('房間總覽'));[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('收租統計')).click();await wait(()=>d.querySelectorAll('.room-year-card').length===15);assert(w.location.search.includes('view=reports'));[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('房間總覽')).click();await wait(() => d.querySelectorAll('.room-card').length === 15);assert(!new URL(w.location.href).searchParams.has('view'));
     assert(d.querySelector('.pages-demo-banner').textContent.includes('虛構資料'));
     assert.equal(w.RentalAccess.state.role, 'viewer');
     assert.equal(w.RentalAccess.canWrite, false);

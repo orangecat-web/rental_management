@@ -8,7 +8,7 @@ window.RentalComponents.reports = function () {
   return {
     components:{ReportBars:RentalReportCharts.bars,ReportLine:RentalReportCharts.line,ReportAnnualLines:RentalReportCharts.annualLines,RentPie:RentalReportCharts.pie},
     setup(){
-      const selectedPowerMonths=ref([1,3,5,7,9,11]);const accountLink=item=>'?view=accounts&billingYear='+year.value+'&billingMonth='+item.month+'&property='+encodeURIComponent(window.RentalPropertyContext?.id||'default');
+      const accountLink=item=>'?view=accounts&billingYear='+year.value+'&billingMonth='+item.month+'&property='+encodeURIComponent(window.RentalPropertyContext?.id||'default');
       const collectionReport=ref(null),collectionError=ref('');
       const years=ref([]),availableMonths=ref([]),year=ref(currentYear),periods=ref([]),failures=ref([]),busy=ref(false),status=ref(''),month=ref(0),meterMonth=ref(0),room=ref(''),roomCompareMonth=ref(0),mode=ref('usage'),powerMetric=ref('usage'),rentScope=ref('month'),quarter=ref(1);let alive=true;
       const future=m=>Number(year.value)>currentYear||(Number(year.value)===currentYear&&m>currentMonth);
@@ -36,7 +36,7 @@ window.RentalComponents.reports = function () {
       const usageTotal=computed(()=>validMeters.value.reduce((s,a)=>s+a.meter.usage,0));
       const singleValue=a=>!a?null:mode.value==='fee'?(D.number(a.electricityFee)?a.electricityFee:null):a.meter.valid?a.meter[mode.value]:null;
       const yearMeterMonths=[1,3,5,7,9,11];
-      const annualPowerSeries=computed(()=>rooms.value.map(r=>({key:r,label:r+' 房',items:yearMeterMonths.filter(m=>selectedPowerMonths.value.includes(m)).map(m=>{const a=visible.value.find(p=>p.month===m)?.rows.find(a=>a.room===r);return {key:m,label:m+' 月',value:a?.meter.valid?a.meter.usage:null};})})));
+      const annualPowerSeries=computed(()=>rooms.value.map(r=>({key:r,label:r+' 房',items:yearMeterMonths.map(m=>{const a=visible.value.find(p=>p.month===m)?.rows.find(a=>a.room===r);return {key:m,label:m+' 月',value:a?.meter.valid?a.meter.usage:null};})})));
       const settledTotal=item=>item.settledRent===null||item.settledRent===undefined||item.settledElectricity===null||item.settledElectricity===undefined?null:Math.round((item.settledRent+item.settledElectricity)*100)/100;
       const periodTrend=r=>yearMeterMonths.map(m=>({month:m,account:visible.value.find(p=>p.month===m)?.rows.find(a=>a.room===r)}));
       const itemsForRows=rows=>rows.map(a=>({key:a.room,label:a.room,value:singleValue(a),detail:mode.value==='fee'?'電費':a.meter.valid?a.meter.days+' 天':a.meter.reason}));
@@ -70,7 +70,7 @@ window.RentalComponents.reports = function () {
       async function initialize(){busy.value=true;status.value='正在讀取帳務年份……';try{const list=await rpc('getAvailableBillingYears');if(!Array.isArray(list)||!list.every(y=>Number.isInteger(y)&&y>=1900&&y<=9999))throw Error('年份格式不正確');years.value=[...new Set(list)].sort((a,b)=>b-a);if(!years.value.length)throw Error('尚未設定帳務年份');year.value=years.value.includes(currentYear)?currentYear:years.value[0];busy.value=false;if(alive)await load();}catch(e){if(alive){busy.value=false;status.value='讀取失敗：'+e.message;}}}
       onMounted(initialize);
       onBeforeUnmount(()=>{alive=false;});
-      return {accountLink,selectedPowerMonths,annualPowerSeries,settledTotal,collectionReport,collectionError,years,year,visible,financialPeriods,failures,busy,status,month,meterMonth,room,roomCompareMonth,mode,powerMetric,future,cap,asOf,quarters,quarter,rentScope,rentLabel,rentMonths,pieSummary,coveredMonths,missingMonths,hasFailures,rentWarnings,rentItems,totalPowerItems,meterPeriods,meterPeriod,meterRows,validMeters,usageTotal,rooms,roomCards,roomScale,independentComparisonItems,roomUnit,focusRoom,fmt,load,initialize,chooseDefaults};
+      return {accountLink,annualPowerSeries,settledTotal,collectionReport,collectionError,years,year,visible,financialPeriods,failures,busy,status,month,meterMonth,room,roomCompareMonth,mode,powerMetric,future,cap,asOf,quarters,quarter,rentScope,rentLabel,rentMonths,pieSummary,coveredMonths,missingMonths,hasFailures,rentWarnings,rentItems,totalPowerItems,meterPeriods,meterPeriod,meterRows,validMeters,usageTotal,rooms,roomCards,roomScale,independentComparisonItems,roomUnit,focusRoom,fmt,load,initialize,chooseDefaults};
     },
     template:`<div class="rental-reports">
       <div class="report-toolbar"><label>帳務年份<select v-model="year" aria-label="帳務年份" @change="load" :disabled="busy"><option v-for="y in years" :value="y">{{y}} 年</option></select></label><button class="secondary" @click="years.length?load():initialize()" :disabled="busy">{{busy?'讀取中……':'重新讀取報表'}}</button></div>
@@ -99,7 +99,7 @@ window.RentalComponents.reports = function () {
       <report-line :items="totalPowerItems" :unit="powerMetric==='fee'?'元':'度'" :title="powerMetric==='fee'?'各期全部房間電費合計':'各期全部房間用電量合計'"></report-line>
       <p class="report-note">用電量以本期減前期電表計算；電費依當月帳務的電費欄位。度數資料不完整時僅註明已知小計，不畫成全部合計，缺值也不算成 0。</p>
       </section>
-      <section id="room-period-comparison" class="report-panel room-period-comparison" aria-labelledby="room-period-title"><div class="report-heading"><div><h2 id="room-period-title">整年度各房用電比較</h2><p>{{year}} 年，各房用電量依月份排列；點旁顯示房號與度數，缺值留空。</p></div></div><report-annual-lines :series="annualPowerSeries" :title="year+' 年各房用電量'" unit="度"></report-annual-lines><div class="report-mode" role="group" aria-label="年度用電顯示月份"><label v-for="m in [1,3,5,7,9,11]"><input type="checkbox" :value="m" v-model="selectedPowerMonths">{{m}} 月</label></div></section>
+      <section id="room-period-comparison" class="report-panel room-period-comparison" aria-labelledby="room-period-title"><div class="report-heading"><div><h2 id="room-period-title">整年度各房用電比較</h2><p>{{year}} 年，各房用電量依月份排列；點選房號可顯示或隱藏，滑到圖上或點選月份查看度數，缺值留空。</p></div></div><report-annual-lines :series="annualPowerSeries" :title="year+' 年各房用電量'" unit="度"></report-annual-lines></section>
       <section id="room-electricity" class="report-panel room-electricity-panel" aria-labelledby="room-electricity-title"><div class="report-heading"><div><p class="eyebrow">ROOM ELECTRICITY · {{year}}</p><h2 id="room-electricity-title">單間房用電量</h2><p>每間房一張年度圖，依帳務月份顯示六個電費期別；未填資料留空。</p></div></div>
       <div class="report-mode" role="group" aria-label="單房用電圖表單位"><button @click="mode='usage'" :aria-pressed="mode==='usage'">每期度數</button><button @click="mode='daily'" :aria-pressed="mode==='daily'">每日平均用電</button><button @click="mode='fee'" :aria-pressed="mode==='fee'">電費金額</button></div>
       <p class="room-year-hint">{{year}} 年 · 單位：{{roomUnit}} · 各房使用相同縱軸刻度，方便比較。每日平均依有效期的總度數 ÷ 總天數計算。</p>
