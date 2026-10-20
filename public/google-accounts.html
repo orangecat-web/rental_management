@@ -21,6 +21,7 @@
     :focus-visible { outline: 3px solid #567c50; outline-offset: 2px; }
     .status { min-height: 1.5rem; color: #52664e; }
     .draft-notice { color: #805019; }
+    .account-batch-actions { display:flex; flex-wrap:wrap; gap:.7rem; margin:1rem 0; }
     .initialization-summary { margin: 1rem 0; padding: 1rem; background: white; border: 1px solid #dce3dc; border-radius: .65rem; }
     .initialization-summary p { margin-top: 0; font-weight: 600; }
     .initialization-summary li { margin: .4rem 0; }
@@ -93,6 +94,7 @@
       </ul>
     </section>
     <p v-if="creationStatus" id="creation-status" class="status" role="status" aria-live="polite">{{ creationStatus }}</p>
+    <div class="account-batch-actions"><button v-write type="button" @click="saveAllAccounts" :disabled="busy||!dirtyKeys.size||batchReview">儲存全部帳務修改</button><button v-write type="button" @click="resetAllAccounts" :disabled="busy||!dirtyKeys.size">還原全部帳務修改</button></div><p v-if="batchStatus" class="status" role="status">{{batchStatus}}</p><p v-if="batchReview" class="notice">部分儲存結果尚待核對；請先還原未完成輸入，再重新讀取帳務確認，系統不會自動重送。</p>
     <p v-if="dirtyKeys.size > 0" class="draft-notice">有 {{ dirtyKeys.size }} 個未儲存項目，請儲存或還原後再切換月份、重新讀取或初始化。</p>
     <p v-if="pendingSaves > 0" class="status" role="status">有 {{ pendingSaves }} 筆資料儲存中……</p>
     <p id="initialization-status" class="status" role="status" aria-live="polite">{{ initializationStatus }}</p>
@@ -102,7 +104,7 @@
     </section>
     <p id="status" class="status" role="status" aria-live="polite">{{ status }}</p>
     <p class="billing-due-note">預設應繳日為每月 10 日，收款仍依實際日期紀錄。</p>
-    <section v-if="accounts.length" class="cash-summary" aria-label="每月收款摘要"><div><span>應收（含前期餘額）</span><strong>NT$ {{numberFormat.format(cashSummary.due)}}</strong></div><div><span>確認未收</span><strong>NT$ {{numberFormat.format(cashSummary.unpaid)}}</strong></div><div><span>多收餘額</span><strong>NT$ {{numberFormat.format(cashSummary.overpaid)}}</strong></div><p>待補應收 {{cashSummary.pending}} 間。勾選已確認收款即預設收足；未勾選列未收。多收或少收再調整實收金額。</p><label>篩選房間<select v-model="accountFilter" aria-label="收款狀態篩選"><option value="all">全部房間</option><option value="unpaid">未收房間</option><option value="overpaid">多收房間</option><option value="pending">待補應收房間</option></select></label></section>
+    <section v-if="accounts.length" class="cash-summary" aria-label="每月收款摘要"><div><span>應收（含前期餘額）</span><strong>NT$ {{numberFormat.format(cashSummary.due)}}</strong></div><div><span>確認未收</span><strong>NT$ {{numberFormat.format(cashSummary.unpaid)}}</strong></div><div><span>多收餘額</span><strong>NT$ {{numberFormat.format(cashSummary.overpaid)}}</strong></div><p>待補應收 {{cashSummary.pending}} 間。勾選已確認收款即預設收足；未勾選列未收。多收或少收再調整實收金額。</p><label>篩選房間<select v-model="accountFilter" aria-label="收款狀態篩選" :disabled="controlsLocked"><option value="all">全部房間</option><option value="unpaid">未收房間</option><option value="overpaid">多收房間</option><option value="pending">待補應收房間</option></select></label></section>
     <div v-if="accounts.length" class="table-wrap">
       <table aria-label="每月帳務資料">
         <thead><tr><th v-for="column in columns" :key="column.key" scope="col">{{ column.title }}</th></tr></thead>
@@ -121,7 +123,7 @@
                     :aria-label="account.month + ' 月 ' + account.room + ' 房電費通知預覽'">預覽電費通知</a>
                 </template>
                 <meter-photo-viewer v-else-if="column.key === 'meterPhoto'" :account="account" :blocked="editorsBlocked"></meter-photo-viewer>
-                <account-field v-else-if="column.editable" :account="account" :field="column" :blocked="editorsBlocked"
+                <account-field v-else-if="column.editable" :ref="el=>registerAccountField(account.room,column.key,el)" :account="account" :field="column" :blocked="editorsBlocked"
                   @save-start="startSave" @save-end="finishSave"
                   @saved="updateAccount(account, column, $event)"
                   @dirty-change="setDirty(account.room, column.key, $event)"></account-field>
@@ -254,8 +256,8 @@
             draft.value = displayInput(savedValue.value, props.field);
             message.value = '已還原為上次讀取或儲存的內容。';
           }
-          async function save() {
-            if (saving.value || props.blocked || !inputElement.value.reportValidity()) return;
+          async function save(fromBatch=false) {
+            if (saving.value || (props.blocked&&fromBatch!==true) || !validate()) return false;
             saving.value = true; message.value = '儲存中……'; emit('save-start');
             try {
               const result = await api.saveField(props.account.year, props.account.month, props.account.room,
@@ -265,11 +267,14 @@
                 : typeof value === 'string';
               if (!valid) throw new Error('儲存回應格式不正確，請核對後重新讀取。');
               savedValue.value = value; draft.value = displayInput(value, props.field);
-              emit('saved', value); emit('dirty-change', false); message.value = '已寫回試算表 ✓';
-            } catch (error) { message.value = '儲存未完成確認：' + errorText(error); }
+              emit('saved', value); emit('dirty-change', false); message.value = '已寫回試算表 ✓';return true;
+            } catch (error) { message.value = '儲存未完成確認：' + errorText(error);return false; }
             finally { saving.value = false; emit('save-end'); }
           }
-          return { isReading, draft, saving, message, inputElement, label, dirty, reset, save };
+          function validate(){return inputElement.value?.reportValidity()===true;}
+          function getChange(){return {room:props.account.room,field:props.field.key,meter:!!props.field.meter,value:String(draft.value??''),expected:savedValue.value};}
+          function acceptSaved(value){savedValue.value=value;draft.value=displayInput(value,props.field);emit('saved',value);emit('dirty-change',false);message.value='已寫回試算表 ✓';}
+          return { validate,getChange,acceptSaved,isReading, draft, saving, message, inputElement, label, dirty, reset, save };
         }
       };
 
@@ -348,7 +353,7 @@
               savedIds.value = [...new Set(result.fileIds)]; selectedIds.value = [...savedIds.value]; expectedValue.value = result.value;
               emit('saved', result.value); emit('dirty-change', false);
               message.value = '已儲存 ' + savedIds.value.length + ' 張匯款截圖 ✓';
-            } catch (error) { message.value = '儲存未完成確認：' + errorText(error); }
+            } catch (error) { message.value = '儲存未完成確認：' + errorText(error);return false; }
             finally { localBusy.value = false; emit('save-end'); }
           }
           return { choices, selectedIds, loaded, localBusy, dirty, message, imageUrl, load, toggle, reset, preview, imageError, save };
@@ -392,9 +397,21 @@
           const status = ref('正在讀取月份……'), initializationStatus = ref('');
           const initializationResult = ref(null), initializationApplied = ref(false), initializationPreview = ref(null);
           const dirtyKeys = reactive(new Set()), staleRooms = reactive(new Set());
-          const busy = computed(() => loading.value || operation.value || pendingSaves.value > 0);
+          const batchSaving=ref(false),batchReview=ref(false),batchStatus=ref(''),accountEditors=new Map();
+          function registerAccountField(room,field,editor){const key=room+':'+field;if(editor)accountEditors.set(key,editor);else accountEditors.delete(key);}
+          function resetAllAccounts(){if(busy.value)return;for(const e of accountEditors.values())e.reset();batchStatus.value='已還原尚未儲存的帳務輸入；已完成寫入的資料保留。';}
+          async function saveAllAccounts(){
+            if(busy.value||batchReview.value||!dirtyKeys.size||window.RentalAccess?.canWrite===false)return;
+            const targets=[...accountEditors.values()].filter(e=>e.dirty),groups=new Map();
+            if(!targets.length)return;
+            for(const e of targets){if(!e.validate()){batchStatus.value='請先修正欄位格式，尚未寫入任何修改。';return;}const c=e.getChange(),a=accounts.value.find(a=>a.room===c.room),key=(!c.meter&&['notes','transferDate','transferLastFive'].includes(c.field)?a?.receiptId||c.room:c.room)+':'+c.field;const prior=groups.get(key);if(prior&&(prior.change.value!==c.value||prior.change.expected!==c.expected)){batchStatus.value='合併收款的同一欄位有不同輸入，請先統一後再儲存；尚未寫入任何修改。';return;}if(prior)prior.editors.push(e);else groups.set(key,{change:c,editors:[e]});}
+            batchSaving.value=true;let done=0;
+            try{for(const {editors} of groups.values()){batchStatus.value='儲存中：'+done+' / '+groups.size+' 個帳務欄位';if(!await editors[0].save(true)){batchReview.value=true;batchStatus.value='已完成 '+done+' 個欄位，其餘結果待核對。已停止後續寫入，保留未完成輸入。';return;}const value=editors[0].getChange().expected;for(const e of editors.slice(1))e.acceptSaved(value);done++;await nextTick();}batchStatus.value='已儲存全部 '+done+' 個帳務欄位。';}
+            finally{batchSaving.value=false;if(!batchReview.value&&staleRooms.size&&!dirtyKeys.size)await loadAccounts();}
+          }
+          const busy = computed(() => loading.value || operation.value || batchSaving.value || pendingSaves.value > 0);
           const controlsLocked = computed(() => busy.value || dirtyKeys.size > 0);
-          const editorsBlocked = computed(() => loading.value || operation.value);
+          const editorsBlocked = computed(() => loading.value || operation.value || batchSaving.value);
           /** 新月份只回傳房間數等規劃資訊，實際寫入使用獨立按鈕。 */
           const creationPanelOpen = ref(false), newMonth = ref(0), creationPreview = ref(null), creationStatus = ref('');
           const monthChoices = Array.from({ length: 12 }, (_, index) => index + 1);
@@ -552,7 +569,7 @@
             status.value = '正在讀取 ' + year.value + ' 年 ' + selectedMonth + ' 月帳務……';
             try {
               const result = validateAccounts(await api.accounts(year.value, selectedMonth), selectedMonth);
-              accounts.value = result; revision.value++; dirtyKeys.clear(); staleRooms.clear(); accountsReady.value = true;
+              accounts.value = result; revision.value++; dirtyKeys.clear(); staleRooms.clear(); accountsReady.value = true;batchReview.value=false;batchStatus.value='';
               status.value = year.value + ' 年 ' + selectedMonth + ' 月｜已讀取 ' + result.length + ' 筆帳務｜' +
                 (selectedMonth % 2 === 1 ? '可編輯收款紀錄及本期抄表資料' : '可編輯收款紀錄');
               return true;
@@ -671,7 +688,7 @@
           }
           onMounted(loadYears);
           return { historicalMode, numberFormat, accountFilter, filteredAccounts, cashSummary, year, years, loadYears, changeYear, month, months, accounts, status, loading, operation, pendingSaves, accountsReady, revision,
-            dirtyKeys, staleRooms, controlsLocked, busy, editorsBlocked, columns, displayCell, noticeUrl,
+            registerAccountField,saveAllAccounts,resetAllAccounts,batchReview,batchStatus,dirtyKeys, staleRooms, controlsLocked, busy, editorsBlocked, columns, displayCell, noticeUrl,
             creationPanelOpen, newMonth, monthChoices, validNewMonth, canCreate, creationPreview, creationStatus,
             changeCreationMonth, toggleCreationPanel, previewNewMonth, createNewMonth,
             setDirty, startSave, finishSave, updateAccount, loadMonths, changeMonth, initializationStatus,

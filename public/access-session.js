@@ -1,7 +1,7 @@
 /** Session metadata only; tokens/cookies remain outside JavaScript and never enter localStorage. */
 (() => {
  const state=Vue.reactive({authenticated:false,canWrite:false,role:'',email:'',provider:'',loginPath:'/auth/login',logoutPath:'/auth/logout'});
- const writeHandlers=new Set(['checkout','saveRoom','addRoom','confirmRoomAction','addContact','save','reset','saveAll','resetAll','resetEntry','matchNames','applyDateAndPhotos','restore','restoreEntry','previewInitialization','initializeMonth','toggleCreationPanel','previewNewMonth','createNewMonth']);
+ const writeHandlers=new Set(['checkout','saveRoom','addRoom','confirmRoomAction','addContact','save','reset','saveAll','resetAll','saveAllAccounts','resetAllAccounts','resetEntry','matchNames','applyDateAndPhotos','restore','restoreEntry','previewInitialization','initializeMonth','toggleCreationPanel','previewNewMonth','createNewMonth']);
  function decorateTemplate(template){
   return template.replace(/<(button|input|textarea|select)\b/g,(prefix,tag,offset)=>{
    // Read to the closing bracket outside quoted attributes (arrow functions contain >).

@@ -1,4 +1,5 @@
 /** One read-only statistics page; rent allocation and electricity use separate charts and units. */
+window.RentalComponents ||= {};
 window.RentalComponents.reports = function () {
   const {ref,computed,onMounted,onBeforeUnmount}=Vue,D=RentalReportData;
   const rpc=(name,...args)=>new Promise((resolve,reject)=>RentalTransport('billing').script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](...args));
@@ -9,7 +10,7 @@ window.RentalComponents.reports = function () {
     components:{ReportBars:RentalReportCharts.bars,ReportLine:RentalReportCharts.line,ReportAnnualLines:RentalReportCharts.annualLines,RentPie:RentalReportCharts.pie},
     setup(){
       const accountLink=item=>'?view=accounts&billingYear='+year.value+'&billingMonth='+item.month+'&property='+encodeURIComponent(window.RentalPropertyContext?.id||'default');
-      const collectionReport=ref(null),collectionError=ref('');
+      const publicView=window.RentalPublic===true;const collectionReport=ref(null),collectionError=ref('');
       const years=ref([]),availableMonths=ref([]),year=ref(currentYear),periods=ref([]),failures=ref([]),busy=ref(false),status=ref(''),month=ref(0),meterMonth=ref(0),room=ref(''),roomCompareMonth=ref(0),mode=ref('usage'),powerMetric=ref('usage'),rentScope=ref('month'),quarter=ref(1);let alive=true;
       const future=m=>Number(year.value)>currentYear||(Number(year.value)===currentYear&&m>currentMonth);
       const cap=computed(()=>Number(year.value)<currentYear?12:Number(year.value)===currentYear?currentMonth:0);
@@ -70,7 +71,7 @@ window.RentalComponents.reports = function () {
       async function initialize(){busy.value=true;status.value='正在讀取帳務年份……';try{const list=await rpc('getAvailableBillingYears');if(!Array.isArray(list)||!list.every(y=>Number.isInteger(y)&&y>=1900&&y<=9999))throw Error('年份格式不正確');years.value=[...new Set(list)].sort((a,b)=>b-a);if(!years.value.length)throw Error('尚未設定帳務年份');year.value=years.value.includes(currentYear)?currentYear:years.value[0];busy.value=false;if(alive)await load();}catch(e){if(alive){busy.value=false;status.value='讀取失敗：'+e.message;}}}
       onMounted(initialize);
       onBeforeUnmount(()=>{alive=false;});
-      return {accountLink,annualPowerSeries,settledTotal,collectionReport,collectionError,years,year,visible,financialPeriods,failures,busy,status,month,meterMonth,room,roomCompareMonth,mode,powerMetric,future,cap,asOf,quarters,quarter,rentScope,rentLabel,rentMonths,pieSummary,coveredMonths,missingMonths,hasFailures,rentWarnings,rentItems,totalPowerItems,meterPeriods,meterPeriod,meterRows,validMeters,usageTotal,rooms,roomCards,roomScale,independentComparisonItems,roomUnit,focusRoom,fmt,load,initialize,chooseDefaults};
+      return {publicView,accountLink,annualPowerSeries,settledTotal,collectionReport,collectionError,years,year,visible,financialPeriods,failures,busy,status,month,meterMonth,room,roomCompareMonth,mode,powerMetric,future,cap,asOf,quarters,quarter,rentScope,rentLabel,rentMonths,pieSummary,coveredMonths,missingMonths,hasFailures,rentWarnings,rentItems,totalPowerItems,meterPeriods,meterPeriod,meterRows,validMeters,usageTotal,rooms,roomCards,roomScale,independentComparisonItems,roomUnit,focusRoom,fmt,load,initialize,chooseDefaults};
     },
     template:`<div class="rental-reports">
       <div class="report-toolbar"><label>帳務年份<select v-model="year" aria-label="帳務年份" @change="load" :disabled="busy"><option v-for="y in years" :value="y">{{y}} 年</option></select></label><button class="secondary" @click="years.length?load():initialize()" :disabled="busy">{{busy?'讀取中……':'重新讀取報表'}}</button></div>
@@ -82,7 +83,7 @@ window.RentalComponents.reports = function () {
         <div class="report-metrics"><article><span>實收合計</span><strong>{{collectionReport.cashTotal===null?'未重建':'NT$ '+fmt(collectionReport.cashTotal)}}</strong><p>{{collectionReport.unknownReceiptCount}} / {{collectionReport.receiptCount}} 筆收款尚缺已確認實收金額。</p></article></div>
         <p class="report-note">504／505 合併收款共 {{collectionReport.combinedReceipts}} 筆，各房租金與電表保留。轉帳日期、照片與應繳金額均不作為實收金額。</p>
         <h3>已核對新入住簽約款</h3><p>{{collectionReport.depositScope}}。</p>
-        <div class="signing-cards"><article v-for="item in collectionReport.signing" :key="item.month+':'+item.room"><h4>{{item.month}} 月 · {{item.room}} 房</h4><dl><div><dt>當月租金</dt><dd>NT$ {{fmt(item.rent)}}</dd></div><div><dt>兩個月押金</dt><dd>NT$ {{fmt(item.deposit)}}</dd></div><div><dt>簽約應收合計</dt><dd>NT$ {{fmt(item.contractTotal)}}</dd></div><div><dt>已確認實收</dt><dd>{{item.cash===null?'未重建':'NT$ '+fmt(item.cash)}}</dd></div></dl><a :href="accountLink(item)">前往 {{item.month}} 月匯款截圖，登記實收金額</a><p>在「整月收款整理」核對金額並確認收款後儲存，再重新讀取本報表。</p></article></div>
+        <div class="signing-cards"><article v-for="item in collectionReport.signing" :key="item.month+':'+item.room"><h4>{{item.month}} 月 · {{item.room}} 房</h4><dl><div><dt>當月租金</dt><dd>NT$ {{fmt(item.rent)}}</dd></div><div><dt>兩個月押金</dt><dd>NT$ {{fmt(item.deposit)}}</dd></div><div><dt>簽約應收合計</dt><dd>NT$ {{fmt(item.contractTotal)}}</dd></div><div><dt>已確認實收</dt><dd>{{item.cash===null?'未重建':'NT$ '+fmt(item.cash)}}</dd></div></dl><a :href="accountLink(item)">{{publicView?'查看 '+item.month+' 月帳務資料':'前往 '+item.month+' 月匯款截圖，登記實收金額'}}</a><p v-if="!publicView">在「整月收款整理」核對金額並確認收款後儲存，再重新讀取本報表。</p></article></div>
         <h3>各月歷史核對</h3><div class="signing-cards"><article v-for="item in collectionReport.months" :key="item.month"><h4>{{item.month}} 月</h4><dl><div><dt>應收租金</dt><dd>NT$ {{fmt(item.rent)}}</dd></div><div><dt>已結清租金</dt><dd>{{item.settledRent===null?'待核對':'NT$ '+fmt(item.settledRent)}}</dd></div><div v-if="item.month%2===1"><dt>電費</dt><dd>NT$ {{fmt(item.electricity)}}</dd></div><div v-if="item.month%2===1"><dt>已結清租金＋已結清電費＝總和</dt><dd>{{settledTotal(item)===null?'待核對':'NT$ '+fmt(item.settledRent)+' ＋ '+fmt(item.settledElectricity)+' ＝ '+fmt(settledTotal(item))}}</dd></div></dl><p v-if="item.vacantRooms.length">空房紀錄：{{item.vacantRooms.length}} 間。</p></article></div>
       </section>
       <template v-if="visible.length">
