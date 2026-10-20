@@ -213,7 +213,7 @@
         :step="field.key === 'rent' ? '0.01' : field.key === 'initialReading' ? 'any' : undefined"
         :maxlength="field.key === 'defaultTransferLastFive' ? 5 : ['registeredAddress','guarantorAddress'].includes(field.key) ? 500 : field.type === 'date' || ['rent','initialReading'].includes(field.key) ? undefined : 100"
         :inputmode="field.key === 'defaultTransferLastFive' ? 'numeric' : undefined"
-        :pattern="field.key === 'defaultTransferLastFive' ? '[0-9]{5}' : undefined"
+        :pattern="field.key === 'defaultTransferLastFive' ? '[0-9]{0,5}' : undefined"
         :placeholder="field.key === 'defaultTransferLastFive' ? '例如 01234' : undefined">
       <div class="editor-actions">
 

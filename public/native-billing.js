@@ -45,7 +45,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
       const AccountField = {
         props: { account: Object, field: Object, blocked: Boolean },
         emits: ['save-start', 'save-end', 'saved', 'dirty-change'],
-        template: "\n    <div class=\"editor\" :class=\"{ note: field.key === 'notes' }\">\n      <textarea v-if=\"field.key === 'notes'\" ref=\"inputElement\" v-model=\"draft\" rows=\"2\" maxlength=\"2000\"\n        :aria-label=\"label\" :disabled=\"saving || blocked\"></textarea>\n      <input v-else ref=\"inputElement\" v-model=\"draft\" :type=\"field.type || 'text'\" :aria-label=\"label\" :disabled=\"saving || blocked\"\n        :min=\"isReading ? 0 : undefined\" :step=\"isReading ? 'any' : undefined\"\n        :inputmode=\"field.key === 'transferLastFive' ? 'numeric' : undefined\"\n        :pattern=\"field.key === 'transferLastFive' ? '[0-9]{5}' : undefined\"\n        :maxlength=\"field.key === 'transferLastFive' ? 5 : undefined\"\n        :placeholder=\"field.key === 'transferLastFive' ? '例如 01234' : isReading ? '輸入累計電表度數' : undefined\">\n      <div class=\"editor-actions\">\n        <button type=\"button\" @click=\"save\" :disabled=\"saving || blocked\">{{ saving ? '儲存中……' : '儲存' }}</button>\n        <button v-if=\"dirty\" type=\"button\" @click=\"reset\" :disabled=\"saving || blocked\">還原</button>\n      </div>\n      <div class=\"save-message\" role=\"status\">{{ message }}</div>\n    </div>\n  ",
+        template: "\n    <div class=\"editor\" :class=\"{ note: field.key === 'notes' }\">\n      <textarea v-if=\"field.key === 'notes'\" ref=\"inputElement\" v-model=\"draft\" rows=\"2\" maxlength=\"2000\"\n        :aria-label=\"label\" :disabled=\"saving || blocked\"></textarea>\n      <input v-else ref=\"inputElement\" v-model=\"draft\" :type=\"field.type || 'text'\" :aria-label=\"label\" :disabled=\"saving || blocked\"\n        :min=\"isReading ? 0 : undefined\" :step=\"isReading ? 'any' : undefined\"\n        :inputmode=\"field.key === 'transferLastFive' ? 'numeric' : undefined\"\n        :pattern=\"field.key === 'transferLastFive' ? '[0-9]{0,5}' : undefined\"\n        :maxlength=\"field.key === 'transferLastFive' ? 5 : undefined\"\n        :placeholder=\"field.key === 'transferLastFive' ? '例如 01234' : isReading ? '輸入累計電表度數' : undefined\">\n      <div class=\"editor-actions\">\n        <button type=\"button\" @click=\"save\" :disabled=\"saving || blocked\">{{ saving ? '儲存中……' : '儲存' }}</button>\n        <button v-if=\"dirty\" type=\"button\" @click=\"reset\" :disabled=\"saving || blocked\">還原</button>\n      </div>\n      <div class=\"save-message\" role=\"status\">{{ message }}</div>\n    </div>\n  ",
         setup(props, { emit }) {
           const isReading = props.field.key === 'currentReading';
           const source = props.field.meter ? props.account.meter : props.account;
@@ -163,7 +163,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
 
       const MeterPhotoViewer = {
         props: { account: Object, blocked: Boolean },
-        template: "\n    <div class=\"meter-photo\">\n      <button type=\"button\" @click=\"load\" :disabled=\"loading || blocked\">{{ imageUrl ? '重新載入照片' : '載入照片' }}</button>\n      <div class=\"save-message\" role=\"status\">{{ message }}</div>\n      <template v-if=\"imageUrl.startsWith('https://drive.google.com/file/d/')\"><iframe :src=\"imageUrl\" :title=\"account.room+' 房本期電表照片'\" loading=\"lazy\" referrerpolicy=\"no-referrer\"></iframe><a :href=\"imageUrl.replace(/preview$/,'view')\" target=\"_blank\" rel=\"noopener noreferrer\">Google Drive 原圖</a>",
+        template: "\n    <div class=\"meter-photo\">\n      <button type=\"button\" @click=\"load\" :disabled=\"loading || blocked\">{{ imageUrl ? '重新載入照片' : '載入照片' }}</button>\n      <div class=\"save-message\" role=\"status\">{{ message }}</div>\n      <img v-if=\"imageUrl\" class=\"photo-image\" :src=\"imageUrl\" :alt=\"account.room + ' 房本期電表照片'\" @error=\"imageError\">\n    </div>\n  ",
         setup(props) {
           const loading = ref(false), message = ref(''), imageUrl = ref('');
           watch(() => props.account.meter?.currentReadingDate, () => {
@@ -173,11 +173,11 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
             if (loading.value || props.blocked) return;
             loading.value = true; imageUrl.value = ''; message.value = '照片讀取中……';
             try {
-              const a = props.account, result = await (api.drivePreview?api.meterPhotoReference(a.year,a.month,a.room):api.meterPhoto(a.year, a.month, a.room));
+              const a = props.account, result = await api.meterPhoto(a.year, a.month, a.room);
               if (!result || typeof result.found !== 'boolean') throw new Error('照片回應格式不正確。');
               if (!result.found) { message.value = result.message || '尚未提供照片。'; return; }
               if (result.readingDate !== a.meter?.currentReadingDate) throw new Error('抄表日期已變更，請重新讀取帳務。');
-              if(api.drivePreview){if(!/^[A-Za-z0-9_-]+$/.test(result.id||''))throw Error('照片參照不正確。');imageUrl.value='https://drive.google.com/file/d/'+result.id+'/preview';}else{if (!validImage(result.dataUrl)) throw new Error('圖片格式不正確。');imageUrl.value = result.dataUrl;} message.value = '抄表日期：' + result.readingDate;
+              if (!validImage(result.dataUrl)) throw new Error('圖片格式不正確。');imageUrl.value = result.dataUrl; message.value = '抄表日期：' + result.readingDate;
             } catch (error) { message.value = '照片讀取失敗：' + errorText(error); }
             finally { loading.value = false; }
           }
