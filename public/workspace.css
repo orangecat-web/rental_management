@@ -46,3 +46,6 @@
 
 /* Size report cards to the panel, including tablet sidebars and split-screen windows. */
 .report-metrics article:only-child{grid-column:1/-1}.rent-pie-layout>*{min-width:0;max-width:100%}.rent-pie-legend strong,.rent-pie-legend b{white-space:nowrap}.rent-pie-legend>div{min-width:0}
+
+/* Shared signing/audit card styling from the production reports. */
+.signing-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:18px}.signing-cards article{min-width:0;border:1px solid #dce3dc;border-radius:10px;padding:18px;background:#fff}.signing-cards h4{font-size:20px;margin:0 0 16px}.signing-cards dl{margin:0}.signing-cards dl>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin:12px 0;font-size:16px}.signing-cards dt,.signing-cards dd{margin:0;overflow-wrap:anywhere}.signing-cards dd{font-weight:600}.signing-cards p{font-size:16px;line-height:1.8}
