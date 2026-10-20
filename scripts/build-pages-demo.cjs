@@ -11,7 +11,7 @@ fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 // Explicit asset list: no Apps Script starters, downloads, deployment config or secrets.
 const assets = [
-  'index.html', 'notice.html', 'style.css', 'workspace.css', 'native-editors.css',
+  'index.html', 'notice.html', 'style.css', 'buttons.css', 'workspace.css', 'native-editors.css',
   'tenant-vue.global.prod.js', 'access-session.js', 'workspace-transport.js',
   'native-tenant.js', 'native-billing.js', 'billing-transport.js',
   'meter-worksheet.js', 'payment-worksheet.js', 'notice-renderer.js',

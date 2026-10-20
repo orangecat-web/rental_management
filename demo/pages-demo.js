@@ -61,6 +61,7 @@
     if(!['default',demoProperty].includes(propertyId))throw Error('展示房產不存在。');
     if(propertyId===demoProperty){if(action==='getTenantData')return tenants.slice(0,2).map((t,i)=>({...t,room:String(601+i),name:'示範房產 B 房客 '+(i+1)}));if(action==='getRoomSettings')return [{room:'601',roomType:'套房',inactive:false,occupied:true,version:'demo-b-601'},{room:'602',roomType:'雅房',inactive:false,occupied:true,version:'demo-b-602'}];if(action==='getAvailableBillingYears')return [2026];if(action==='getAvailableBillingMonths')return [];if(action==='getRentalSiteCapabilities')return {version:2,billing:true};throw Error('此示範房產尚無帳務資料。');}
 
+    if(scope==='tenant'&&action==='previewTenantBillingNames'){const t=tenants.find(t=>t.room===args[0]);if(!t)throw Error('房號不存在。');return {room:t.room,name:t.name,startDate:t.startDate,endDate:t.endDate,changes:[],version:'demo-name-preview'};}
     if (scope === 'tenant' && action === 'getTenantData') return tenants;
     if(scope==='tenant'&&action==='getRoomSettings')return tenants.map(t=>({room:t.room,roomType:t.roomType,inactive:false,occupied:!!t.name,version:t.version}));
     if (scope !== 'billing') throw Error('展示版不提供此操作。');

@@ -1,7 +1,7 @@
 import {authenticate,authenticationFailure} from './auth.mjs';
 import {canPerform} from './permissions.mjs';
 /** Server-only Google gateway. Browser requests never receive the shared key. */
-const TENANT_ACTIONS = new Set(['getRentalProperties','saveRentalProperty','saveTenantChanges','previewTenantCheckout','checkoutTenant','getRoomSettings','saveRoomSetting', 'getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract']);
+const TENANT_ACTIONS = new Set(['previewTenantBillingNames','syncTenantBillingNames','getRentalProperties','saveRentalProperty','saveTenantChanges','previewTenantCheckout','checkoutTenant','getRoomSettings','saveRoomSetting', 'getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract']);
 const BILLING_ACTIONS = new Set(['getXingwuCollectionReport', 'getRentalSiteCapabilities', 'getAvailableBillingYears', 'getAvailableBillingMonths', 'getMonthlyAccounts', 'saveMonthlyAccountField', 'previewMonthlyInitialization', 'initializeMonthlyAccounts', 'previewMonthlyAccountsSheetCreation', 'createMonthlyAccountsSheet', 'getMonthlyPaymentPhotos', 'getRoomPaymentPhotoSelection', 'saveRoomPaymentPhotoSelection', 'getPaymentPhoto', 'getMeterPhotoReference','getMeterPhoto', 'getRoomNoticeData']);
 const MAX_BODY = 16000;
 const JSON_HEADERS = {
@@ -31,6 +31,8 @@ export function validCall(action, args) {
   if(action==='getRentalProperties')return args.length===0;
   if(action==='saveRentalProperty')return args.length===6&&['create','update','delete','restore','workspace'].includes(args[0])&&text(args[1],50)&&/^(default|p-[a-f0-9-]{36})$/i.test(args[1])&&text(args[2],100)&&text(args[3],100)&&text(args[4],500)&&Number.isSafeInteger(args[5])&&args[5]>=0;
   if (action === 'getRoomSettings') return args.length===0;
+  if(action==='previewTenantBillingNames')return args.length===1&&room(args[0]);
+  if(action==='syncTenantBillingNames')return args.length===3&&room(args[0])&&text(args[1],100)&&text(args[2],100);
   if (action === 'saveTenantChanges') return args.length===3 && room(args[0]) && args[1] && typeof args[1]==='object' && !Array.isArray(args[1]) && Object.keys(args[1]).length<=40 && text(args[2],100);
   const checkoutOptions=o=>o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).every(k=>['year','month','mode','checkoutDate','cycleStart','monthlyRent','amount','previewVersion'].includes(k))&&Number.isInteger(o.year)&&o.year>=1900&&o.year<=9999&&Number.isInteger(o.month)&&o.month>=1&&o.month<=12&&['free','daily','fixed'].includes(o.mode)&&['checkoutDate','cycleStart','monthlyRent','amount','previewVersion'].every(k=>o[k]===undefined||text(o[k],100));
   if(action==='previewTenantCheckout')return args.length===2&&room(args[0])&&checkoutOptions(args[1]);
@@ -127,6 +129,6 @@ export async function handleApi(request, env, fetchImpl = fetch) {
       ? error.message : error?.name === 'TimeoutError' || error?.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK';
     console.error('rental-google-failure', { action: call.action, category });
     // Never automatically retry a write with an unknown result.
-    return fail('GOOGLE_UNAVAILABLE', !['saveRentalProperty','saveTenantChanges','checkoutTenant','saveRoomSetting','saveTenantField','saveTenantNote','saveTenantContract','saveMonthlyAccountField','saveRoomPaymentPhotoSelection','initializeMonthlyAccounts','createMonthlyAccountsSheet'].includes(call.action) ? 'Google 暫時無法讀取，請稍後再試。' : '未收到儲存結果，請重新讀取確認後再操作，避免重複寫入。', 502);
+    return fail('GOOGLE_UNAVAILABLE', !['syncTenantBillingNames','saveRentalProperty','saveTenantChanges','checkoutTenant','saveRoomSetting','saveTenantField','saveTenantNote','saveTenantContract','saveMonthlyAccountField','saveRoomPaymentPhotoSelection','initializeMonthlyAccounts','createMonthlyAccountsSheet'].includes(call.action) ? 'Google 暫時無法讀取，請稍後再試。' : '未收到儲存結果，請重新讀取確認後再操作，避免重複寫入。', 502);
   }
 }

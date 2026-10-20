@@ -35,3 +35,7 @@ Read README.md, docs/CODEX_HANDOFF.md and docs/DEPLOYMENT.md before changing thi
 - Checkout may adjust one explicitly selected existing billing month after an amount preview. Support free, daily (rental-cycle days anchored to lease start; checkout day inclusive), and a manually entered amount. Preserve electricity, bank cash and all other months; invalidate affected confirmation if due amounts change. Never recreate Xingwu history.
 - Property management creates independent private databases, signs and validates the property scope on every RPC, and archives removals. Keep original public statistics fixed to the original property. New-property month creation must not relax the original Xingwu 2026 November/December prohibition.
 - Tenant ID, address, birthday and guarantor data are private, not persisted client-side or included in public statistics. Public Demo uses invalid synthetic IDs and keeps all writes denied.
+
+## Same-lease name correction authorized 2026-10-20
+- Correcting a name without changing the lease may update the same room's matching old-name snapshots within that lease. Explicit vacancies and other lease periods remain unchanged.
+- Previously changed names use a room/lease/month preview and manager confirmation with tenant and preview version checks. Only the name cell changes; all money, receipt evidence, allocations and checkout history remain intact. No automatic retries or read-time source writes. The fictitious Demo remains read-only.

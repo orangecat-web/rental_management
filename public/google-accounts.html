@@ -48,6 +48,7 @@
     @media (max-width: 600px) { body { padding: 1rem; } }
   body{padding:1.5rem 0;background:transparent} #bridge-upgrade{line-height:1.9;padding:1rem;background:#fff;border:1px solid #dce3dc;border-radius:.65rem;margin:1rem 0} @media(max-width:600px){body{padding:1rem 0}}
 </style>
+<link rel="stylesheet" href="buttons.css">
 </head>
 <body>
 
@@ -94,7 +95,7 @@
       </ul>
     </section>
     <p v-if="creationStatus" id="creation-status" class="status" role="status" aria-live="polite">{{ creationStatus }}</p>
-    <div class="account-batch-actions"><button v-write type="button" @click="saveAllAccounts" :disabled="busy||!dirtyKeys.size||batchReview">儲存全部帳務修改</button><button v-write type="button" @click="resetAllAccounts" :disabled="busy||!dirtyKeys.size">還原全部帳務修改</button></div><p v-if="batchStatus" class="status" role="status">{{batchStatus}}</p><p v-if="batchReview" class="notice">部分儲存結果尚待核對；請先還原未完成輸入，再重新讀取帳務確認，系統不會自動重送。</p>
+    <div class="account-batch-actions"><button v-write type="button" class="primary" @click="saveAllAccounts" :disabled="busy||!dirtyKeys.size||batchReview">儲存全部帳務修改</button><button v-write type="button" @click="resetAllAccounts" :disabled="busy||!dirtyKeys.size">還原全部帳務修改</button></div><p v-if="batchStatus" class="status" role="status">{{batchStatus}}</p><p v-if="batchReview" class="notice">部分儲存結果尚待核對；請先還原未完成輸入，再重新讀取帳務確認，系統不會自動重送。</p>
     <p v-if="dirtyKeys.size > 0" class="draft-notice">有 {{ dirtyKeys.size }} 個未儲存項目，請儲存或還原後再切換月份、重新讀取或初始化。</p>
     <p v-if="pendingSaves > 0" class="status" role="status">有 {{ pendingSaves }} 筆資料儲存中……</p>
     <p id="initialization-status" class="status" role="status" aria-live="polite">{{ initializationStatus }}</p>

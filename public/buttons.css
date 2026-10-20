@@ -1,0 +1,80 @@
+/* Shared action buttons. Load after page/component styles in every workspace. */
+:root {
+  --rental-button-ink: #284e3d;
+  --rental-button-fill: #ffffff;
+  --rental-button-border: #bdcdbb;
+  --rental-button-hover: #edf3e7;
+  --rental-button-primary: #284e3d;
+  --rental-button-primary-hover: #1f4032;
+  --rental-button-danger: #984333;
+  --rental-button-radius: 8px;
+}
+/* Navigation, room cards and chart labels retain their layout and selection styles. */
+:root body :is(button, .rental-button, .notice-link):not(:where(nav button, .room-button, .room-card, .chart-column-caption button)) {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--rental-button-border);
+  border-radius: var(--rental-button-radius);
+  background: var(--rental-button-fill);
+  color: var(--rental-button-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+:root body :is(button, .rental-button, .notice-link):not(:where(nav button, .room-button, .room-card, .chart-column-caption button)):hover:not(:disabled) {
+  background: var(--rental-button-hover);
+  border-color: var(--rental-button-ink);
+  filter: none;
+}
+:root body :is(button.primary, .rental-button.primary, .notice-link, .segmented button.selected, .report-mode button[aria-pressed="true"], .report-scope button[aria-pressed="true"]) {
+  color: #fff;
+  background: var(--rental-button-primary);
+  border-color: var(--rental-button-primary);
+}
+:root body :is(button.primary, .rental-button.primary, .notice-link, .segmented button.selected, .report-mode button[aria-pressed="true"], .report-scope button[aria-pressed="true"]):hover:not(:disabled) {
+  color: #fff;
+  background: var(--rental-button-primary-hover);
+  border-color: var(--rental-button-primary-hover);
+}
+:root body button.danger {
+  color: var(--rental-button-danger);
+  background: #fff;
+  border-color: #d5aea5;
+}
+:root body button.danger:hover:not(:disabled) {
+  color: #7d3226;
+  background: #fbefec;
+  border-color: var(--rental-button-danger);
+}
+:root body :is(button, .rental-button, .notice-link):focus-visible {
+  outline: 3px solid #c39d54;
+  outline-offset: 3px;
+}
+:root body .annual-line-legend button[aria-pressed="false"] {
+  background: #f5f7f3;
+  text-decoration: line-through;
+  opacity: .6;
+}
+:root body button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root body :is(button, .rental-button, .notice-link) { transition: none; }
+}
