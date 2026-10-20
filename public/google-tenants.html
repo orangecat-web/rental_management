@@ -173,7 +173,7 @@
           @dirty-change="setDirty(activeTenant.room, 'notes', $event)"></tenant-field>
       </section>
 
-      <section class="form-section" aria-label="緊急聯絡人"><div class="section-heading"><h3>緊急聯絡人</h3><button v-write @click="addContact" :disabled="loading||pendingSaves>0||contacts.length>=20">新增緊急聯絡人</button></div><div v-for="(contact,index) in contacts" :key="index" class="contact-row"><label>聯絡人 {{index+1}}<input v-write-field v-model="contact.name" maxlength="100" :aria-label="'緊急聯絡人 '+(index+1)+' 姓名'" :disabled="loading||pendingSaves>0"></label><label>電話<input v-write-field v-model="contact.phone" type="tel" maxlength="100" :aria-label="'緊急聯絡人 '+(index+1)+' 電話'" :disabled="loading||pendingSaves>0"></label><button v-write @click="contacts.splice(index,1)" :disabled="loading||pendingSaves>0">移除此聯絡人</button></div><p v-if="!contacts.length">尚未填寫緊急聯絡人。</p></section>
+      <section class="form-section" aria-label="緊急聯絡人"><div class="section-heading"><h3>緊急聯絡人</h3><button v-write @click="addContact" :disabled="loading||pendingSaves>0||contacts.length>=20">新增緊急聯絡人</button></div><div v-for="(contact,index) in contacts" :key="index" class="contact-row"><label>聯絡人 {{index+1}}<input v-write-field v-model="contact.name" maxlength="100" :aria-label="'緊急聯絡人 '+(index+1)+' 姓名'" :disabled="loading||pendingSaves>0"></label><label>電話<input v-write-field v-model="contact.phone" @blur="contact.phone=formatPhone(contact.phone)" type="tel" maxlength="100" :aria-label="'緊急聯絡人 '+(index+1)+' 電話'" :disabled="loading||pendingSaves>0"></label><button v-write @click="contacts.splice(index,1)" :disabled="loading||pendingSaves>0">移除此聯絡人</button></div><p v-if="!contacts.length">尚未填寫緊急聯絡人。</p></section>
       <section class="form-section">
         <details class="other-data">
           <summary>其他聯絡與房間資料</summary>
@@ -206,7 +206,7 @@
         <option value="">{{ field.key === 'identity' ? '未標記' : '未設定' }}</option>
         <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
       </select>
-      <input v-else ref="inputElement" :id="inputId" v-model="draft"
+      <input v-else ref="inputElement" :id="inputId" v-model="draft" @blur="formatTelephone"
         :type="field.type || 'text'" :aria-label="label" :disabled="saving || blocked"
         :min="field.type === 'number' ? 0 : undefined"
         :max="field.key === 'rent' ? 1000000 : field.key === 'initialReading' ? 100000000 : undefined"
@@ -276,6 +276,7 @@
       };
 
       /** 只轉換輸入框顯示值；savedValue 仍保留後端原值作更新衝突檢查。 */
+      function formatPhone(value) { const text=String(value??'').trim(),digits=text.replace(/[\s-]/g,'');return /^09\d{8}$/.test(digits)?digits.slice(0,4)+'-'+digits.slice(4,7)+'-'+digits.slice(7):text; }
       function displayField(value, field) {
         if (field.checkbox) return value === '是';
         const text = String(value ?? (field.key==='identity'?'一般':'')) || (field.key==='identity'?'一般':'');
@@ -283,7 +284,7 @@
           const match = /^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/.exec(text);
           if (match) return match[1] + '-' + match[2].padStart(2, '0') + '-' + match[3].padStart(2, '0');
         }
-        return text;
+        return field.type==='tel'?formatPhone(text):text;
       }
 
       const TenantField = {
@@ -302,6 +303,7 @@
           watch(dirty, value => emit('dirty-change', value));
           watch(draft,value=>emit('draft-change',value));
 
+          function formatTelephone(){if(props.field.type==='tel')draft.value=formatPhone(draft.value);}
           function reset() {
             if (saving.value || props.blocked) return;
             draft.value = displayField(savedValue.value, props.field);
@@ -333,7 +335,7 @@
               emit('save-end');
             }
           }
-          return { draft, saving, message, inputElement, inputId, label, dirty, reset, save };
+          return { draft, saving, message, inputElement, inputId, label, dirty, reset, save,formatTelephone };
         }
       };
 
@@ -433,8 +435,8 @@
           async function saveAll(){
             if(!writeAllowed()||loading.value||pendingSaves.value||!activeTenant.value||!dirtyKeys.size)return;
             const article=document.querySelector('[aria-label="房客資料編輯"]');if(article&&[...article.querySelectorAll('input,textarea,select')].some(el=>!el.reportValidity()))return;
-            const changes={};for(const [key,editor] of fieldEditors){if(!editor.dirty)continue;changes[key]=key==='contractLinks'?(editor.draft.trim()?[editor.draft.trim()]:[]):String(editor.draft??'');}
-            if(JSON.stringify(contacts.value)!==JSON.stringify(savedContacts.value))changes.emergencyContacts=JSON.parse(JSON.stringify(contacts.value));
+            const changes={};for(const [key,editor] of fieldEditors){if(!editor.dirty)continue;changes[key]=key==='contractLinks'?(editor.draft.trim()?[editor.draft.trim()]:[]):(['phone','cohabitantPhone','guarantorPhone'].includes(key)?formatPhone(editor.draft):String(editor.draft??''));}
+            if(JSON.stringify(contacts.value)!==JSON.stringify(savedContacts.value))changes.emergencyContacts=contacts.value.map(c=>({...c,phone:formatPhone(c.phone)}));
             if(!activeTenant.value.identity)changes.identity='一般';
             pendingSaves.value++;status.value='正在儲存全部修改……';
             try{const t=await rpc('saveTenantChanges',activeTenant.value.room,changes,activeTenant.value.version);acceptTenant(t);status.value='全部修改已儲存 ✓';}
@@ -523,7 +525,7 @@
             }
           }
           onMounted(loadTenants);
-          return {openCheckout,previewCheckout,checkoutPeriod,checkoutOptions,checkoutPreview,checkoutMessage,onDraft,resetAll,registerField,contacts,addContact,saveAll,checkoutConfirm,checkout,roomSettingsOpen,roomSettings,roomAction,newRoom,newRoomType,openRoomSettings,saveRoom,addRoom,confirmRoomAction,selectedRoom, activeTenant, selectRoom, rentText, tenants, loading, loadFailed, pendingSaves, dirtyKeys, status, revision,
+          return {formatPhone,openCheckout,previewCheckout,checkoutPeriod,checkoutOptions,checkoutPreview,checkoutMessage,onDraft,resetAll,registerField,contacts,addContact,saveAll,checkoutConfirm,checkout,roomSettingsOpen,roomSettings,roomAction,newRoom,newRoomType,openRoomSettings,saveRoom,addRoom,confirmRoomAction,selectedRoom, activeTenant, selectRoom, rentText, tenants, loading, loadFailed, pendingSaves, dirtyKeys, status, revision,
             basicFields, noteField, extraFields, guarantorFields, setDirty, startSave, finishSave, updateField, loadTenants };
         }
       });

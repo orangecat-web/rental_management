@@ -68,11 +68,12 @@ const server = http.createServer((req, res) => {
       prepared.push(w.RentalReportData.prepare(2026, month, result.data));
       for (const a of result.data) {
         assert.equal(a.netDue, a.totalDue + a.arrears);
-        assert.equal(a.unpaid, a.netDue - a.effectivePaid);
+        if(a.receiptPhotoMatched&&!a.isReceived){assert.equal(a.unpaid,a.arrears+(a.electricityFee||0));assert.equal(a.actualPaid,null);assert.equal(a.effectivePaid,null);}else assert.equal(a.unpaid, a.netDue - a.effectivePaid);
         if (month % 2) assert(w.RentalReportData.meter(a).valid);
       }
     }
-    assert(w.RentalReportData.rentCohorts(prepared).every(row => row.valid));
+    const cohorts=w.RentalReportData.rentCohorts(prepared);assert(cohorts.filter(row=>!(row.month===12&&row.room==='401')).every(row=>row.valid));assert(!cohorts.find(row=>row.month===12&&row.room==='401').valid,'saved photo does not invent cash');
+    const paired=(await rpc('getRoomPaymentPhotoSelection',[2026,12,'401'])).result.data;assert.deepEqual(Array.from(paired.fileIds),['demo-payment-401']);const demoDecember=(await rpc('getMonthlyAccounts',[2026,12])).result.data.find(a=>a.room==='401');assert.equal(demoDecember.isReceived,false);assert.equal(demoDecember.unpaid,0);assert.equal(demoDecember.receiptRecordedAmount,null);
     const notice = await rpc('getRoomNoticeData', [2026, 11, '506']);
     w.RentalNotice.validate(notice.result.data);
     assert(notice.result.data.photo.dataUrl.startsWith('data:image/png;base64,'));

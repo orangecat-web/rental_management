@@ -37,11 +37,11 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
   zeroCard.click();await wait(()=>d.querySelector('#tenant-506-rent'));
   assert.equal(d.querySelector('#tenant-506-rent').value,'0');
   d.querySelector('[aria-label="選擇 401 房"]').click();await wait(()=>d.querySelector('#tenant-401-phone'));
-  let phone=d.querySelector('#tenant-401-phone');phone.value='0987654321';phone.dispatchEvent(new w.Event('input',{bubbles:true}));
+  let phone=d.querySelector('#tenant-401-phone');assert.equal(phone.value,'0912-345-678');phone.value='0987654321';phone.dispatchEvent(new w.Event('input',{bubbles:true}));
   await wait(()=>d.querySelector('.draft-notice'));
   d.querySelector('nav button').click();await wait(()=>d.body.textContent.includes('有未儲存的修改'));assert(d.querySelector('#tenant-401-phone'));
   click(d,'儲存全部修改');await wait(()=>d.querySelector('.status').textContent.includes('全部修改已儲存'));phone=d.querySelector('#tenant-401-phone');
-  assert.deepEqual(calls.find(c=>c.action==='saveTenantChanges'),{url:'/api/tenant-rpc',propertyId:'default',action:'saveTenantChanges',args:['401',{phone:'0987654321',identity:'一般'},'v1']});
+  assert.deepEqual(calls.find(c=>c.action==='saveTenantChanges'),{url:'/api/tenant-rpc',propertyId:'default',action:'saveTenantChanges',args:['401',{phone:'0987-654-321',identity:'一般'},'v1']});
   // Conflict leaves the user's draft present and blocks navigation until restore.
   conflict=true;phone.value='0900000000';phone.dispatchEvent(new w.Event('input',{bubbles:true}));await wait(()=>d.querySelector('.draft-notice'));click(d,'儲存全部修改');await wait(()=>d.querySelector('.status').textContent.includes('其他人已更新'));assert.equal(phone.value,'0900000000');click(d,'還原全部未儲存');await wait(()=>!d.querySelector('.draft-notice'));
   const accountNav=[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('每月帳務'));accountNav.click();

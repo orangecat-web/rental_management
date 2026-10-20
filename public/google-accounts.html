@@ -104,7 +104,7 @@
     </section>
     <p id="status" class="status" role="status" aria-live="polite">{{ status }}</p>
     <p class="billing-due-note">預設應繳日為每月 10 日，收款仍依實際日期紀錄。</p>
-    <section v-if="accounts.length" class="cash-summary" aria-label="每月收款摘要"><div><span>應收（含前期餘額）</span><strong>NT$ {{numberFormat.format(cashSummary.due)}}</strong></div><div><span>多收餘額</span><strong>NT$ {{numberFormat.format(cashSummary.overpaid)}}</strong></div><p>待補應收 {{cashSummary.pending}} 間。勾選已確認收款即預設收足；未勾選列未收。多收或少收再調整實收金額。</p><label>篩選房間<select v-model="accountFilter" aria-label="收款狀態篩選" :disabled="controlsLocked"><option value="all">全部房間</option><option value="unpaid">未收房間</option><option value="overpaid">多收房間</option><option value="pending">待補應收房間</option></select></label></section>
+    <section v-if="accounts.length" class="cash-summary" aria-label="每月收款摘要"><div><span>應收（含前期餘額）</span><strong>NT$ {{numberFormat.format(cashSummary.due)}}</strong></div><div><span>多收餘額</span><strong>NT$ {{numberFormat.format(cashSummary.overpaid)}}</strong></div><p v-if="accounts.some(a=>a.receiptRuleVersion===2)">人工確認後才認列實收金額；已儲存的截圖配對只排除未繳房租。未確認且無配對的費用跨月列欠款，空房除外。</p><p v-else>待補應收 {{cashSummary.pending}} 間。勾選已確認收款即預設收足；未勾選列未收。多收或少收再調整實收金額。</p><label>篩選房間<select v-model="accountFilter" aria-label="收款狀態篩選" :disabled="controlsLocked"><option value="all">全部房間</option><option value="unpaid">未收房間</option><option value="overpaid">多收房間</option><option value="pending">待補應收房間</option></select></label></section>
     <div v-if="accounts.length" class="table-wrap">
       <table aria-label="每月帳務資料">
         <thead><tr><th v-for="column in columns" :key="column.key" scope="col">{{ column.title }}</th></tr></thead>

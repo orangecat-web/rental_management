@@ -7,7 +7,7 @@ Read README.md, docs/CODEX_HANDOFF.md and docs/DEPLOYMENT.md before changing thi
 - Room IDs and available years/months come from Google data. Keep 0 distinct from missing values; preserve leading zeros in phones and bank suffixes.
 - Electricity is billed in odd months: (current reading - previous reading) × 5. Previous readings/dates come from the preceding electricity cycle; do not copy previous photos. These existing business rules should move into validated configuration when adding pricing options.
 - 504 and 505 are independent rooms/notices. 506 has rent 0 and still pays electricity.
-- Receipt confirmation is explicit. Screenshots/dates do not auto-confirm new receipts. Partial receipts are human-entered. Credits/debt recompute without duplicate carry.
+- Receipt amounts require explicit human confirmation. A saved room/month screenshot association can exclude unconfirmed rent, but cannot confirm or infer cash. Filename candidates and dates do not count. Partial receipts are human-entered. Credits/debt recompute without duplicate carry.
 - Rent reporting allocates FIFO: old claims, current rent, then current electricity. Later payments settle original rent cohorts. Never sum recurring cumulative debt across months.
 - Annual room charts show six billing periods with one shared scale; desktop 2–3 cards per row, phone 1. Missing readings remain unknown.
 - No private records, photos or login tokens in localStorage, source, exports, logs or URLs. Do not auto-retry uncertain writes.
