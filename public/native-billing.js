@@ -55,6 +55,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
           const label = computed(() => props.account.month + ' 月 ' + props.account.room + ' 房' + props.field.title);
           const dirty = computed(() => String(draft.value ?? '') !== displayInput(savedValue.value, props.field));
           watch(dirty, value => emit('dirty-change', value));
+          watch(()=>props.field.meter?props.account.meter?.[props.field.key]:props.account[props.field.key],value=>{if(!dirty.value&&!saving.value){savedValue.value=value??(isReading?null:'');draft.value=displayInput(savedValue.value,props.field);}});
           function reset() {
             if (saving.value || props.blocked) return;
             draft.value = displayInput(savedValue.value, props.field);
@@ -329,7 +330,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
             if (column.meter) {
               account.meter[column.key] = value; staleRooms.add(account.room);
               status.value = '抄表資料已儲存；電費與金額等待重新讀取。';
-            } else account[column.key] = value;
+            } else {account[column.key] = value;if(account.billingGroup?.includes('+')){for(const a of accounts.value.filter(a=>a.receiptId===account.receiptId))a[column.key]=value;}}
           }
           function validateAccounts(result, selectedMonth) {
             if (!Array.isArray(result)) throw new Error('帳務資料格式不正確。');
