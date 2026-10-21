@@ -4,7 +4,7 @@ const wait = async fn => { const start = Date.now(); while (!fn()) { if (Date.no
 const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b => b.textContent.trim() === text); assert(b, 'missing button ' + text); b.click(); };
 (async () => {
   const properties={revision:0,workspaceName:'測試工作區',items:[{id:'default',name:'測試房產',archived:false,folderUrl:''}]};
-  const calls = [], errors = []; let writes = 0, conflict = false;
+  const calls = [], errors = []; let writes = 0, conflict = false, propertyReadFailures = 1;
   const rows = [{ room:'401',version:'v1',name:'測試甲', phone:'0912345678', rent:5800, endDate:'2027-01-01', notes:'',contractLinks:[] },
     {room:'506',name:'',phone:'',rent:0,notes:'',contractLinks:[]},{room:'408',name:'',rent:null,vacant:true,contractLinks:[]}];
   const vc = new VirtualConsole(); vc.on('jsdomError', e => errors.push(e.message));
@@ -14,7 +14,7 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
     w.fetch=async (url,options)=>{
       if(url==='/api/session')return {ok:true,status:200,json:async()=>({ok:true,data:{authenticated:true,canWrite:true,role:'manager',email:'owner@example.test',provider:'sites',logoutPath:'/signout-with-chatgpt'}})};
       const call=JSON.parse(options.body);calls.push({url,...call}); let data;
-      if(call.action==='getRentalProperties')data=properties;
+      if(call.action==='getRentalProperties'){if(propertyReadFailures-->0)return {ok:false,status:503,json:async()=>({ok:false,error:{code:'GOOGLE_UNAVAILABLE',message:'測試：房產清單連線中斷'}})};data=properties;}
  else if(call.action==='saveRentalProperty'){const [mode,id,name,workspace,folder,revision]=call.args;assert.equal(revision,properties.revision);if(mode==='workspace')properties.workspaceName=workspace;else if(mode==='create')properties.items.push({id,name,archived:false,folderUrl:folder});else if(mode==='delete')properties.items.find(p=>p.id===id).archived=true;else throw Error('unexpected property write');properties.revision++;data=properties;}
  else if(call.action==='getTenantData') data=call.propertyId==='default'?rows:[];
       else if(call.action==='saveTenantChanges') {
@@ -30,6 +30,8 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
   }}); const w=dom.window,d=w.document;
   for(const file of ['tenant-vue.global.prod.js','access-session.js','workspace-transport.js','native-tenant.js','meter-worksheet.js','notice-renderer.js','notice-zip.js','notice-batch.js','payment-worksheet.js','native-billing.js','report-data.js','report-charts.js','rental-reports.js','workspace.js'])w.eval(fs.readFileSync('public/'+file,'utf8'));
   await wait(()=>d.querySelectorAll('.room-card').length===3);assert(d.querySelector('nav button').textContent.includes('房間總覽'),'Home defaults to overview');
+  assert(d.body.textContent.includes('房產清單讀取失敗：測試：房產清單連線中斷'));assert(!d.body.textContent.includes('請更新 Apps Script'));assert(d.querySelector('#property-select').textContent.includes('清單暫不可用'));assert([...d.querySelectorAll('button')].find(b=>b.textContent==='管理房產與工作區').disabled);
+  await wait(()=>[...d.querySelectorAll('button')].some(b=>b.textContent==='重讀房產清單'&&!b.disabled));click(d,'重讀房產清單');await wait(()=>d.querySelector('#property-select').textContent.includes('測試房產'));assert.equal(calls.filter(c=>c.action==='getRentalProperties').length,2);assert(!d.body.textContent.includes('房產清單讀取失敗：'));assert(![...d.querySelectorAll('button')].some(b=>b.textContent==='重讀房產清單'));
   assert.equal(d.querySelectorAll('nav button').length,4); assert(!d.querySelector('iframe'));
   assert(!d.body.textContent.includes('青禾'));assert(!d.body.textContent.includes('示範'));
   assert(d.querySelector('.stats').textContent.includes('408 房'));assert(!d.querySelector('.stats').textContent.includes('合約資料夾'));
