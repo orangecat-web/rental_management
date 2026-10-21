@@ -301,6 +301,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
               ...(odd && accounts.value.some(a => a.meter && typeof a.meter === 'object') ? meterColumns : [])];
           });
           function displayCell(account, column) {
+            if(column.key==='name'&&account.vacant===true)return '空房';
             const value = column.meter ? account.meter?.[column.key] : account[column.key];
             return value === null || value === undefined || value === '' ? '—'
               : column.numeric ? numberFormat.format(value) : String(value);

@@ -77,7 +77,7 @@ const server = http.createServer((req, res) => {
     const notice = await rpc('getRoomNoticeData', [2026, 11, '506']);
     w.RentalNotice.validate(notice.result.data);
     assert(notice.result.data.photo.dataUrl.startsWith('data:image/png;base64,'));
-    const namePreview=await rpc('previewTenantBillingNames',['401'],'tenant');assert.equal(namePreview.response.status,200);assert.equal(namePreview.result.data.changes.length,0);assert.equal((await rpc('syncTenantBillingNames',['401','demo-401','demo-name-preview'],'tenant')).response.status,403);
+    const namePreview=await rpc('previewTenantBillingNames',['401'],'tenant');assert.equal(namePreview.response.status,200);assert.equal(namePreview.result.data.changes.length,0);assert.equal((await rpc('syncTenantBillingNames',['401','demo-401','demo-name-preview',[{year:2026,month:10}]],'tenant')).response.status,403);
     const write = await rpc('saveTenantField', ['401', 'name', 'changed', ''], 'tenant');
     assert.equal(write.response.status, 403);
     assert.equal((await rpc('getTenantData', [], 'tenant')).result.data[0].name, '示範房客 A');

@@ -32,7 +32,7 @@ export function validCall(action, args) {
   if(action==='saveRentalProperty')return args.length===6&&['create','update','delete','restore','workspace'].includes(args[0])&&text(args[1],50)&&/^(default|p-[a-f0-9-]{36})$/i.test(args[1])&&text(args[2],100)&&text(args[3],100)&&text(args[4],500)&&Number.isSafeInteger(args[5])&&args[5]>=0;
   if (action === 'getRoomSettings') return args.length===0;
   if(action==='previewTenantBillingNames')return args.length===1&&room(args[0]);
-  if(action==='syncTenantBillingNames')return args.length===3&&room(args[0])&&text(args[1],100)&&text(args[2],100);
+  if(action==='syncTenantBillingNames')return args.length===4&&room(args[0])&&text(args[1],100)&&text(args[2],100)&&Array.isArray(args[3])&&args[3].length>0&&args[3].length<=120&&args[3].every(p=>p&&Object.keys(p).length===2&&Number.isInteger(p.year)&&p.year>=1900&&p.year<=9999&&Number.isInteger(p.month)&&p.month>=1&&p.month<=12);
   if (action === 'saveTenantChanges') return args.length===3 && room(args[0]) && args[1] && typeof args[1]==='object' && !Array.isArray(args[1]) && Object.keys(args[1]).length<=40 && text(args[2],100);
   const checkoutOptions=o=>o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).every(k=>['year','month','mode','checkoutDate','cycleStart','monthlyRent','amount','previewVersion'].includes(k))&&Number.isInteger(o.year)&&o.year>=1900&&o.year<=9999&&Number.isInteger(o.month)&&o.month>=1&&o.month<=12&&['free','daily','fixed'].includes(o.mode)&&['checkoutDate','cycleStart','monthlyRent','amount','previewVersion'].every(k=>o[k]===undefined||text(o[k],100));
   if(action==='previewTenantCheckout')return args.length===2&&room(args[0])&&checkoutOptions(args[1]);

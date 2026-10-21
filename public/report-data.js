@@ -30,7 +30,7 @@
       rooms.add(String(a.room));
     }
     const odd=month%2===1;
-    const rows=accounts.map(a=>({room:String(a.room),name:String(a.name||'').trim(),arrears:a.arrears,creditApplied:a.creditApplied,rent:a.rent,electricityFee:a.electricityFee,totalDue:a.totalDue,effectivePaid:a.effectivePaid,netDue:a.netDue,unpaid:a.unpaid,overpaid:a.overpaid,creditWarning:a.creditWarning||'',meter:meter(a)}));
+    const rows=accounts.map(a=>({room:String(a.room),name:String(a.name||'').trim(),occupantKey:a.occupantKey,vacant:a.vacant===true,arrears:a.arrears,creditApplied:a.creditApplied,rent:a.rent,electricityFee:a.electricityFee,totalDue:a.totalDue,effectivePaid:a.effectivePaid,netDue:a.netDue,unpaid:a.unpaid,overpaid:a.overpaid,creditWarning:a.creditWarning||'',meter:meter(a)}));
     return {year,month,rows,rent:aggregate(rows,a=>a.rent),electricity:aggregate(rows,a=>odd?a.electricityFee:0),paid:aggregate(rows,a=>a.effectivePaid),debt:aggregate(rows,a=>a.unpaid),credit:aggregate(rows,a=>a.overpaid),warnings:rows.filter(a=>a.creditWarning).length};
   }
   /** Allocate funds once, FIFO: old claims, current rent, then electricity.
@@ -43,14 +43,14 @@
     for(const p of [...periods].sort((a,b)=>a.year*12+a.month-b.year*12-b.month)) {
       for(const a of p.rows) {
         const serial=p.year*12+p.month, prior=histories.get(a.room);
-        const inherited=prior&&prior.serial===serial-1&&a.name&&prior.name===a.name;
+        const identity=a.occupantKey||a.name,inherited=prior&&prior.serial===serial-1&&identity&&prior.identity===identity&&!a.vacant;
         let queue=inherited?prior.queue:[];
         const rent=cents(a.rent),fee=p.month%2?cents(a.electricityFee):0,gross=cents(a.totalDue),cash=cents(a.effectivePaid),credit=cents(a.creditApplied),arrears=cents(a.arrears);
         const record={year:p.year,month:p.month,room:a.room,rent,paid:0,valid:rent!==null};records.push(record);
         const valid=rent!==null&&fee!==null&&gross===rent+fee&&cash!==null&&credit!==null&&arrears!==null;
         if(!valid) {
           record.valid=false;for(const claim of queue)if(claim.record)claim.record.valid=false;
-          histories.set(a.room,{serial,name:a.name,queue:[]});continue;
+          histories.set(a.room,{serial,identity,queue:[]});continue;
         }
         // The backend's carried amount is authoritative. A gap/name change keeps sessions separate.
         const carried=queue.reduce((sum,c)=>sum+c.left,0);
@@ -61,7 +61,7 @@
         let funds=cash+credit;
         for(const claim of queue){const used=Math.min(funds,claim.left);claim.left-=used;funds-=used;if(claim.record)claim.record.paid+=used;if(!funds)break;}
         queue=queue.filter(c=>c.left>0);
-        histories.set(a.room,{serial,name:a.name,queue});
+        histories.set(a.room,{serial,identity,queue});
       }
     }
     return records.map(r=>({...r,rent:r.rent===null?null:r.rent/100,paid:r.paid/100,unpaid:r.rent===null?null:(r.rent-r.paid)/100}));
