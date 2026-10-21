@@ -109,6 +109,14 @@
     .page{padding:1.5rem 0;max-width:none}body{background:transparent}
   .tenant-radio{display:flex;flex-wrap:wrap;gap:1rem;min-height:2.8rem;align-items:center}.tenant-radio label{display:flex;gap:.5rem;align-items:center}.tenant-radio input{width:1.2rem;min-height:1.2rem;padding:0}.tenant-batch-actions{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem}.tenant-batch-actions button,.room-settings button,.contact-row button,.section-heading button{font:inherit;padding:.65rem 1rem;border:1px solid #cfd9cc;border-radius:.45rem;background:#edf3e7;color:#284e3d}.contact-row,.room-setting-row{display:flex;gap:1rem;align-items:end;flex-wrap:wrap;margin-bottom:1rem}.contact-row label,.room-setting-row label{flex:1;min-width:180px}.room-setting-row>input{width:140px}.room-setting-row>select{width:120px}
   @media(max-width:640px){.page{padding:1rem 0}.contact-row{display:grid;grid-template-columns:1fr}}
+
+    .billing-name-review { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: .75rem; }
+    .billing-name-review p { margin: 0; }
+    .billing-name-review ul { display: grid; gap: .35rem; list-style: none; padding: 0; margin: 0; min-width: 0; }
+    .billing-name-review label { display: flex; align-items: center; gap: .65rem; min-height: 44px; min-width: 0; cursor: pointer; }
+    .billing-name-review input[type="checkbox"] { width: 22px !important; height: 22px; min-width: 22px; max-width: 22px; min-height: 22px; padding: 0; margin: 0; flex: 0 0 22px; }
+    .billing-name-review label span { min-width: 0; overflow-wrap: anywhere; }
+    .billing-name-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
 </style>
 <link rel="stylesheet" href="buttons.css">
 </head>
