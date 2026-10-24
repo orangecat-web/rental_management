@@ -118,6 +118,7 @@
     .billing-name-review label span { min-width: 0; overflow-wrap: anywhere; }
     .billing-name-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
 
+    .lease-years-control{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lease-years-control label{margin:0}.lease-years-control input{width:8rem;max-width:100%}.lease-term-message{font-size:16px;color:#98321f;margin:0}
     .lease-fields{align-items:start;container-name:tenant-lease;container-type:inline-size}
     .renewal-notice{min-width:0;display:grid;gap:8px}
     .renewal-notice .renewal-download{justify-self:start}
@@ -172,12 +173,12 @@
       </header>
 
       <section class="form-section" aria-label="基本與租約資料">
-        <div class="section-heading"><h3>基本與租約資料</h3><span class="section-hint">修改完成後，一鍵儲存全部；起租日起一年一約</span></div>
+        <div class="section-heading"><h3>基本與租約資料</h3><span class="section-hint">修改完成後，一鍵儲存全部；租期至少一年，以整年計算</span></div>
         <div class="field-grid lease-fields">
           <tenant-field v-for="field in basicFields" :key="field.key" :ref="el=>registerField(field.key,el)" :tenant="activeTenant" :field="field" :blocked="loading" show-title
             @save-start="startSave" @save-end="finishSave"
             @saved="updateField(activeTenant, field.key, $event)" @draft-change="onDraft(field.key,$event)"
-            @dirty-change="setDirty(activeTenant.room, field.key, $event)"></tenant-field>
+            @dirty-change="setDirty(activeTenant.room, field.key, $event)"><template v-if="field.key==='endDate'" #lease-term><div class="lease-years-control"><label :for="'tenant-'+activeTenant.room+'-leaseYears'">租期年數</label><input v-write-field :id="'tenant-'+activeTenant.room+'-leaseYears'" type="number" min="1" step="1" required inputmode="numeric" :value="leaseYears" @input="changeLeaseYears($event.target.value)" :disabled="loading||pendingSaves>0" :aria-label="activeTenant.room+' 房租期年數'"><span>年</span></div><p v-if="leaseTermMessage" class="lease-term-message" role="status">{{leaseTermMessage}}</p></template></tenant-field>
           <section v-if="!activeTenant.vacant" class="renewal-notice" aria-label="租約到期暨續約意願通知"><h3>租約到期暨續約意願通知</h3><div class="renewal-controls"><label>回覆期限<input type="date" v-model="renewalDeadline" :disabled="loading||pendingSaves>0" aria-label="續約通知回覆期限"></label><button type="button" @click="createRenewal" :disabled="loading||pendingSaves>0||dirtyKeys.size>0">預覽續約通知圖片</button></div><p>通知列出房號、租約到期日及回覆期限；下載圖片後由管理人自行聯絡。</p><p v-if="renewalMessage" role="status">{{renewalMessage}}</p><template v-if="renewalUrl"><img :src="renewalUrl" alt="租約到期暨續約意願通知預覽" style="display:block;max-width:100%;width:600px"><a class="rental-button primary renewal-download" :href="renewalUrl" :download="activeTenant.room+'_續約意願通知.png'">下載通知圖片</a></template></section>
         </div>
       </section>
@@ -237,6 +238,7 @@
         :inputmode="field.key === 'defaultTransferLastFive' ? 'numeric' : undefined"
         :pattern="field.key === 'defaultTransferLastFive' ? '[0-9]{0,5}' : undefined"
         :placeholder="field.key === 'defaultTransferLastFive' ? '例如 01234' : undefined">
+      <slot name="lease-term"></slot>
       <div class="editor-actions">
 
         <button v-if="dirty" type="button" @click="reset" :disabled="saving || blocked">還原</button>
@@ -308,6 +310,10 @@
         }
         return field.type==='tel'?formatPhone(text):text;
       }
+
+      function validLeaseDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(v||'')&&Number.isFinite(Date.parse(v+'T00:00:00Z'))&&new Date(v+'T00:00:00Z').toISOString().slice(0,10)===v;}
+      function leaseEndDate(start,years){if(!validLeaseDate(start)||!Number.isSafeInteger(years)||years<1)return null;const d=new Date(start+'T00:00:00Z');d.setUTCFullYear(d.getUTCFullYear()+years);d.setUTCDate(d.getUTCDate()-1);if(!Number.isFinite(d.getTime()))return null;const end=d.toISOString().slice(0,10);return validLeaseDate(end)?end:null;}
+      function leaseYearCount(start,end){if(!validLeaseDate(start)||!validLeaseDate(end)||start>end)return null;const delta=Number(end.slice(0,4))-Number(start.slice(0,4));for(const n of [delta,delta+1])if(n>=1&&leaseEndDate(start,n)===end)return n;return null;}
 
       const TenantField = {
         props: { tenant: Object, field: Object, blocked: Boolean, showTitle: Boolean },
@@ -464,17 +470,22 @@
             c.font='36px sans-serif';['感謝您這一年來的入住與配合，','也謝謝您對房屋的愛惜與照顧。','租約即將到期，敬請於回覆期限前告知是否續租，','方便我們提前安排後續事宜，謝謝您！'].forEach((line,i)=>c.fillText(line,70,360+i*60));
             c.font='40px sans-serif';c.fillText('租約到期日：'+t.endDate,70,660);c.fillText('回覆期限：'+renewalDeadline.value,70,760);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('圖片產生失敗');renewalUrl.value=URL.createObjectURL(blob);renewalMessage.value='圖片已產生，請下載後人工聯絡房客。';}catch(e){renewalMessage.value=e.message;}}
           const fieldEditors=new Map(),contacts=ref([]),savedContacts=ref([]),checkoutConfirm=ref(false);
-          function onDraft(field,value){if(field!=='startDate'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return;const d=new Date(value+'T00:00:00Z');d.setUTCFullYear(d.getUTCFullYear()+1);d.setUTCDate(d.getUTCDate()-1);const end=fieldEditors.get('endDate');if(end)end.draft=d.toISOString().slice(0,10);}
-          function resetAll(){if(pendingSaves.value)return;for(const e of fieldEditors.values())e.reset();contacts.value=JSON.parse(JSON.stringify(savedContacts.value));status.value='未儲存輸入已還原；可重新讀取核對。';}
+          const leaseYears=ref('1'),leaseTermMessage=ref('');let resettingLease=false,leaseYearsChosen=false;
+          function initLeaseTerm(t){leaseYearsChosen=false;leaseYears.value=String(leaseYearCount(t?.startDate,t?.endDate)||1);leaseTermMessage.value='';}
+          function changeLeaseYears(value){if(!writeAllowed()||loading.value||pendingSaves.value)return;leaseYears.value=value;leaseYearsChosen=true;const n=Number(value),start=fieldEditors.get('startDate')?.draft||'',end=leaseEndDate(start,n);if(!end){leaseTermMessage.value=validLeaseDate(start)?'請填入至少 1 年的整數年數，且日期須在可用範圍內。':'請先填妥起租日。';return;}leaseTermMessage.value='';const editor=fieldEditors.get('endDate');if(editor)editor.draft=end;}
+          function onDraft(field,value){if(resettingLease)return;if(field==='startDate'&&validLeaseDate(value)){const existing=fieldEditors.get('endDate')?.draft;if(!leaseYearsChosen&&!validLeaseDate(activeTenant.value?.startDate)&&validLeaseDate(existing)){const years=leaseYearCount(value,existing);if(years){leaseYears.value=String(years);leaseTermMessage.value='';}else leaseTermMessage.value='請核對既有到期日，租期須以整年計算。';return;}const end=leaseEndDate(value,Number(leaseYears.value));if(end&&fieldEditors.get('endDate')){leaseTermMessage.value='';fieldEditors.get('endDate').draft=end;}}else if(field==='endDate'){const start=fieldEditors.get('startDate')?.draft||'',n=leaseYearCount(start,value);if(n){leaseYears.value=String(n);leaseTermMessage.value='';}else if(start&&value){leaseTermMessage.value='租期須至少一年，並以整年計算。';}}}
+
+          function resetAll(){if(pendingSaves.value)return;resettingLease=true;initLeaseTerm(activeTenant.value);for(const e of fieldEditors.values())e.reset();Vue.nextTick(()=>{resettingLease=false;});contacts.value=JSON.parse(JSON.stringify(savedContacts.value));status.value='未儲存輸入已還原；可重新讀取核對。';}
           const registerField=(key,el)=>{if(el)fieldEditors.set(key,el);else fieldEditors.delete(key);};
           const rpc=(action,...args)=>new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[action](...args));
           const writeAllowed=()=>!window.RentalAccess||RentalAccess.canWrite;
-          watch(activeTenant,t=>{const list=t?.emergencyContacts??(t?.emergencyContact||t?.emergencyPhone?[{name:t.emergencyContact||'',phone:t.emergencyPhone||''}]:[]);contacts.value=JSON.parse(JSON.stringify(list));savedContacts.value=JSON.parse(JSON.stringify(list));checkoutConfirm.value=false;},{immediate:true});
+          watch(activeTenant,t=>{initLeaseTerm(t);const list=t?.emergencyContacts??(t?.emergencyContact||t?.emergencyPhone?[{name:t.emergencyContact||'',phone:t.emergencyPhone||''}]:[]);contacts.value=JSON.parse(JSON.stringify(list));savedContacts.value=JSON.parse(JSON.stringify(list));checkoutConfirm.value=false;},{immediate:true});
           watch(contacts,()=>{if(activeTenant.value)setDirty(activeTenant.value.room,'emergencyContacts',JSON.stringify(contacts.value)!==JSON.stringify(savedContacts.value));},{deep:true});
           function addContact(){if(writeAllowed()&&contacts.value.length<20)contacts.value.push({name:'',phone:''});}
           function acceptTenant(t){const i=tenants.value.findIndex(r=>r.room===t.room);if(i<0)throw Error('儲存回應房號不符。');tenants.value.splice(i,1,t);dirtyKeys.clear();revision.value++;}
           async function saveAll(){
             if(!writeAllowed()||loading.value||pendingSaves.value||!activeTenant.value||!dirtyKeys.size)return;
+            const start=fieldEditors.get('startDate'),end=fieldEditors.get('endDate');if((start?.dirty||end?.dirty)&&start?.draft&&end?.draft&&leaseYearCount(start.draft,end.draft)===null){status.value='租期須至少一年，並以一年、兩年、三年等整年計算。';return;}
             const article=document.querySelector('[aria-label="房客資料編輯"]');if(article&&[...article.querySelectorAll('input,textarea,select')].some(el=>!el.reportValidity()))return;
             const changes={};for(const [key,editor] of fieldEditors){if(!editor.dirty)continue;changes[key]=key==='contractLinks'?(editor.draft.trim()?[editor.draft.trim()]:[]):(['phone','cohabitantPhone','guarantorPhone'].includes(key)?formatPhone(editor.draft):String(editor.draft??''));}
             if(JSON.stringify(contacts.value)!==JSON.stringify(savedContacts.value))changes.emergencyContacts=contacts.value.map(c=>({...c,phone:formatPhone(c.phone)}));
@@ -563,7 +574,7 @@
             }
           }
           onMounted(loadTenants);
-          return {moveInPreview,moveInMonths,moveInMessage,previewMoveIn,confirmMoveIn,rentFormat,renewalDeadline,renewalUrl,renewalMessage,createRenewal,billingNamePreview,selectedBillingNames,selectAllBillingNames,previewBillingNames,syncBillingNames,formatPhone,openCheckout,previewCheckout,checkoutPeriod,checkoutOptions,checkoutPreview,checkoutMessage,onDraft,resetAll,registerField,contacts,addContact,saveAll,checkoutConfirm,checkout,selectedRoom, activeTenant, selectRoom, rentText, tenants, loading, loadFailed, pendingSaves, dirtyKeys, status, revision,
+          return {moveInPreview,moveInMonths,moveInMessage,previewMoveIn,confirmMoveIn,rentFormat,renewalDeadline,renewalUrl,renewalMessage,createRenewal,billingNamePreview,selectedBillingNames,selectAllBillingNames,previewBillingNames,syncBillingNames,formatPhone,openCheckout,previewCheckout,checkoutPeriod,checkoutOptions,checkoutPreview,checkoutMessage,leaseYears,leaseTermMessage,changeLeaseYears,onDraft,resetAll,registerField,contacts,addContact,saveAll,checkoutConfirm,checkout,selectedRoom, activeTenant, selectRoom, rentText, tenants, loading, loadFailed, pendingSaves, dirtyKeys, status, revision,
             basicFields, noteField, extraFields, guarantorFields, setDirty, startSave, finishSave, updateField, loadTenants };
         }
       });
