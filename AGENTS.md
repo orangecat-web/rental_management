@@ -44,3 +44,8 @@ Read README.md, docs/CODEX_HANDOFF.md and docs/DEPLOYMENT.md before changing thi
 - The owner explicitly approved production financial numbers with synthetic personal information for this readonly Demo. The private production site retains real people; anonymous/Pages/acceptance use fake people.
 - Only the allowlisted demo/production-numbers.json may contain production-derived amounts, room IDs, meter values/dates and opaque anonymous cohort keys. Do not copy source names, contacts, notes, suffixes, private configuration, credentials, Drive references or photos.
 - Preserve this repository's existing workflows, standalone room/initial-meter checks, fake personal fixtures and readonly/offline API boundary. The snapshot adds no live Google or private Worker connection.
+
+
+### 2026-10-24 公開站範圍後續更正
+
+使用者明確確認 xingwu-rental-public 也顯示真實個資，取代同日前述公開站假個資規定。本 Pages Demo 與驗收站仍是假個資／照片；本倉庫只允許數值白名單快照，禁止同步公開站的真實個資。
