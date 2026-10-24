@@ -70,3 +70,7 @@
 
 /* Keep billing period controls aligned on the same vertical centre. */
 .billing-native .billing-accounts-view .billing-toolbar .controls>.rental-inline-field{margin-top:0;margin-bottom:0;align-items:center}.billing-toolbar .controls>button{align-self:center;margin-block:0}#public-app .report-toolbar{align-items:center}#public-app .report-toolbar>label{display:inline-flex;align-items:center;gap:8px;margin-block:0}
+
+/* Equal report panels; no fixed widths on small viewports. */
+.rent-chart-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;align-items:start;margin-top:24px}.rent-chart-pair>section{min-width:0}.rent-chart-pair h4{margin-bottom:20px}.rent-chart-pair .rent-pie-layout{grid-template-columns:minmax(0,1fr);gap:20px;padding:0}.rent-chart-pair .rent-pie{max-width:260px}.rent-chart-pair .rent-pie-legend>div{grid-template-columns:18px minmax(0,1fr) auto;margin-bottom:14px}.rent-chart-pair .rent-pie-legend b{font-size:18px}.rent-chart-pair .rent-pie-legend strong{font-size:22px}.rent-panel>.report-coverage{margin-bottom:0}
+@media(max-width:760px){.rent-chart-pair{grid-template-columns:minmax(0,1fr);gap:32px}.rent-chart-pair .rent-pie{max-width:240px}}

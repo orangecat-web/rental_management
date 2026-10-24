@@ -6,29 +6,23 @@ window.RentalReportCharts = (() => {
   function axisMaximum(values){const max=Math.max(0,...values.filter(v=>typeof v==='number'&&Number.isFinite(v)));if(!max)return 1;const power=10**Math.floor(Math.log10(max)),ratio=max/power;return (ratio<=1?1:ratio<=2?2:ratio<=5?5:10)*power;}
   const bars={
     props:{items:{type:Array,required:true},unit:{type:String,default:'度'},title:{type:String,required:true},interactive:Boolean,compact:Boolean,scaleMax:Number},emits:['select'],
-    setup(props){const narrow=Vue.ref(false);let media;const changed=()=>narrow.value=media.matches;Vue.onMounted(()=>{media=window.matchMedia?.('(max-width:760px)');if(media){changed();media.addEventListener('change',changed);}});Vue.onBeforeUnmount(()=>media?.removeEventListener('change',changed));const maximum=Vue.computed(()=>Math.max(props.scaleMax||0,axisMaximum(props.items.map(i=>i.value))));const chunks=Vue.computed(()=>{const size=props.compact?6:narrow.value?3:8,result=[];for(let i=0;i<props.items.length;i+=size)result.push(props.items.slice(i,i+size).map((item,j)=>({...item,color:palette[(i+j)%palette.length]})));return result;});return {maximum,chunks,fmt,axisFmt,ticks:[1,.75,.5,.25,0]};},
+    setup(props){const narrow=Vue.ref(false);let media;const changed=()=>narrow.value=media.matches;Vue.onMounted(()=>{media=window.matchMedia?.('(max-width:760px)');if(media){changed();media.addEventListener('change',changed);}});Vue.onBeforeUnmount(()=>media?.removeEventListener('change',changed));const maximum=Vue.computed(()=>Math.max(props.scaleMax||0,axisMaximum(props.items.map(i=>i.value))));const chunks=Vue.computed(()=>{const size=props.compact?6:narrow.value?3:8,result=[];for(let i=0;i<props.items.length;i+=size)result.push(props.items.slice(i,i+size).map((item,j)=>({...item,color:item.color||palette[(i+j)%palette.length]})));return result;});return {maximum,chunks,fmt,axisFmt,ticks:[1,.75,.5,.25,0]};},
     template:`<div class="vertical-chart" :class="{'compact-chart':compact}" :aria-label="title"><p class="chart-unit">單位：{{unit}}</p><div class="vertical-chart-row" v-for="(chunk,index) in chunks" :key="index"><div class="chart-y-axis" aria-hidden="true"><span v-for="tick in ticks" :style="{top:((1-tick)*100)+'%'}">{{axisFmt(maximum*tick)}}</span></div><div class="chart-columns" :style="{gridTemplateColumns:'repeat('+chunk.length+',minmax(0,1fr))'}"><div class="chart-column" v-for="item in chunk" :key="item.key"><div class="chart-column-plot" role="img" :aria-label="item.label+'：'+(item.value===null?'資料待補':fmt(item.value)+' '+unit)+(item.detail?'，'+item.detail:'')"><template v-if="item.value!==null"><div v-if="item.parts" v-for="part in item.parts" class="chart-vertical-fill" :style="{height:(part.value/maximum*100)+'%',bottom:(part.offset/maximum*100)+'%',background:part.fill,borderColor:part.color}" :title="part.label+'：'+fmt(part.value)+' '+unit"></div><div v-else class="chart-vertical-fill" :style="{height:(item.value/maximum*100)+'%',minHeight:item.value===0?'2px':undefined,background:item.color[1],borderColor:item.color[0]}" :title="item.label+'：'+fmt(item.value)+' '+unit"></div></template><div v-else class="chart-unknown">待補</div></div><div class="chart-column-caption"><button v-if="interactive" @click="$emit('select',item.key)" :aria-label="'查看 '+item.label+' 用電量'">{{item.label}}</button><strong v-else>{{item.label}}</strong><span v-if="!compact">{{fmt(item.value)}}{{item.value!==null?' '+unit:''}}</span><small v-if="item.detail&&!compact">{{item.detail}}</small></div></div></div></div><p v-if="!items.length" class="report-note">此範圍沒有可用資料。</p></div>`
   };
   function wedge(start,end){const point=t=>[100+88*Math.sin(t*2*Math.PI),100-88*Math.cos(t*2*Math.PI)];const a=point(start),b=point(end);return `M100 100 L${a.join(' ')} A88 88 0 ${end-start>.5?1:0} 1 ${b.join(' ')} Z`;}
-  const pie={props:{summary:{type:Object,required:true}},setup(props){const fraction=Vue.computed(()=>props.summary.total>0?props.summary.paid/props.summary.total:0);const percent=Vue.computed(()=>Math.round(fraction.value*10000)/100);return {fmt,fraction,percent,wedge};},template:`
-    <div class="rent-pie-layout" :class="{'pie-empty':!summary.valid||summary.total<=0}">
-      <div class="rent-pie-graphic">
-        <svg v-if="summary.valid&&summary.total>0" class="rent-pie" viewBox="0 0 200 200" role="img" :aria-label="'租金'+(summary.settlementOnly?'已結清 ':'已繳 ')+fmt(percent)+'%，'+(summary.settlementOnly?'未結清 ':'未繳 ')+fmt(100-percent)+'%'">
-          <circle v-if="fraction===0||fraction===1" cx="100" cy="100" r="88" :fill="fraction===1?'rgba(101, 158, 222, 0.17)':'rgba(236, 128, 150, 0.17)'"/>
-          <template v-else><path :d="wedge(0,fraction)" fill="rgba(101, 158, 222, 0.17)"/><path :d="wedge(fraction,1)" fill="rgba(236, 128, 150, 0.17)"/></template>
-        </svg>
-        <svg v-else viewBox="0 0 200 200" class="rent-pie" aria-hidden="true"><circle cx="100" cy="100" r="88" fill="#e8ede5"/></svg>
-      </div>
-      <div class="rent-pie-information">
-        <div v-if="summary.valid&&summary.total>0" class="rent-pie-legend">
-          <div><i class="paid-dot"></i><span>{{summary.settlementOnly?'已結清租金':'已繳租金'}}</span><strong>{{fmt(percent)}}%</strong><b>{{fmt(summary.paid)}} 元</b></div>
-          <div><i class="unpaid-dot"></i><span>{{summary.settlementOnly?'未結清租金':'未繳租金'}}</span><strong>{{fmt(100-percent)}}%</strong><b>{{fmt(summary.unpaid)}} 元</b></div>
-          <p>分母：應收租金 {{fmt(summary.total)}} 元</p>
-        </div>
-        <p v-else class="pie-empty-message">{{summary.valid?'此範圍應收租金為 0 元，不計百分比。':'資料尚未完整，暫不計算已繳／未繳百分比。'}}</p>
-        <slot></slot>
-      </div>
-    </div>`};
+  const pie={props:{summary:{type:Object,required:true}},setup(props){
+    const slices=Vue.computed(()=>{let start=0;return (props.summary.items||[]).filter(i=>i.value>0).map(i=>{const fraction=i.value/props.summary.total,s={...i,start,end:start+fraction,fraction};start+=fraction;return s;});});
+    const description=Vue.computed(()=>'已核對實收收入：'+(props.summary.items||[]).map(i=>i.label+' '+fmt(i.value)+' 元').join('，'));
+    return {fmt,slices,description,wedge,percent:value=>Math.round(value/props.summary.total*10000)/100};
+  },template:`<div class="rent-pie-layout" :class="{'pie-empty':!summary.valid||summary.total<=0}">
+    <div class="rent-pie-graphic"><svg v-if="summary.valid&&summary.total>0" class="rent-pie" viewBox="0 0 200 200" role="img" :aria-label="description">
+      <circle v-if="slices.length===1" cx="100" cy="100" r="88" :fill="slices[0].color"/>
+      <template v-else><path v-for="slice in slices" :key="slice.key" :d="wedge(slice.start,slice.end)" :fill="slice.color"><title>{{slice.label}}：{{fmt(slice.value)}} 元（{{fmt(percent(slice.value))}}%）</title></path></template>
+    </svg><svg v-else viewBox="0 0 200 200" class="rent-pie" aria-hidden="true"><circle cx="100" cy="100" r="88" fill="#e8ede5"/></svg></div>
+    <div class="rent-pie-information"><div v-if="summary.valid" class="rent-pie-legend"><div v-for="item in summary.items" :key="item.key"><i :style="{background:item.color}"></i><span>{{item.label}}</span><strong>{{summary.total>0?fmt(percent(item.value))+'%':'—'}}</strong><b>{{fmt(item.value)}} 元</b></div><p>已核對實收合計：{{fmt(summary.total)}} 元</p></div>
+    <p v-if="!summary.valid" class="pie-empty-message">收入分類資料尚未取得，請重新讀取或更新統計來源。</p><p v-else-if="summary.total===0" class="pie-empty-message">此範圍尚無已核對的分類收入，不計百分比。</p>
+    <p v-if="summary.unknownReceiptCount" class="report-missing">{{summary.unknownReceiptCount}} 筆收款待核對，尚未列入收入。</p><p v-if="summary.unallocatedCash" class="report-note">另有 {{fmt(summary.unallocatedCash)}} 元已核對款項未列入這三類（含尚未使用的溢收）。</p></div>
+  </div>`};
   const line={props:{items:{type:Array,required:true},unit:{type:String,default:'度'},title:{type:String,required:true},interactive:Boolean},emits:['select'],setup(props){
     const maximum=Vue.computed(()=>axisMaximum(props.items.map(i=>i.value)));
     const point=(item,index)=>({x:70+(props.items.length<2?415:index/(props.items.length-1)*830),y:260-(item.value/maximum.value)*230});

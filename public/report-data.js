@@ -76,5 +76,13 @@
     const total=valid?sum('rent'):null,paid=valid?sum('paid'):null,unpaid=valid?sum('unpaid'):null;
     return {settlementOnly:selected.some(r=>r.settledByHistory),valid,total,paid,unpaid,count:selected.length,unknown:selected.filter(r=>!r.valid).length,paidPercent:valid&&total>0?paid/total*100:null};
   }
-  window.RentalReportData={meter,prepare,day,number,rentCohorts,rentSummary};
+  function incomeSummary(report,months) {
+    const empty={valid:false,total:null,items:[],unknownReceiptCount:0,unallocatedCash:0};
+    if(!Array.isArray(report?.incomeMonths))return empty;
+    const rows=report.incomeMonths.filter(r=>months.includes(r.month)),fields=['rent','deposit','electricity','total','unallocatedCash','unknownReceiptCount'];
+    if(!rows.length||new Set(rows.map(r=>r.month)).size!==rows.length||rows.some(r=>fields.some(k=>!number(r[k]))||!Number.isInteger(r.unknownReceiptCount)||Math.abs(r.total-r.rent-r.deposit-r.electricity)>.005))return empty;
+    const sum=k=>rows.reduce((s,r)=>s+Math.round(r[k]*100),0)/100;
+    return {valid:true,total:sum('total'),unknownReceiptCount:sum('unknownReceiptCount'),unallocatedCash:sum('unallocatedCash'),items:[{key:'rent',label:'租金',value:sum('rent'),color:'#659ede'},{key:'deposit',label:'押金',value:sum('deposit'),color:'#a787dc'},{key:'electricity',label:'電費',value:sum('electricity'),color:'#55b6b6'}]};
+  }
+  window.RentalReportData={meter,prepare,day,number,rentCohorts,rentSummary,incomeSummary};
 })();
