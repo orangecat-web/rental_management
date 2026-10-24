@@ -110,7 +110,7 @@ table[aria-label="每月帳務資料"]{min-width:1280px}.table-wrap .notice-link
       <p>{{ year }} 年 {{ initializationResult.month }} 月｜{{ initializationApplied ? '初始化結果' : '初始化預覽' }}</p>
       <ul><li v-for="(line, index) in initializationLines" :key="index">{{ line }}</li></ul>
     </section>
-    <p id="status" class="status" role="status" aria-live="polite">{{ status }}</p>
+    <p id="status" class="status" role="status" aria-live="polite">{{ status }}</p><p v-if="annualPreparationWarning" class="notice annual-preparation-warning" role="status">年度月份尚未補齊：{{annualPreparationWarning}}。既有月份仍可查看；不會自動重試補建。</p>
     <section v-if="accounts.length" class="cash-summary" aria-label="每月對帳摘要"><div class="cash-equation" aria-label="本月對帳計算"><div class="cash-term"><span>房租應收（含前期餘額）</span><strong>NT$ {{numberFormat.format(cashSummary.due)}}</strong></div><template v-if="cashSummary.fee"><span class="cash-operator">＋</span><div class="cash-term"><span>電費</span><strong>NT$ {{numberFormat.format(cashSummary.fee)}}</strong></div></template><template v-if="cashSummary.overpaid"><span class="cash-operator">＋</span><div class="cash-term"><span>溢收</span><strong>NT$ {{numberFormat.format(cashSummary.overpaid)}}</strong></div></template><template v-if="cashSummary.deposit"><span class="cash-operator">＋</span><div class="cash-term"><span>押金</span><strong>NT$ {{numberFormat.format(cashSummary.deposit)}}</strong></div></template><template v-if="cashSummary.unpaid"><span class="cash-operator">−</span><div class="cash-term"><span>短收</span><strong>NT$ {{numberFormat.format(cashSummary.unpaid)}}</strong></div></template><span class="cash-operator">＝</span><div class="cash-term"><span>實際對帳金額</span><strong>{{cashSummary.pending?'待核對':'NT$ '+numberFormat.format(cashSummary.actual)}}</strong></div></div><p v-if="cashSummary.pending">尚有 {{cashSummary.pending}} 間待核對；已核對部分 NT$ {{numberFormat.format(cashSummary.actual)}}。待核對金額不列短收。</p><p>押金只列當月對帳收入，不累計至次月。前期短收加計、前期溢收抵扣；實際對帳金額由人工核對匯款單數字。</p><label>篩選房間<select v-model="accountFilter" aria-label="收款狀態篩選" :disabled="controlsLocked"><option value="all">全部房間</option><option value="unpaid">未收房間</option><option value="overpaid">溢收房間</option><option value="pending">待核對房間</option></select></label></section>
     <div v-if="accounts.length" class="table-wrap">
       <table aria-label="每月帳務資料">
@@ -400,7 +400,7 @@ table[aria-label="每月帳務資料"]{min-width:1280px}.table-wrap .notice-link
       const app = createApp({
         components: { AccountField, PaymentPhotoPicker, MeterPhotoViewer },
         setup() {
-          const annualMode=ref(false);
+          const annualMode=ref(false),annualPreparationWarning=ref('');
           const taipeiToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
           const historicalMode=computed(()=>accounts.value.some(a=>a.historical));
           const accountFilter=ref('all');
@@ -599,11 +599,12 @@ table[aria-label="每月帳務資料"]{min-width:1280px}.table-wrap .notice-link
             if (controlsLocked.value) return;
             const preferredYear = year.value||Number(new URLSearchParams(location.search).get('billingYear'));
             loading.value = true; accountsReady.value = false; clearInitialization();
+            annualPreparationWarning.value='';
             status.value = '正在讀取年度帳務來源……';
             let ready = false;
             try {
               if(window.RentalAccess&&!window.RentalDemo){let cap;try{cap=await api.capabilities();}catch{}annualMode.value=cap?.annualBilling===true;
-                if(annualMode.value&&window.RentalAccess.canWrite){status.value='正在檢查並補齊本年度十二個月份……';await api.ensureAnnual(Number(taipeiToday().slice(0,4)));}}
+                if(annualMode.value&&window.RentalAccess.canWrite){status.value='正在檢查並補齊本年度十二個月份……';try{await api.ensureAnnual(Number(taipeiToday().slice(0,4)));}catch(e){annualPreparationWarning.value=errorText(e);}}}
               const list = await api.years();
               if (!Array.isArray(list) || !list.every(value => Number.isInteger(value) && value >= 1000 && value <= 9999) ||
                   new Set(list).size !== list.length) throw new Error('年度來源清單格式不正確。');
@@ -706,7 +707,7 @@ table[aria-label="每月帳務資料"]{min-width:1280px}.table-wrap .notice-link
             } finally { operation.value = false; }
           }
           onMounted(loadYears);
-          return { reconciliationText,historicalMode, numberFormat, accountFilter, filteredAccounts, cashSummary, year, years, loadYears, changeYear, month, months, annualMode, accounts, status, loading, operation, pendingSaves, accountsReady, revision,
+          return { reconciliationText,historicalMode, numberFormat, accountFilter, filteredAccounts, cashSummary, year, years, loadYears, changeYear, month, months, annualMode, annualPreparationWarning, accounts, status, loading, operation, pendingSaves, accountsReady, revision,
             registerAccountField,saveAllAccounts,resetAllAccounts,batchReview,batchStatus,dirtyKeys, staleRooms, controlsLocked, busy, editorsBlocked, columns, displayCell, noticeUrl,
             creationPanelOpen, newMonth, monthChoices, validNewMonth, canCreate, creationPreview, creationStatus,
             changeCreationMonth, toggleCreationPanel, previewNewMonth, createNewMonth,

@@ -1,0 +1,18 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM,VirtualConsole}=require('jsdom');
+const wait=async fn=>{for(let i=0;i<1500;i++){if(fn())return;await new Promise(r=>setTimeout(r,3));}throw Error('Annual fallback UI timeout');};
+(async()=>{
+ const calls=[],errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));let fail=true,months=Array.from({length:10},(_,i)=>i+1);
+ const dom=new JSDOM('<main id="app" class="billing-native"></main>',{url:'https://rental.test/?billingYear=2026&billingMonth=10',runScripts:'dangerously',virtualConsole:vc}),w=dom.window,d=w.document;w.RentalAccess={canWrite:true};w.RentalPropertyContext={id:'default'};
+ const RealDate=w.Date;w.Date=class extends RealDate{constructor(...args){super(...(args.length?args:['2026-10-24T04:00:00Z']));}};
+ w.RentalTransport=()=>{const runner=(ok=()=>{},bad=()=>{})=>new Proxy({withSuccessHandler:f=>runner(f,bad),withFailureHandler:f=>runner(ok,f)},{get(t,action){return t[action]|| (async(...args)=>{calls.push(action);try{let value;if(action==='getRentalSiteCapabilities')value={version:2,billing:true,annualBilling:true};else if(action==='ensureAnnualAccounts'){if(fail)throw Error('房間清單應為 15 間，目前房客表 16 列');months=Array.from({length:12},(_,i)=>i+1);value={created:true};}else if(action==='getAvailableBillingYears')value=[2026];else if(action==='getAvailableBillingMonths')value=months;else if(action==='getMonthlyAccounts')value=[{year:args[0],month:args[1],room:'401',name:'合成房客',rent:6000,electricityFee:0,totalDue:6000,netDue:6000,effectivePaid:null,receiptTotal:null,unpaid:null,overpaid:0,transferDate:'2026-10-02',historical:true,notes:''}];else throw Error('Unexpected API');ok(value);}catch(e){bad(e);}});}});return {script:{run:runner()}};};
+ try{
+ for(const f of ['tenant-vue.global.prod.js','photo-preview.js','meter-worksheet.js','notice-renderer.js','notice-batch.js','payment-worksheet.js','native-billing.js'])w.eval(fs.readFileSync('public/'+f,'utf8'));
+ const app=w.Vue.createApp(w.RentalComponents.billing());app.directive('write',{});app.directive('write-field',{});const view=app.mount('#app');
+ await wait(()=>d.querySelector('.account-data-row'));assert.equal(d.querySelector('#year').value,'2026');assert.equal(d.querySelector('#month').options.length,10);assert(d.querySelector('.annual-preparation-warning').textContent.includes('16 列'));assert.equal(calls.filter(a=>a==='ensureAnnualAccounts').length,1);
+ const select=d.querySelector('#month');select.value='9';select.dispatchEvent(new w.Event('change',{bubbles:true}));await wait(()=>view.month===9&&view.accounts[0]?.month===9);assert.equal(calls.filter(a=>a==='ensureAnnualAccounts').length,1,'month changes do not retry annual writes');
+ await view.loadYears();assert.equal(d.querySelector('#month').options.length,10);assert.equal(calls.filter(a=>a==='ensureAnnualAccounts').length,2,'only explicit reload retries annual preparation');
+ fail=false;await view.loadYears();await w.Vue.nextTick();assert.equal(d.querySelector('#month').options.length,12);assert(!d.querySelector('.annual-preparation-warning'));assert.equal(view.month,9,'reload retains the selected old month');
+ const before=calls.filter(a=>a==='ensureAnnualAccounts').length;w.RentalAccess.canWrite=false;await view.loadYears();assert.equal(calls.filter(a=>a==='ensureAnnualAccounts').length,before);assert.deepEqual(errors,[]);
+ console.log('PASS: failed annual preparation preserves old year/month/account reads with a separate warning; no automatic write retry on month changes, explicit successful reload recovers all months, viewers never prepare years.');
+ }finally{dom.window.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});
