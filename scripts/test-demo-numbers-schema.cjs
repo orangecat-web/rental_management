@@ -6,3 +6,5 @@ for(const bad of [{...s,name:'PRIVATE'},{...s,source:'other'},{...s,periods:[s.p
 assert.throws(()=>account({...raw,rent:'PRIVATE'},2026,1));assert.throws(()=>account({...raw,dueDate:'2026-02-31'},2026,1));assert.throws(()=>account(raw,2026,2));assert.throws(()=>account({...raw,occupantKey:'PRIVATE'},2026,1));console.log('PASS: numeric snapshot allowlist preserves zero/unknown, strips people/free text/URLs and rejects invalid scope, fields, dates and duplicates.');
 
 assert.equal(account({...raw,dueDate:'10'},2026,1).dueDate,'10');assert.throws(()=>account({...raw,dueDate:'32'},2026,1));
+
+const planned=account({...raw,planned:true,historySettlement:'planned'},2026,1);assert.equal(planned.planned,true);assert.equal(planned.historySettlement,'planned');

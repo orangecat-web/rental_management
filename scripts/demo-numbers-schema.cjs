@@ -10,8 +10,8 @@ function account(row,year,month){
  if(!row||row.year!==year||row.month!==month||!room(row.room)||['rent','electricityFee','totalDue','netDue','effectivePaid'].some(k=>!Object.hasOwn(row,k)))throw Error('Invalid numeric account scope');
  const out={year,month,room:row.room,...pick(row,numeric),...pick(row,dates)};
  for(const k of numeric)if(Object.hasOwn(out,k)&&!money(out[k]))throw Error('Invalid numeric account field: '+k+' ('+typeof out[k]+')');for(const k of dates)if(Object.hasOwn(out,k)&&!(date(out[k])||k==='dueDate'&&/^(?:[1-9]|[12][0-9]|3[01])$/.test(out[k])))throw Error('Invalid numeric account date: '+k+' ('+typeof out[k]+', length '+String(out[k]).length+')');
- for(const k of ['historical','vacant'])if(Object.hasOwn(row,k)){if(typeof row[k]!=='boolean')throw Error('Invalid account flag');out[k]=row[k];}
- if(Object.hasOwn(row,'historySettlement')){if(!['settled','unknown','pending','unsettled',''].includes(row.historySettlement))throw Error('Invalid settlement status');out.historySettlement=row.historySettlement;}
+ for(const k of ['historical','vacant','planned'])if(Object.hasOwn(row,k)){if(typeof row[k]!=='boolean')throw Error('Invalid account flag');out[k]=row[k];}
+ if(Object.hasOwn(row,'historySettlement')){if(!['settled','unknown','pending','unsettled','planned',''].includes(row.historySettlement))throw Error('Invalid settlement status');out.historySettlement=row.historySettlement;}
  if(Object.hasOwn(row,'occupantKey')){if(typeof row.occupantKey!=='string'||!/^[-\w]{43}$/.test(row.occupantKey))throw Error('Invalid anonymous identity');out.occupantKey=row.occupantKey;}
  if(row.meter==null)out.meter=null;else{out.meter=pick(row.meter,[...meterNumeric,...meterDates]);if(meterNumeric.some(k=>Object.hasOwn(out.meter,k)&&!money(out.meter[k]))||meterDates.some(k=>Object.hasOwn(out.meter,k)&&!date(out.meter[k])))throw Error('Invalid meter number/date');}
  return out;
