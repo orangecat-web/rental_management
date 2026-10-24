@@ -50,7 +50,7 @@ const server = http.createServer((req, res) => {
     assert.equal(w.RentalAccess.state.role, 'viewer');
     assert.equal(w.RentalAccess.canWrite, false);
     assert(d.querySelector('[aria-label="查看 506 房"]').textContent.includes('NT$ 0'));
-    assert(!d.querySelector('.access-identity form'));
+    assert(d.querySelector('.access-identity form button').disabled);
     for (const el of d.querySelectorAll('script[src],link[rel="stylesheet"],a[href]')) {
       const href = el.src || el.href;
       if (href?.startsWith('http')) assert(href.startsWith(base), 'Project-relative asset/navigation: ' + href);
@@ -110,7 +110,7 @@ const server = http.createServer((req, res) => {
     const noticeLink = d.querySelector('.meter-sheet a[href*="notice.html"]');
     assert(noticeLink.href.startsWith(base + 'notice.html?'));
     [...d.querySelectorAll('.billing-tab-buttons button')].find(b=>b.textContent==='帳務資料').click();await w.Vue.nextTick();assert.equal(d.querySelector('#month').options.length,12);
-    d.querySelector('[aria-label="401 房實際對帳"]').click();await wait(()=>d.querySelector('.reconciliation-dialog'));assert(d.querySelector('[aria-label="401 房實際對帳金額"]').readOnly);assert([...d.querySelectorAll('.reconciliation-dialog button')].find(b=>b.textContent==='儲存對帳資料').hidden);d.querySelector('[aria-label="關閉實際對帳"]').click();await wait(()=>!d.querySelector('.reconciliation-dialog'));
+    d.querySelector('[aria-label="401 房實際對帳"]').click();await wait(()=>d.querySelector('.reconciliation-dialog'));assert(d.querySelector('[aria-label="401 房實際對帳金額"]').readOnly);assert(![...d.querySelectorAll('.reconciliation-dialog button')].find(b=>b.textContent==='儲存對帳資料').hidden);assert([...d.querySelectorAll('.reconciliation-dialog button')].find(b=>b.textContent==='儲存對帳資料').disabled);d.querySelector('[aria-label="關閉實際對帳"]').click();await wait(()=>!d.querySelector('.reconciliation-dialog'));
     navigate('收租統計');
     await wait(() => d.querySelectorAll('.room-year-card').length === 15);
     assert.equal(d.querySelector('#workspace-error').hidden, true);

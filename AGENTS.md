@@ -49,3 +49,7 @@ Read README.md, docs/CODEX_HANDOFF.md and docs/DEPLOYMENT.md before changing thi
 ### 2026-10-24 公開站範圍後續更正
 
 使用者明確確認 xingwu-rental-public 也顯示真實個資，取代同日前述公開站假個資規定。本 Pages Demo 與驗收站仍是假個資／照片；本倉庫只允許數值白名單快照，禁止同步公開站的真實個資。
+
+## Full Demo UI authorized 2026-10-24
+
+Keep all management components visible in the Demo; disable mutations instead of hiding their buttons. Keep legitimate conditional sections and preview/navigation behavior aligned with the production UI. Apply presentation only in the built Pages artifact: do not elevate viewer permissions, enable any API write, or modify private viewer policy. Readonly property management must be openable; file uploads and save/checkout actions stay disabled. The full-year production-number snapshot is authorized with synthetic people/photos only. See docs/DEMO_FULL_UI.md.
