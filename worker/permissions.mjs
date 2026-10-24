@@ -1,6 +1,6 @@
 /** Default-deny authorization. Every future RPC must declare its permission here. */
 export const ACTION_PERMISSIONS = Object.freeze({
-  previewTenantBillingNames:'read',syncTenantBillingNames:'write',getRentalProperties:'read',saveRentalProperty:'write',saveTenantChanges:'write',previewTenantCheckout:'read',checkoutTenant:'write',getRoomSettings:'read',saveRoomSetting:'write',getTenantData:'read', saveTenantField:'write', saveTenantNote:'write', saveTenantContract:'write',
+  getWorkspaceLogo:'read',saveWorkspaceLogo:'write',ensureAnnualAccounts:'write',previewAnnualCheckout:'read',confirmAnnualCheckout:'write',previewTenantMoveIn:'read',confirmTenantMoveIn:'write',previewTenantBillingNames:'read',syncTenantBillingNames:'write',getRentalProperties:'read',saveRentalProperty:'write',saveTenantChanges:'write',previewTenantCheckout:'read',checkoutTenant:'write',getRoomSetupState:'read',confirmRoomSetup:'write',getRoomSettings:'read',saveRoomSetting:'write',getTenantData:'read', saveTenantField:'write', saveTenantNote:'write', saveTenantContract:'write',
   getXingwuCollectionReport:'read', getRentalSiteCapabilities:'read', getAvailableBillingYears:'read', getAvailableBillingMonths:'read', getMonthlyAccounts:'read',
   saveMonthlyAccountField:'write', previewMonthlyInitialization:'read', initializeMonthlyAccounts:'write',
   previewMonthlyAccountsSheetCreation:'read', createMonthlyAccountsSheet:'write',

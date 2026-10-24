@@ -1,0 +1,29 @@
+/** Exercise actual Vue selectors and signed-read calls using synthetic yearly data. */
+const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM,VirtualConsole}=require('jsdom');
+const wait=async f=>{for(let i=0;i<1200;i++){if(f())return;await new Promise(r=>setTimeout(r,3));}throw Error('Billing month UI timeout');};
+(async()=>{
+ const calls=[],errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+ const available={2026:Array.from({length:12},(_,i)=>i+1),2027:[2,4],2028:[4,5,7],2029:[1,4,9]};
+ const dom=new JSDOM('<div id="app" class="billing-native"></div>',{url:'https://rental.test/?billingYear=2026&billingMonth=4',runScripts:'dangerously',virtualConsole:vc}),w=dom.window,d=w.document;
+ w.RentalAccess={canWrite:true};w.RentalDemo=true;w.RentalPropertyContext={id:'default'};
+ w.RentalTransport=()=>{const run=(ok=()=>{},bad=()=>{})=>new Proxy({withSuccessHandler:f=>run(f,bad),withFailureHandler:f=>run(ok,f)},{get(t,action){return t[action]||((...args)=>{calls.push({action,args});try{let data;if(action==='getAvailableBillingYears')data=Object.keys(available).map(Number);else if(action==='getAvailableBillingMonths')data=available[args[0]];else if(action==='getMonthlyAccounts'){const [year,month]=args;assert(available[year].includes(month));data=[{year,month,room:'401',name:'合成房客',rent:6000,electricityFee:month%2?500:0,totalDue:month%2?6500:6000,netDue:month%2?6500:6000,receiptTotal:null,isReceived:false,notes:'',meter:month%2?{previousReading:100,currentReading:200,previousReadingDate:'2025-11-01',currentReadingDate:'2026-01-01',usage:100,unitPrice:5}:null}];}else throw Error('Unexpected non-account read/write: '+action);ok(data);}catch(e){bad(e)}});}});return {script:{run:run()}};};
+ for(const file of ['tenant-vue.global.prod.js','photo-preview.js','meter-worksheet.js','notice-renderer.js','notice-batch.js','payment-worksheet.js','native-billing.js'])w.eval(fs.readFileSync('public/'+file,'utf8'));
+ const app=w.Vue.createApp(w.RentalComponents.billing());for(const name of ['write','write-field'])app.directive(name,{});const view=app.mount('#app');
+ const options=()=>[...d.querySelector('#month').options].map(o=>Number(o.value));
+ const click=t=>{const b=[...d.querySelectorAll('button')].find(b=>b.textContent.trim()===t);assert(b,t);b.click();};
+ const select=async(id,value)=>{const el=d.getElementById(id);el.value=String(value);el.dispatchEvent(new w.Event('change',{bubbles:true}));await w.Vue.nextTick();await wait(()=>!view.loading);await w.Vue.nextTick();};
+ await wait(()=>view.accountsReady);assert.equal(view.month,4);assert.equal(options().length,12);assert(!d.querySelector('a[href*="notice.html"]'));assert(![...d.querySelectorAll('thead th')].some(e=>e.textContent==='電費通知'));
+ click('電表抄錄與通知');await wait(()=>view.month===3&&view.accountsReady);await w.Vue.nextTick();assert.deepEqual(options(),[1,3,5,7,9,11]);assert(d.querySelector('.meter-sheet'));assert(d.querySelector('.meter-notice a').href.includes('month=3'));assert(d.querySelector('.meter-notice a').href.includes('room=401'));assert(!calls.some(c=>/Photo|NoticeData|save|create|initialize|ensure/.test(c.action)),'Navigation does not load images/notices or write accounts');
+ // Dirty readings block tab/month changes and all notice generation until restored/saved.
+ const reading=d.querySelector('[aria-label="401 房本期電表"]');reading.value='250';reading.dispatchEvent(new w.Event('input',{bubbles:true}));await w.Vue.nextTick();assert(d.querySelector('#month').disabled);assert(!d.querySelector('.meter-notice a'));assert([...d.querySelectorAll('.notice-batch button')].find(b=>b.textContent.startsWith('批次產生通知')).disabled);const before=calls.length;await view.changeBillingView('accounts');assert.equal(view.billingView,'meters');assert.equal(calls.length,before);click('還原全部未儲存輸入');await w.Vue.nextTick();assert(d.querySelector('.meter-notice a'));
+ click('帳務資料');await wait(()=>view.month===4&&view.accountsReady);assert.equal(options().length,12);assert(!d.querySelector('a[href*="notice.html"]'));
+ // A year with only even months offers no electricity options and issues no month=0 request.
+ click('電表抄錄與通知');await wait(()=>view.month===3&&view.accountsReady);await select('year',2027);assert.equal(view.month,0);assert.equal(d.querySelectorAll('#month option[value="2"],#month option[value="4"]').length,0);assert(d.body.textContent.includes('本年度尚無已建立的單數月份'));assert(!d.querySelector('.meter-sheet'));assert(!calls.some(c=>c.action==='getMonthlyAccounts'&&c.args[0]===2027));click('帳務資料');await wait(()=>view.accountsReady);assert.deepEqual(options(),[2,4]);assert.equal(view.month,2);
+ // With no earlier existing odd month use the first available odd month; never invent a period.
+ await select('year',2028);await select('month',4);click('電表抄錄與通知');await wait(()=>view.month===5&&view.accountsReady);assert.deepEqual(options(),[5,7]);click('帳務資料');await wait(()=>view.month===4&&view.accountsReady);
+ // Sparse years select the nearest existing predecessor, not a missing month 3.
+ await select('year',2029);await select('month',4);click('電表抄錄與通知');await wait(()=>view.month===1&&view.accountsReady);assert.deepEqual(options(),[1,9]);assert(!calls.some(c=>c.action==='getMonthlyAccounts'&&c.args[0]===2029&&c.args[1]===3));
+ // Reload while in electricity mode retains the odd-only filter and current period.
+ click('重新讀取');await wait(()=>!view.loading&&view.accountsReady);assert.deepEqual(options(),[1,9]);assert.equal(view.month,1);
+ assert(calls.every(c=>c.action.startsWith('get')));assert.deepEqual(errors,[]);app.unmount();w.close();console.log('PASS: notices only under meter rows, full billing months vs existing odd electricity months, 4→3→4 restoration, sparse/year/no-odd fallbacks, reload, dirty guards, zero automatic image reads and no writes.');
+})().catch(e=>{console.error(e);process.exit(1)});

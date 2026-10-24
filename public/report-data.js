@@ -30,7 +30,7 @@
       rooms.add(String(a.room));
     }
     const odd=month%2===1;
-    const rows=accounts.map(a=>({room:String(a.room),name:String(a.name||'').trim(),occupantKey:a.occupantKey,vacant:a.vacant===true,arrears:a.arrears,creditApplied:a.creditApplied,rent:a.rent,electricityFee:a.electricityFee,totalDue:a.totalDue,effectivePaid:a.effectivePaid,netDue:a.netDue,unpaid:a.unpaid,overpaid:a.overpaid,creditWarning:a.creditWarning||'',meter:meter(a)}));
+    const rows=accounts.map(a=>({historical:a.historical===true,historySettlement:a.historySettlement,room:String(a.room),name:String(a.name||'').trim(),occupantKey:a.occupantKey,vacant:a.vacant===true,arrears:a.arrears,creditApplied:a.creditApplied,rent:a.rent,electricityFee:a.planned&&odd&&!meter(a).valid?null:a.electricityFee,totalDue:a.totalDue,effectivePaid:a.effectivePaid,netDue:a.netDue,unpaid:a.unpaid,overpaid:a.overpaid,creditWarning:a.creditWarning||'',meter:meter(a)}));
     return {year,month,rows,rent:aggregate(rows,a=>a.rent),electricity:aggregate(rows,a=>odd?a.electricityFee:0),paid:aggregate(rows,a=>a.effectivePaid),debt:aggregate(rows,a=>a.unpaid),credit:aggregate(rows,a=>a.overpaid),warnings:rows.filter(a=>a.creditWarning).length};
   }
   /** Allocate funds once, FIFO: old claims, current rent, then electricity.
@@ -47,6 +47,9 @@
         let queue=inherited?prior.queue:[];
         const rent=cents(a.rent),fee=p.month%2?cents(a.electricityFee):0,gross=cents(a.totalDue),cash=cents(a.effectivePaid),credit=cents(a.creditApplied),arrears=cents(a.arrears);
         const record={year:p.year,month:p.month,room:a.room,rent,paid:0,valid:rent!==null};records.push(record);
+        if(a.historical&&a.historySettlement==='settled'&&rent!==null&&fee!==null&&gross===rent+fee){
+          record.paid=rent;record.settledByHistory=true;histories.set(a.room,{serial,identity,queue:[]});continue;
+        }
         const valid=rent!==null&&fee!==null&&gross===rent+fee&&cash!==null&&credit!==null&&arrears!==null;
         if(!valid) {
           record.valid=false;for(const claim of queue)if(claim.record)claim.record.valid=false;
@@ -71,7 +74,7 @@
     const valid=selected.length>0&&selected.every(r=>r.valid);
     const sum=key=>selected.reduce((s,r)=>s+Math.round((r[key]||0)*100),0)/100;
     const total=valid?sum('rent'):null,paid=valid?sum('paid'):null,unpaid=valid?sum('unpaid'):null;
-    return {valid,total,paid,unpaid,count:selected.length,unknown:selected.filter(r=>!r.valid).length,paidPercent:valid&&total>0?paid/total*100:null};
+    return {settlementOnly:selected.some(r=>r.settledByHistory),valid,total,paid,unpaid,count:selected.length,unknown:selected.filter(r=>!r.valid).length,paidPercent:valid&&total>0?paid/total*100:null};
   }
   window.RentalReportData={meter,prepare,day,number,rentCohorts,rentSummary};
 })();

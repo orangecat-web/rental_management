@@ -1,8 +1,8 @@
 /** Private same-origin RPC. Only memory holds returned tenant and account records. */
 window.RentalTransport = function (scope) {
   const allowed = scope === 'tenant'
-    ? new Set(['previewTenantBillingNames','syncTenantBillingNames','getRentalProperties','saveRentalProperty','saveTenantChanges','previewTenantCheckout','checkoutTenant','getRoomSettings','saveRoomSetting', 'getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract'])
-    : new Set(['getXingwuCollectionReport', 'getAvailableBillingYears', 'getAvailableBillingMonths', 'getMonthlyAccounts', 'saveMonthlyAccountField', 'previewMonthlyInitialization', 'initializeMonthlyAccounts', 'previewMonthlyAccountsSheetCreation', 'createMonthlyAccountsSheet', 'getMonthlyPaymentPhotos', 'getRoomPaymentPhotoSelection', 'saveRoomPaymentPhotoSelection', 'getPaymentPhoto', 'getMeterPhotoReference','getMeterPhoto', 'getRoomNoticeData']);
+    ? new Set(['getWorkspaceLogo','saveWorkspaceLogo','previewAnnualCheckout','confirmAnnualCheckout','previewTenantMoveIn','confirmTenantMoveIn','previewTenantBillingNames','syncTenantBillingNames','getRentalProperties','saveRentalProperty','saveTenantChanges','previewTenantCheckout','checkoutTenant','getRoomSetupState','confirmRoomSetup','getRoomSettings','saveRoomSetting', 'getTenantData', 'saveTenantField', 'saveTenantNote', 'saveTenantContract'])
+    : new Set(['ensureAnnualAccounts','getRentalSiteCapabilities','getXingwuCollectionReport', 'getAvailableBillingYears', 'getAvailableBillingMonths', 'getMonthlyAccounts', 'saveMonthlyAccountField', 'previewMonthlyInitialization', 'initializeMonthlyAccounts', 'previewMonthlyAccountsSheetCreation', 'createMonthlyAccountsSheet', 'getMonthlyPaymentPhotos', 'getRoomPaymentPhotoSelection', 'saveRoomPaymentPhotoSelection', 'getPaymentPhoto', 'getMeterPhotoReference','getMeterPhoto', 'getRoomNoticeData']);
   function runner(success = () => {}, failure = () => {}) {
     const chain = { withSuccessHandler: callback => runner(callback, failure), withFailureHandler: callback => runner(success, callback) };
     for (const action of allowed) chain[action] = async (...args) => {

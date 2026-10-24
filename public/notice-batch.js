@@ -15,12 +15,11 @@ window.RentalComponents.noticeBatch = function(api) {
   async function generate(){
    if(locked.value||props.month%2!==1||!selected.value.length)return;
    const rooms=props.accounts.filter(a=>selected.value.includes(a.room)).map(a=>a.room);if(!rooms.length)return;
-   clear();processed.value=0;packaged.value=false;totalTasks.value=new Set(rooms.map(r=>props.accounts.find(a=>a.room===r)?.billingGroup||r)).size;working.value=true;stop.value=false;emit('busy-change',true);const files=[],completedGroups=new Set(),attemptedGroups=new Set();
+   clear();processed.value=0;packaged.value=false;totalTasks.value=rooms.length;working.value=true;stop.value=false;emit('busy-change',true);const files=[],completedGroups=new Set(),attemptedGroups=new Set();
    try {
     for(const room of rooms){
      if(!alive||stop.value)break;
-     const account=props.accounts.find(a=>a.room===room),group=account?.billingGroup;
-     if(attemptedGroups.has(group||room))continue;attemptedGroups.add(group||room);
+     
      message.value='正在產生 '+room+' 房（'+(results.value.length+1)+'／'+rooms.length+'）……';
      let rendered;
      try {

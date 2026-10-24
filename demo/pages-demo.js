@@ -14,8 +14,25 @@
     notes: '虛構展示資料，非真實房客。', contractLinks: []
   })).map(tenant=>({...tenant,phone:formatPhone(tenant.phone),guarantorPhone:formatPhone(tenant.guarantorPhone),emergencyContacts:tenant.emergencyContacts.map(c=>({...c,phone:formatPhone(c.phone)})),initialReading:tenant.initialMeterReading,signingDate:tenant.contractDate}));
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
+  const numbers=window.RentalDemoNumbers||null;
+  const snapshotYears=numbers?[...new Set(numbers.periods.map(p=>p.year))].sort((a,b)=>b-a):[2026];
+  const snapshotMonths=year=>numbers?numbers.periods.filter(p=>p.year===year).map(p=>p.month).sort((a,b)=>a-b):months;
+  if(numbers){
+    if(numbers.version!==1||numbers.source!=='production-numbers'||numbers.personalData!=='synthetic')throw Error('數值快照格式不正確。');
+    const fake=tenants.map(t=>({...t}));
+    const replacements=numbers.tenants.map((n,i)=>{const t=fake.find(t=>t.room===n.room)||fake[i%fake.length];return {...t,room:n.room,version:'demo-'+n.room,name:n.vacant?'':t.name||'示範房客 '+n.room,rent:n.rent,vacant:n.vacant,roomType:n.roomType??t.roomType,initialMeterReading:null,initialReading:null,phone:n.vacant?'':t.phone};});
+    tenants.splice(0,tenants.length,...replacements);rooms.splice(0,rooms.length,...replacements.map(t=>t.room));
+  }
+  function numericalAccounts(year,month){
+    const period=numbers.periods.find(p=>p.year===year&&p.month===month);if(!period)throw Error('正式快照沒有此月份，不補造資料。');
+    const report=numbers.reports.find(r=>r.year===year);
+    return period.accounts.map(a=>{const t=tenants.find(t=>t.room===a.room),signing=report?.signing.find(s=>s.room===a.room&&s.month===month),deposit=signing?.deposit??0,recorded=signing?signing.cash:a.effectivePaid;
+      return {...a,name:a.vacant?'空房':t?.name||'示範房客 '+a.room,notes:'示範備註；帳務數字取自正式快照。',transferLastFive:'01234',paymentScreenshot:'',receiptDeposit:deposit,receiptTotal:recorded,receiptRecordedAmount:recorded,actualPaid:recorded,receiptDue:a.netDue===null?null:a.netDue+deposit,receiptSuggestedAmount:a.netDue===null?null:a.netDue+deposit,receiptAmountReady:!a.meter||a.meter.currentReading!==null,isReceived:recorded!==null&&recorded!==undefined,receiptConfirmed:recorded!==null&&recorded!==undefined?'是':'否',receiptEditable:true,financialLocked:false};
+    });
+  }
   const date = (year, month) => new Date(Date.UTC(year, month - 1, 1)).toISOString().slice(0, 10);
   function accounts(year, month) {
+    if(numbers)return numericalAccounts(year,month);
     return tenants.map((t, i) => {
       const odd = month % 2 === 1, usage = 80 + i * 6 + month * 2;
       const firstMeterMonth = t.initialMeterReading === null ? null : months.find(m=>m%2===1 && t.contractDate>=date(year,m-2) && t.contractDate<date(year,m));
@@ -57,6 +74,8 @@
   const demoProperty='p-00000000-0000-4000-8000-000000000002';
   const demoProperties={revision:0,workspaceName:'假資料展示工作區',items:[{id:'default',name:'示範房產 A',archived:false,folderUrl:''},{id:demoProperty,name:'示範房產 B',archived:false,folderUrl:''}]};
   function rpc(action, args, scope, propertyId='default') {
+    if(action==='getWorkspaceLogo')return {version:'',dataUrl:''};
+    if(action==='getRoomSetupState')return {confirmed:true,count:propertyId===demoProperty?2:tenants.length,version:'demo-room-setup',rooms:propertyId===demoProperty?[{room:'601',roomType:'套房',inactive:false},{room:'602',roomType:'雅房',inactive:false}]:tenants.map(t=>({room:t.room,roomType:t.roomType,inactive:false}))};
     if(action==='getRentalProperties')return demoProperties;
     if(!['default',demoProperty].includes(propertyId))throw Error('展示房產不存在。');
     if(propertyId===demoProperty){if(action==='getTenantData')return tenants.slice(0,2).map((t,i)=>({...t,room:String(601+i),name:'示範房產 B 房客 '+(i+1)}));if(action==='getRoomSettings')return [{room:'601',roomType:'套房',inactive:false,occupied:true,version:'demo-b-601'},{room:'602',roomType:'雅房',inactive:false,occupied:true,version:'demo-b-602'}];if(action==='getAvailableBillingYears')return [2026];if(action==='getAvailableBillingMonths')return [];if(action==='getRentalSiteCapabilities')return {version:2,billing:true};throw Error('此示範房產尚無帳務資料。');}
@@ -65,28 +84,29 @@
     if (scope === 'tenant' && action === 'getTenantData') return tenants;
     if(scope==='tenant'&&action==='getRoomSettings')return tenants.map(t=>({room:t.room,roomType:t.roomType,inactive:false,occupied:!!t.name,version:t.version}));
     if (scope !== 'billing') throw Error('展示版不提供此操作。');
-    if (action === 'getRentalSiteCapabilities') return { version: 2, billing: true };
-    if (action === 'getAvailableBillingYears') return [2026];
+    if (action === 'getRentalSiteCapabilities') return { version:2,billing:true,...(numbers?{historicalReadOnly:true,monthlyCreation:false}:{}) };
+    if (action === 'getAvailableBillingYears') return snapshotYears;
     const [year, month, room] = args;
-    if (year !== 2026) throw Error('展示版提供 2026 年資料。');
-    if (action === 'getAvailableBillingMonths') return months;
-    if(action==='getXingwuCollectionReport'){const rows=months.flatMap(m=>accounts(year,m));const count=rows.length;const cash=rows.reduce((s,a)=>s+(a.effectivePaid||0),0),unknown=rows.filter(a=>!a.isReceived).length;return {version:1,year,receiptCount:count,unknownReceiptCount:unknown,cashTotal:unknown?null:cash,knownCashTotal:cash,combinedReceipts:0,depositScope:'虛構簽約款，僅供介面展示',signing:[{month:1,room:'401',rent:5800,deposit:11600,contractTotal:17400,cash:17400}],months:months.map(m=>{const a=accounts(year,m),rent=a.reduce((s,r)=>s+r.rent,0),electricity=a.reduce((s,r)=>s+(r.electricityFee||0),0);return {month:m,rent,electricity,settledRent:rent,settledElectricity:electricity,historicalCredit:0,vacantRooms:[]};})};}
+    if (!snapshotYears.includes(year)) throw Error('展示版沒有此年份的資料。');
+    if (action === 'getAvailableBillingMonths') return snapshotMonths(year);
+    if(action==='getXingwuCollectionReport'){if(numbers){const r=numbers.reports.find(r=>r.year===year);if(!r)throw Error('快照沒有此年度報表。');return {...r,depositScope:'正式帳務數值快照；個資及照片為示範資料。'};}const rows=months.flatMap(m=>accounts(year,m));const count=rows.length;const cash=rows.reduce((s,a)=>s+(a.effectivePaid||0),0),unknown=rows.filter(a=>!a.isReceived).length;return {version:1,year,receiptCount:count,unknownReceiptCount:unknown,cashTotal:unknown?null:cash,knownCashTotal:cash,combinedReceipts:0,depositScope:'虛構簽約款，僅供介面展示',signing:[{month:1,room:'401',rent:5800,deposit:11600,contractTotal:17400,cash:17400}],months:months.map(m=>{const a=accounts(year,m),rent=a.reduce((s,r)=>s+r.rent,0),electricity=a.reduce((s,r)=>s+(r.electricityFee||0),0);return {month:m,rent,electricity,settledRent:rent,settledElectricity:electricity,historicalCredit:0,vacantRooms:[]};})};}
 
     if (!Number.isInteger(month) || month < 1 || month > 12) throw Error('月份不正確。');
     if (action === 'getMonthlyAccounts') return accounts(year, month);
     if (action === 'getMonthlyPaymentPhotos') return month===12?[{id:'demo-payment-401',name:'401-DEMO.png'}]:[];
     if(action==='getPaymentPhoto'&&month===12&&room==='demo-payment-401')return {dataUrl:samplePhoto('401','匯款')};
     if (action === 'getRoomPaymentPhotoSelection' && rooms.includes(room)) return month===12&&room==='401'?{fileIds:['demo-payment-401'],value:'demo-only-saved-association'}:{ fileIds: [], value: '' };
-    if (action === 'getMeterPhoto' || action === 'getRoomNoticeData') {
+    if (action === 'getMeterPhoto' || action === 'getMeterPhotoReference' || action === 'getRoomNoticeData') {
       const a = accounts(year, month).find(a => a.room === room);
       if (!a?.meter) throw Error('請選擇單數月份及有效房號。');
-      const photo = { found: true, name: room + '-demo.png', readingDate: date(year, month), dataUrl: samplePhoto(room) };
+      if(action==='getMeterPhotoReference')return {found:true,id:'demo-meter-'+room,readingDate:a.meter.currentReadingDate};
+      const photo = { found:true,name:room+'-demo.png',readingDate:a.meter.currentReadingDate,dataUrl:samplePhoto(room) };
       if (action === 'getMeterPhoto') return photo;
-      return { year, month, room, rent: a.rent, arrears: a.arrears, creditApplied: 0, total: a.netDue,
+      return { year, month, room, rent: a.rent, arrears: a.arrears, creditApplied: a.creditApplied, total: a.netDue,
         dueDate: a.dueDate, photo,
         electricity: { previousDate: a.meter.previousReadingDate, currentDate: a.meter.currentReadingDate,
           previousReading: a.meter.previousReading, currentReading: a.meter.currentReading,
-          usage: a.meter.usage, unitPrice: 5, fee: a.electricityFee } };
+          usage: a.meter.usage, unitPrice: a.meter.unitPrice??5, fee: a.electricityFee } };
     }
     throw Error('展示版僅供瀏覽，不提供寫入或此項操作。');
   }

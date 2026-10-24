@@ -87,7 +87,7 @@ async function saveField(label,value){const el=byLabel(label);input(el,value);aw
   assert(!d.querySelector('thead').textContent.includes('電費'));
   assert.equal(byLabel('12 月 401 房轉帳後五碼').value,'01234');
   assert(text().includes('0'));
-  const normalName=w.mockState.entries[12].name;w.mockState.entries[12].vacant=true;w.mockState.entries[12].name='已退租的假姓名';$('#reload').click();await wait(()=>ready()&&d.querySelector('table tbody tr td').textContent==='空房');w.mockState.entries[12].vacant=false;w.mockState.entries[12].name=normalName;$('#reload').click();await wait(()=>ready()&&d.querySelector('table tbody tr td').textContent===normalName);
+  const normalName=w.mockState.entries[12].name;w.mockState.entries[12].vacant=true;w.mockState.entries[12].name='已退租的假姓名';$('#reload').click();await wait(()=>ready()&&d.querySelector('table tbody tr td').textContent.trim().startsWith('空房'));w.mockState.entries[12].vacant=false;w.mockState.entries[12].name=normalName;$('#reload').click();await wait(()=>ready()&&d.querySelector('table tbody tr td').textContent.trim().startsWith(normalName));
   $('#previewInitialization').click();await wait(()=>$('#initialization-status').textContent.includes('無需初始化'));
   assert.equal($('#initializeMonth').disabled,true);
 

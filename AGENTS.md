@@ -39,3 +39,8 @@ Read README.md, docs/CODEX_HANDOFF.md and docs/DEPLOYMENT.md before changing thi
 ## Same-lease name correction authorized 2026-10-20
 - Saving a tenant name updates the tenant record only. Billing names change only after a manager previews the current lease and explicitly checks the individual months; default selection is empty. Unchecked months, explicit vacancies and other lease periods remain unchanged. This supersedes automatic same-lease name propagation.
 - Previously changed names use a room/lease/month preview and manager confirmation with tenant and preview version checks. Only the selected names change, with an internal stable identity marker on new accounts to prevent a display-name correction from changing debt calculations; all money, receipt evidence, allocations and checkout history remain intact. No automatic retries or read-time source writes. The fictitious Demo remains read-only.
+
+## Production-number snapshot authorized 2026-10-24
+- The owner explicitly approved production financial numbers with synthetic personal information for this readonly Demo. The private production site retains real people; anonymous/Pages/acceptance use fake people.
+- Only the allowlisted demo/production-numbers.json may contain production-derived amounts, room IDs, meter values/dates and opaque anonymous cohort keys. Do not copy source names, contacts, notes, suffixes, private configuration, credentials, Drive references or photos.
+- Preserve this repository's existing workflows, standalone room/initial-meter checks, fake personal fixtures and readonly/offline API boundary. The snapshot adds no live Google or private Worker connection.

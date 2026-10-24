@@ -4,6 +4,7 @@ window.RentalNotice = (() => {
   const close = (a,b) => Math.abs(a-b) < 0.000001;
   const validDate = value => typeof value==='string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value+'T00:00:00Z')) && new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
   function validate(data) {
+    if(data?.group)throw Error('請使用單房通知。');
     if (!data || !/^\d{4}$/.test(String(data.year)) || !Number.isInteger(data.month) || data.month<1 || data.month>12 || data.month%2!==1 || !/^\d{3,8}$/.test(String(data.room))) throw Error('僅能產生單數月份的單房電費通知。');
     const m=data.electricity;
     if(![data.arrears??0,data.creditApplied??0].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0)||((data.creditApplied||0)>data.rent+(m?.fee||0)+(data.arrears||0)))throw Error('前期餘額格式不正確。');
@@ -92,7 +93,7 @@ window.RentalNotice = (() => {
       if(data.creditApplied>0)row('多收抵扣','− NT$ '+money.format(data.creditApplied));
       ctx.fillStyle = '#eaf0e3';
       ctx.fillRect(60, y - 10, 960, 110);
-      text('應繳金額', 80, y + 60, 38, '#294638', true);
+      text(data.historical?'歷史應繳金額':'應繳金額', 80, y + 60, 38, '#294638', true);
 
       ctx.textAlign = 'right';
       ctx.fillText('NT$ ' + money.format(data.total), 1000, y + 60);

@@ -1,57 +1,47 @@
 /** One worksheet for all rooms. Reuses the signed APIs and optimistic field checks. */
 window.RentalComponents ||= {};
-window.RentalPhotoMemory ||= (()=>{
- const items=new Map();let size=0,generation=0;const ttl=30*60*1000,limit=24*1024*1024;
- const remove=k=>{const old=items.get(k);if(old){size-=old.value.length*2;items.delete(k)}};
- const clear=()=>{items.clear();size=0;generation++};window.addEventListener('pagehide',clear);
- document.addEventListener('submit',e=>{if(e.target.action?.includes('/auth/logout'))clear()},true);
- return {clear,get generation(){return generation},get(k){const item=items.get(k);if(!item)return '';if(Date.now()-item.time>ttl){remove(k);return ''}return item.value},set(k,value,expected=generation){if(expected!==generation)return;remove(k);if(value.length*2>limit)return;while(items.size&&(size+value.length*2>limit||items.size>=60))remove(items.keys().next().value);items.set(k,{value,time:Date.now()});size+=value.length*2}};
-})();
-
 window.RentalComponents.meterWorksheet = function (api) {
-  const { ref, computed, watch, nextTick, onMounted } = Vue;
+  const { ref, computed, watch, nextTick, onBeforeUnmount } = Vue;
   return {
-    props: { accounts: Array, year: Number, month: Number, blocked: Boolean },
+    props: { accounts: Array, year: Number, month: Number, blocked: Boolean, noticeUrl: Function },
     emits: ['dirty-change','busy-change','field-saved','reconciled','refresh-request'],
     template: `
 <section class="meter-sheet" aria-label="整月電表抄錄表">
   <div class="meter-sheet-toolbar">
-    <label v-write class="meter-common-date">本期共同抄表日<input type="date" v-model="commonDate" :disabled="locked" @input="acknowledgeDate" aria-label="本期共同抄表日"></label>
+    <label v-write  class="meter-common-date">本期共同抄表日<input type="date" v-model="commonDate" :disabled="locked || historical" @input="acknowledgeDate" aria-label="本期共同抄表日"></label>
     <div class="meter-sheet-actions">
-      <button v-viewer-only type="button" class="secondary" @click="loadPhotos" :disabled="locked">載入全部電表照片</button>
-      <button type="button" class="primary" @click="applyDateAndPhotos" :disabled="locked || reviewRequired || !validDate">{{photoBusy?'正在載入照片……':'套用日期並載入全部照片'}}</button>
-      <button type="button" class="primary" @click="saveAll" :disabled="locked || reviewRequired || !dirty || !validDate">儲存全部抄表</button>
+      <button type="button" class="secondary" @click="loadPhotos" :disabled="locked">更新照片連結</button>
+      <button type="button" class="primary" @click="applyDateAndPhotos" :disabled="historical || locked || reviewRequired || !validDate">套用抄表日期並更新連結</button>
+      <button type="button" class="primary" @click="saveAll" :disabled="historical || locked || reviewRequired || !dirty || !validDate">儲存全部抄表</button>
       <button type="button" class="secondary" @click="restore" :disabled="locked || !dirty">還原全部未儲存輸入</button>
       <button v-if="reviewRequired" type="button" class="secondary" @click="reconcile" :disabled="locked">重新讀取核對，保留未完成輸入</button>
     </div>
   </div>
-  <p class="meter-sheet-hint">日期只填一次。照片以已儲存的抄表日配對；度數填完後按「儲存全部抄表」。空間不足會換行。</p>
+  <p class="meter-sheet-hint">日期只填一次。照片只顯示連結，不預先下載；點擊後才載入單張圖片並彈出預覽視窗。連結依已儲存的抄表日配對；度數填完後按「儲存全部抄表」。空間不足會換行。</p>
   <p v-if="!validDate" class="meter-sheet-hint">請選擇有效的共同抄表日期（可與帳務月份不同）；原有日期仍顯示在各房資料中。</p>
   <p class="meter-batch-status" role="status" aria-live="polite">{{status}}</p>
   <div class="meter-sheet-rows" role="table" aria-label="各房電表度數">
     <article v-for="entry in entries" :key="entry.room" class="meter-sheet-row" role="row" :aria-label="entry.room+' 房電表'">
       <div class="meter-room-title"><h2>{{entry.room}} 房</h2><span>{{entry.name||'未填居住者'}}</span><span v-if="entry.conflict" class="meter-field-error">試算表已有其他修改，請還原此房或重新輸入後再儲存。</span></div>
       <div class="meter-row-values">
-        <div class="meter-previous"><span>前期電表</span><strong>{{format(entry.previousReading)}} 度</strong><span>{{entry.previousSource==='initial'?'簽約日：':''}}{{entry.previousDate||'前期日期待補'}}</span></div>
-        <label class="meter-current">本期電表<input type="number" step="any" :min="entry.previousReading ?? 0" v-model="entry.draft" :disabled="locked || entry.previousReading===null" @input="entry.conflict=false;entry.message=''" :aria-label="entry.room+' 房本期電表'"><span>試算表目前：{{format(entry.savedReading)}} 度</span></label>
+        <div class="meter-previous"><span>前期電表</span><strong>{{format(entry.previousReading)}} 度</strong><span>{{entry.previousDate||'前期日期待補'}}</span></div>
+        <label class="meter-current">本期電表<input type="number" step="any" :min="entry.previousReading ?? 0" v-model="entry.draft" :disabled="historical || locked || entry.previousReading===null" @input="entry.conflict=false;entry.message=''" :aria-label="entry.room+' 房本期電表'"><span>試算表目前：{{format(entry.savedReading)}} 度</span></label>
         <div class="meter-amount"><span>本期使用</span><strong>{{usage(entry)===null?'—':format(usage(entry))+' 度'}}</strong><span>電費 NT$ {{usage(entry)===null?'—':format(usage(entry)*5)}}</span></div>
         <div class="meter-date-detail"><span>本期抄表日</span><strong>{{commonDate||entry.savedDate||'待填寫'}}</strong><span v-if="commonDate!==entry.savedDate">已儲存：{{entry.savedDate||'未填寫'}}</span></div>
       </div>
       <p v-if="readingError(entry)" class="meter-field-error">{{readingError(entry)}}</p>
       <p v-if="entry.message" class="meter-row-message" role="status">{{entry.message}}</p>
       <button v-if="entry.conflict" class="secondary" type="button" @click="restoreEntry(entry)" :disabled="locked">還原此房</button>
-      <div class="meter-row-photo"><button v-if="!entry.photo&&entry.savedDate" type="button" @click="loadPrivatePhoto(entry)" :disabled="locked">透過網站載入本期照片</button>
-        <div><span>本期電表照片</span><span class="meter-photo-message">{{entry.photoMessage||'尚未載入；上方按鈕可一次載入全部房間。'}}</span></div>
-        <div v-if="entry.photo && entry.photoDate===(commonDate||entry.savedDate)"><img :src="entry.photo" :alt="entry.room+' 房 '+entry.photoDate+' 電表照片'" loading="lazy" @error="entry.photo='';entry.photoMessage='圖片無法顯示，請核對檔案。'"></div>
-        <p v-else-if="entry.photo" class="meter-sheet-hint">日期已變更，請使用上方按鈕重新載入本期照片。</p>
-      </div>
+      <div class="meter-row-photo"><div class="meter-photo-status"><span class="meter-photo-message">{{entry.photoMessage||'點擊連結才開啟圖片，不預先載入。'}}</span></div><div class="meter-photo-actions"><a v-if="entry.savedDate&&(!commonDate||commonDate===entry.savedDate)" :href="entry.driveLink||'#'" @click.prevent="openPhoto(entry)" :aria-label="entry.room+' 房開啟本期電表照片'">本期電表照片</a><p v-else class="meter-sheet-hint">請先儲存本期抄表日期，再開啟對應照片。</p>
+      <div v-if="noticeUrl" class="meter-notice"><a v-if="!dirty&&!reviewRequired&&!locked" class="notice-link" :href="noticeUrl({room:entry.room,year,month})" target="_blank" rel="noopener noreferrer" :aria-label="month+' 月 '+entry.room+' 房電費通知預覽'">預覽電費通知</a><p v-else class="meter-sheet-hint">請先儲存並核對抄表資料，再預覽電費通知。</p></div></div></div>
     </article>
   </div>
 </section>`,
     setup(props, { emit }) {
-      const historical=Vue.computed(()=>props.accounts.some(a=>a.financialLocked&&!a.meterEditable));
+      const preview=window.RentalPhotoPreview.create();
+      onBeforeUnmount(()=>preview.close());
+      const historical=computed(()=>props.accounts.some(a=>a.financialLocked&&!a.meterEditable));
       const entries = ref([]), commonDate = ref(''), status = ref(''), working = ref(false), photoBusy = ref(false), reviewRequired = ref(false);
-      const photoScope=JSON.stringify([window.RentalAccess?.state?.email||'',window.RentalPropertyContext?.id||'default']);const photoKey=(room,date)=>photoScope+':meter:'+props.year+':'+props.month+':'+room+':'+date;
       let currentPeriod = '', initialDate = '';
       const format = v => v === null || v === undefined || v === '' ? '—' : new Intl.NumberFormat('zh-TW',{maximumFractionDigits:2}).format(v);
       const minDate = computed(()=>props.year+'-'+String(props.month).padStart(2,'0')+'-01');
@@ -71,9 +61,9 @@ window.RentalComponents.meterWorksheet = function (api) {
           const e=old.get(a.room), m=a.meter, hadDraft=e&&readingDirty(e);
           const changed=e&&m.currentReading!==e.savedReading&&String(m.currentReading??'')!==String(e.draft??'');
           return {room:a.room,name:a.name,previousReading:typeof m.previousReading==='number'?m.previousReading:null,
-            previousDate:m.previousReadingDate||'',previousSource:m.previousReadingSource||'',savedDate:m.currentReadingDate||'',savedReading:m.currentReading??null,
+            previousDate:m.previousReadingDate||'',savedDate:m.currentReadingDate||'',savedReading:m.currentReading??null,
             draft:hadDraft?e.draft:String(m.currentReading??''),conflict:!!(hadDraft&&(changed||e?.conflict)),message:e?.message||'',
-            driveLink:e?.driveLink||'',photo:e?.photo||'',photoDate:e?.photoDate||'',photoMessage:e?.photoMessage||''};
+            driveLink:e?.photoDate===(m.currentReadingDate||'')?e.driveLink||'':'',photoDate:e?.photoDate===(m.currentReadingDate||'')?e.photoDate:'',photoMessage:e?.photoDate===(m.currentReadingDate||'')?e.photoMessage||'':''};
         });
         const dates=[...new Set(entries.value.map(e=>e.savedDate))], uniform=dates.length===1?dates[0]:'';
         if(fresh || commonDate.value===initialDate) commonDate.value=uniform;
@@ -102,7 +92,7 @@ window.RentalComponents.meterWorksheet = function (api) {
           status.value='已重新讀取。請核對各房「試算表目前」度數；有衝突的房間請還原或重新輸入。';}
         catch(error){status.value='核對失敗：'+error.message}finally{working.value=false}
       }
-      async function persist(mode){
+      async function persist(mode){if(historical.value)return false;
         if(locked.value||reviewRequired.value||!validDate.value)return false;
         const targets=entries.value.filter(e=>mode==='date'?commonDate.value!==e.savedDate:readingDirty(e)||commonDate.value!==e.savedDate);
         if(targets.some(e=>e.conflict)){status.value='有其他修改尚未核對，請先處理標示的房間。';return false}
@@ -130,39 +120,35 @@ window.RentalComponents.meterWorksheet = function (api) {
         finally{working.value=false}
       }
       async function saveAll(){if(await persist('all')){await nextTick();emit('refresh-request')}}
-      async function thumbnail(dataUrl){
-        // Bound memory for fifteen large phone photos; original Drive files stay untouched.
-        if(typeof dataUrl!=='string'||!/^data:image\/(jpeg|png|webp);base64,/.test(dataUrl))throw Error('圖片格式不正確。');
-        const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('圖片無法顯示。'));img.src=dataUrl});
-        const scale=Math.min(1,1280/img.naturalWidth,1600/img.naturalHeight), canvas=document.createElement('canvas');
-        canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
-        const ctx=canvas.getContext('2d');if(!ctx)throw Error('圖片預覽無法建立。');
-        ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        const result=canvas.toDataURL('image/jpeg',0.85);img.src='';canvas.width=1;canvas.height=1;return result;
+      const driveUrl=id=>typeof id==='string'&&/^[A-Za-z0-9_-]{1,200}$/.test(id)?'https://drive.google.com/file/d/'+id+'/view':'';
+      async function reference(entry){
+        if(!entry.savedDate)throw Error('請先儲存本期抄表日期。');
+        const date=entry.savedDate,result=await api.meterPhotoReference(props.year,props.month,entry.room);
+        if(entry.savedDate!==date)throw Error('抄表日期已變更，請重新開啟連結。');
+        if(!result||typeof result.found!=='boolean')throw Error('照片連結回應格式不正確。');
+        if(!result.found)throw Error(result.message||'尚未找到本期電表照片。');
+        if(result.readingDate!==date||!driveUrl(result.id))throw Error('照片日期或連結不符。');
+        entry.driveLink=driveUrl(result.id);entry.photoDate=date;entry.photoMessage='抄表日：'+date+'；點擊連結開啟原圖。';return entry.driveLink;
       }
-      async function loadPhotos(force=true){
+      async function loadPhotos(){
         if(locked.value||reviewRequired.value)return;
         photoBusy.value=true;let completed=0,found=0,failed=0,index=0;
-        const queue=[...entries.value], year=props.year,month=props.month;
-        async function worker(){while(index<queue.length){const e=queue[index++];e.photo='';e.photoMessage='載入中……';
-          try{
-            if(!e.savedDate){e.photoMessage='尚未儲存本期抄表日。';continue}
-            const cached=!force&&RentalPhotoMemory.get(photoKey(e.room,e.savedDate));if(cached){e.photo=cached;e.photoDate=e.savedDate;e.photoMessage='抄表日：'+e.savedDate;found++;continue}
-            const generation=RentalPhotoMemory.generation;const result=await api.meterPhoto(year,month,e.room);
-            if(!result||typeof result.found!=='boolean')throw Error('照片回應格式不正確。');
-            if(!result.found){e.photoMessage=result.message||'尚未提供照片。';continue}
-            if(result.readingDate!==e.savedDate)throw Error('照片日期與本期抄表日不一致。');
-            e.photo=await thumbnail(result.dataUrl);RentalPhotoMemory.set(photoKey(e.room,e.savedDate),e.photo,generation);e.driveLink='';e.photoDate=result.readingDate;e.photoMessage='抄表日：'+result.readingDate;found++;
-          }catch(error){e.photoMessage='載入失敗：'+error.message;failed++}
-          finally{completed++;status.value='照片載入中：'+completed+' / '+queue.length+' 間';}
-        }}
-        try{await Promise.all([worker(),worker()]);status.value='照片處理完成：'+queue.length+' 間，已載入 '+found+' 張'+(failed?'，'+failed+' 間讀取失敗':'')+'。缺圖的房間已逐一標示。';}
-        finally{photoBusy.value=false}
+        const queue=[...entries.value];
+        async function worker(){while(index<queue.length){const e=queue[index++];e.driveLink='';try{await reference(e);found++;}catch(error){e.photoMessage='連結讀取失敗：'+error.message;failed++;}finally{completed++;status.value='連結讀取中：'+completed+' / '+queue.length+' 間';}}}
+        try{await Promise.all([worker(),worker()]);status.value='照片連結處理完成：'+queue.length+' 間，取得 '+found+' 個連結'+(failed?'，'+failed+' 間尚無有效連結':'')+'；未下載圖片內容。';}finally{photoBusy.value=false;}
       }
-      async function loadPrivatePhoto(entry){if(locked.value)return;photoBusy.value=true;try{const generation=RentalPhotoMemory.generation;const result=await api.meterPhoto(props.year,props.month,entry.room);if(!result?.found||result.readingDate!==entry.savedDate)throw Error('照片或日期不符。');entry.photo=await thumbnail(result.dataUrl);RentalPhotoMemory.set(photoKey(entry.room,entry.savedDate),entry.photo,generation);entry.photoDate=result.readingDate;entry.driveLink='';entry.photoMessage='網站預覽；原圖保留在 Drive。';}catch(e){entry.photoMessage='照片讀取失敗：'+e.message;}finally{photoBusy.value=false;}}
+      function openPhoto(entry){
+        if(locked.value)return;
+        const date=entry.savedDate,year=props.year,month=props.month;
+        preview.open(entry.room+' 房／本期電表照片',async()=>{
+          const result=await api.meterPhoto(year,month,entry.room);
+          if(!result?.found)throw Error(result?.message||'尚未找到本期電表照片。');
+          if(entry.savedDate!==date||result.readingDate!==date)throw Error('照片日期與本期抄表日不一致，請重新核對。');
+          return result.dataUrl;
+        });
+      }
       async function applyDateAndPhotos(){if(await persist('date')){await nextTick();await loadPhotos()}}
-      onMounted(()=>{if(api.drivePreview)loadPhotos(false)});
-      return {loadPrivatePhoto,historical,entries,commonDate,status,working,photoBusy,reviewRequired,minDate,maxDate,validDate,locked,dirty,format,usage,readingError,acknowledgeDate,restoreEntry,restore,reconcile,saveAll,applyDateAndPhotos,loadPhotos};
+      return {openPhoto,historical,entries,commonDate,status,working,photoBusy,reviewRequired,minDate,maxDate,validDate,locked,dirty,format,usage,readingError,acknowledgeDate,restoreEntry,restore,reconcile,saveAll,applyDateAndPhotos,loadPhotos};
     }
   };
 };

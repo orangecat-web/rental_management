@@ -33,6 +33,8 @@ const server = http.createServer((req, res) => {
       resources: 'usable', runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole: vc,
       beforeParse(w) {
         w.Response = Response;
+        // This legacy interaction suite intentionally exercises the deterministic synthetic fixture.
+        Object.defineProperty(w,'RentalDemoNumbers',{configurable:true,get:()=>null,set:()=>{}});
         w.fetch = (input, options) => fetch(new URL(input, w.location.href), options);
         const RealDate = w.Date;
         w.Date = class extends RealDate { constructor(...args) { super(...(args.length ? args : ['2026-10-18T00:00:00Z'])); } };
@@ -104,12 +106,15 @@ const server = http.createServer((req, res) => {
     assert.equal(d.querySelector('#month').options.length, 12);
     const month = d.querySelector('#month'); month.value = '11'; month.dispatchEvent(new w.Event('change', { bubbles: true }));
     await wait(() => d.querySelector('.billing-native')?.textContent.includes('11 月｜已讀取'));
-    const noticeLink = d.querySelector('.billing-native a[href*="notice.html"]');
+    assert(!d.querySelector('.billing-native a[href*="notice.html"]'));[...d.querySelectorAll('.billing-tab-buttons button')].find(b=>b.textContent==='電表抄錄與通知').click();await wait(()=>d.querySelector('.meter-sheet'));assert.deepEqual([...d.querySelector('#month').options].map(o=>Number(o.value)),[1,3,5,7,9,11]);
+    const noticeLink = d.querySelector('.meter-sheet a[href*="notice.html"]');
     assert(noticeLink.href.startsWith(base + 'notice.html?'));
+    [...d.querySelectorAll('.billing-tab-buttons button')].find(b=>b.textContent==='帳務資料').click();await w.Vue.nextTick();assert.equal(d.querySelector('#month').options.length,12);
+    d.querySelector('[aria-label="401 房實際對帳"]').click();await wait(()=>d.querySelector('.reconciliation-dialog'));assert(d.querySelector('[aria-label="401 房實際對帳金額"]').readOnly);assert([...d.querySelectorAll('.reconciliation-dialog button')].find(b=>b.textContent==='儲存對帳資料').hidden);d.querySelector('[aria-label="關閉實際對帳"]').click();await wait(()=>!d.querySelector('.reconciliation-dialog'));
     navigate('收租統計');
     await wait(() => d.querySelectorAll('.room-year-card').length === 15);
     assert.equal(d.querySelector('#workspace-error').hidden, true);
-    const select=d.querySelector('[aria-label="選擇房產"]');assert.equal(select.options.length,2);select.value='p-00000000-0000-4000-8000-000000000002';select.dispatchEvent(new w.Event('change',{bubbles:true}));navigate('房間總覽');await wait(()=>d.querySelectorAll('.room-card').length===2);assert(d.querySelector('.room-card').textContent.includes('601'));assert(!d.querySelector('.room-card').textContent.includes('401'));assert.equal((await rpc('saveRentalProperty',['workspace','default','','changed','',0],'tenant')).response.status,403);
+    const select=d.querySelector('[aria-label="選擇房產"]');assert.equal(select.options.length,2);select.value='p-00000000-0000-4000-8000-000000000002';select.dispatchEvent(new w.Event('change',{bubbles:true}));await w.Vue.nextTick();await wait(()=>[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('房間總覽'))?.disabled===false);navigate('房間總覽');await wait(()=>d.querySelectorAll('.room-card').length===2);assert(d.querySelector('.room-card').textContent.includes('601'));assert(!d.querySelector('.room-card').textContent.includes('401'));assert.equal((await rpc('saveRentalProperty',['workspace','default','','changed','',0],'tenant')).response.status,403);
 
     assert.deepEqual(networkApi, [], 'No API calls should reach even the static host');
     assert.deepEqual(errors, []);

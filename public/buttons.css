@@ -78,3 +78,22 @@
 @media (prefers-reduced-motion: reduce) {
   :root body :is(button, .rental-button, .notice-link) { transition: none; }
 }
+
+/* Replace the platform arrow so its inset is consistent: 8px → 16px. */
+:root body select:not([multiple]):not([size]){appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%23284e3d' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:12px 8px;padding-right:40px}
+
+/* One shared label-to-field gap; choice controls retain their existing inline layout. */
+:root{--rental-field-gap:8px}
+:root body label:has(> :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]),select,textarea)){
+  display:flex;flex-direction:column;gap:var(--rental-field-gap)
+}
+:root body label:has(> :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]),select,textarea))> :is(input,select,textarea){margin:0}
+:root body :is(.cash-summary,.report-toolbar,.report-scope,.report-mode)>label:has(> :is(input:not([type=checkbox]):not([type=radio]),select,textarea)){
+  flex-direction:row;align-items:center
+}
+:root body .editor:has(>label+ :is(input:not([type=checkbox]):not([type=radio]),select,textarea)){row-gap:var(--rental-field-gap)}
+:root body .editor>label:has(+ :is(input:not([type=checkbox]):not([type=radio]),select,textarea)),
+:root body .editor>label+ :is(input:not([type=checkbox]):not([type=radio]),select,textarea){margin-block:0}
+:root body .rental-inline-field{display:inline-flex;align-items:center;column-gap:var(--rental-field-gap);min-width:0;max-width:100%}
+:root body .rental-inline-field> :is(label,input,select,textarea){margin:0}
+:root body .renewal-download{margin-top:16px}
