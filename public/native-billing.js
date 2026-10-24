@@ -217,7 +217,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
       if(selected)await loadAccounts();else status.value='本年度尚無已建立的單數月份。';
     }
     const reconciliationAccount=computed(()=>accounts.value.find(a=>a.room===reconciliationRoom.value));
-    const accountColumns=computed(()=>[...columns.value.filter(c=>!c.meter&&!['paymentPhotos','transferDate','transferLastFive','notes','notice'].includes(c.key)&&(c.key!=='overpaid'||accounts.value.some(a=>a.overpaid>0))),{key:'receiptStatus',title:'對帳狀態'},{key:'reconciliation',title:'操作'}]);
+    const accountColumns=computed(()=>[...columns.value.filter(c=>!c.meter&&!['paymentPhotos','transferLastFive','notes','notice'].includes(c.key)&&(c.key!=='overpaid'||accounts.value.some(a=>a.overpaid>0))),{key:'receiptStatus',title:'對帳狀態'},{key:'reconciliation',title:'操作'}]);
     function receiptStatus(a){return !a.isReceived||a.receiptTotal===null?'待核對':a.unpaid>0?'短收 '+numberFormat.format(a.unpaid):a.overpaid>0?'溢收 '+numberFormat.format(a.overpaid):'已核對';}
     function openReconciliation(account){if(controlsLocked.value)return;reconciliationRoom.value=account.room;}
     function closeReconciliation(){reconciliationRoom.value='';}
@@ -324,6 +324,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
               ...(odd && accounts.value.some(a => a.meter && typeof a.meter === 'object') ? meterColumns : [])];
           });
           function displayCell(account, column) {
+            if(column.key==='dueDate')return String(account.year)+'-'+String(account.month).padStart(2,'0')+'-10';
             if(column.key==='name'){if(account.vacant===true)return '空房';if(account.vacant===false&&(!String(account.name||'').trim()||account.name==='空房'))return '承租人待補';}
             // Show the human-confirmed receipt total, including deposit; keep allocations for calculations.
             if(column.key==='overpaid'&&!account.overpaid)return '';

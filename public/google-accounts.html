@@ -508,6 +508,7 @@ table[aria-label="每月帳務資料"]{min-width:1280px}.table-wrap .notice-link
               ...(odd && accounts.value.some(a => a.meter && typeof a.meter === 'object') ? meterColumns : [])];
           });
           function displayCell(account, column) {
+            if(column.key==='dueDate')return String(account.year)+'-'+String(account.month).padStart(2,'0')+'-10';
             if(column.key==='name'){if(account.vacant===true)return '空房';if(account.vacant===false&&(!String(account.name||'').trim()||account.name==='空房'))return '承租人待補';}
             // Show the human-confirmed receipt total, including deposit; keep allocations for calculations.
             if(column.key==='overpaid'&&!account.overpaid)return '';

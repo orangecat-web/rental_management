@@ -84,7 +84,7 @@ for (const [kind, file] of [['tenant','google-tenants.html'], ['billing','google
       if(selected)await loadAccounts();else status.value='本年度尚無已建立的單數月份。';
     }
     const reconciliationAccount=computed(()=>accounts.value.find(a=>a.room===reconciliationRoom.value));
-    const accountColumns=computed(()=>[...columns.value.filter(c=>!c.meter&&!['paymentPhotos','transferDate','transferLastFive','notes','notice'].includes(c.key)&&(c.key!=='overpaid'||accounts.value.some(a=>a.overpaid>0))),{key:'receiptStatus',title:'對帳狀態'},{key:'reconciliation',title:'操作'}]);
+    const accountColumns=computed(()=>[...columns.value.filter(c=>!c.meter&&!['paymentPhotos','transferLastFive','notes','notice'].includes(c.key)&&(c.key!=='overpaid'||accounts.value.some(a=>a.overpaid>0))),{key:'receiptStatus',title:'對帳狀態'},{key:'reconciliation',title:'操作'}]);
     function receiptStatus(a){return !a.isReceived||a.receiptTotal===null?'待核對':a.unpaid>0?'短收 '+numberFormat.format(a.unpaid):a.overpaid>0?'溢收 '+numberFormat.format(a.overpaid):'已核對';}
     function openReconciliation(account){if(controlsLocked.value)return;reconciliationRoom.value=account.room;}
     function closeReconciliation(){reconciliationRoom.value='';}
