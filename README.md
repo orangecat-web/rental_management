@@ -58,3 +58,6 @@ GitHub repository → Settings → Pages → Source 選 **GitHub Actions**。推
 共用功能同步規則見 [Demo 與正式版同步](docs/DEMO_SYNC.md)。身份選單為「未標記／一般／學生／管理人」，公開 Demo 保持假資料唯讀；房客身份不賦予網站權限。
 
 2026-10-20 第三輪共用介面與多房產展示，見 [docs/ACCEPTANCE_V3_DEMO.md](docs/ACCEPTANCE_V3_DEMO.md)；只使用假資料，全部寫入維持禁止。
+
+
+2026-10-28：同步[每月支出唯讀展示](docs/MONTHLY_EXPENSES.md)。支出與收據為獨立假資料，原租金／電表快照不變；可檢視明細及 Lightbox，寫入與上傳停用。

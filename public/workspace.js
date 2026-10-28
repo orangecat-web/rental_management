@@ -1,14 +1,14 @@
 /** One workspace, one data source. No live records or photographs enter localStorage. */
 (() => {
-  const { createApp, ref, computed, onMounted } = Vue;
+  const { createApp, ref, computed, watch, onMounted } = Vue;
   async function start(){if(!await RentalAccess.ready)return;
   const tenantApi = RentalTransport('tenant');
   const app = createApp({
-    components: { TenantEditor: RentalAccess.secureComponent(RentalComponents.tenant()), BillingEditor: RentalAccess.secureComponent(RentalComponents.billing()), RentalReports: RentalComponents.reports() },
+    components: { ExpenseManager: RentalComponents.expenses ? RentalComponents.expenses() : {template:'<p>支出元件尚未載入。</p>'}, TenantEditor: RentalAccess.secureComponent(RentalComponents.tenant()), BillingEditor: RentalAccess.secureComponent(RentalComponents.billing()), RentalReports: RentalComponents.reports() },
     setup() {
       const query = new URLSearchParams(location.search);
       window.RentalPropertyContext={id:query.get('property')||'default'};
-      const page = ref(query.get('view') === 'reports' ? 'reports' : query.get('view') === 'accounts' ? 'accounts' : query.get('view') === 'tenants' ? 'tenants' : 'overview');
+      const page = ref(query.get('view') === 'expenses'&&(RentalAccess.canWrite||window.RentalDemo) ? 'expenses' : query.get('view') === 'reports' ? 'reports' : query.get('view') === 'accounts' ? 'accounts' : query.get('view') === 'tenants' ? 'tenants' : 'overview');
       const propertyCompatible=ref(false),propertyReady=ref(false),propertyBusy=ref(false),propertyOpen=ref(false),propertyError=ref(''),properties=ref([]),propertyRevision=ref(0),workspaceName=ref('私人管理工作區'),workspaceDraft=ref(''),newPropertyName=ref(''),newPropertyFolder=ref(''),propertyDelete=ref(null),propertyEpoch=ref(0),activeProperty=ref(window.RentalPropertyContext.id);let newPropertyId='';
       const roomLoading=ref(false),roomSetup=ref(null),roomStep=ref(0),roomMessage=ref(''),newRoom=ref(''),newRoomType=ref('套房'),roomAction=ref(null);
       const propertyRpc=(action,...args)=>new Promise((resolve,reject)=>tenantApi.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[action](...args));
@@ -33,9 +33,10 @@
       const currentAccounts=ref([]),paymentPeriod=ref('');
       const roomPayment=room=>currentAccounts.value.find(a=>a.room===room);
       const search = ref(''), selectedRoom = ref(''), editorBusy = ref(false), navigationMessage = ref('');
-      const nav = [{ id: 'overview', label: '房間總覽', icon: '▦' }, { id: 'reports', label: '收租統計', icon: '▥' }, { id: 'tenants', label: '房客資料', icon: '♧' }, { id: 'accounts', label: '每月帳務', icon: '▤' }];
+      const nav = [{ id: 'overview', label: '房間總覽', icon: '▦' }, { id: 'reports', label: '收租統計', icon: '▥' }, { id: 'tenants', label: '房客資料', icon: '♧' }, { id: 'accounts', label: '每月帳務', icon: '▤' },...((RentalAccess.canWrite||window.RentalDemo)?[{id:'expenses',label:'每月支出',icon:'▧'}]:[])];
       const title = computed(() => nav.find(item => item.id === page.value)?.label || '租務管理');
-      const subtitles = { reports: '租金收繳、全部用電與單房趨勢，在這裡一起掌握。', overview: '從房間開始，整理房客、租約與每月帳務。', tenants: '基本資料、聯絡方式與合約，在同一處查看與修改。', accounts: '收款、抄表、照片與電費通知，都從這裡處理。' };
+      watch(title, value => { document.title = '租屋管理 | ' + value; }, {immediate:true});
+      const subtitles = { expenses:'獨立記錄日常現金支出，不併入租金、電費或收租統計。', reports: '租金收繳、全部用電與單房趨勢，在這裡一起掌握。', overview: '從房間開始，整理房客、租約與每月帳務。', tenants: '基本資料、聯絡方式與合約，在同一處查看與修改。', accounts: '收款、抄表、照片與電費通知，都從這裡處理。' };
       const money = value => value === null || value === undefined || value === '' ? '未填寫' : new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 2 }).format(value);
       const totalRent = computed(() => tenants.value.reduce((sum, t) => sum + (typeof t.rent === 'number' ? t.rent : 0), 0));
       const missingRent = computed(() => tenants.value.filter(t => t.rent === null || t.rent === undefined).length);

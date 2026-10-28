@@ -53,3 +53,8 @@ Read README.md, docs/CODEX_HANDOFF.md and docs/DEPLOYMENT.md before changing thi
 ## Full Demo UI authorized 2026-10-24
 
 Keep all management components visible in the Demo; disable mutations instead of hiding their buttons. Keep legitimate conditional sections and preview/navigation behavior aligned with the production UI. Apply presentation only in the built Pages artifact: do not elevate viewer permissions, enable any API write, or modify private viewer policy. Readonly property management must be openable; file uploads and save/checkout actions stay disabled. The full-year production-number snapshot is authorized with synthetic people/photos only. See docs/DEMO_FULL_UI.md.
+
+
+## Monthly expenses sync authorized 2026-10-28
+
+User accepted acceptance expenses and authorized cross-site sync. Demo expenses and receipt illustrations must be entirely synthetic and independent of production numeric snapshot. Keep all controls visible with mutations/uploads disabled; allow readonly details and on-click gallery only. Never copy production expense records, receipt IDs/bytes, GAS installers, private API/configuration into this repository. Preserve unrelated public Demo features and existing numerical snapshot. See docs/MONTHLY_EXPENSES.md.

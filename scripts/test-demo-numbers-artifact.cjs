@@ -8,8 +8,8 @@ const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>10
  const snapshot=validateSnapshot(JSON.parse(fs.readFileSync(source,'utf8'))),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  assert(html.indexOf('production-numbers.js')<html.indexOf('pages-demo.js'));
  const files=[...html.matchAll(/<script[^>]+src="([^"]+)"[^>]*><\/script>/g)].map(m=>m[1]);
- const errors=[],external=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
- const dom=new JSDOM(html.replace(/<script[^>]+src=[^>]+><\/script>/g,''),{url:'https://demo.test/rental_management/',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){w.Response=Response;w.fetch=async url=>{external.push(String(url));throw Error('Unexpected external request');};w.Storage.prototype.setItem=()=>{throw Error('Demo must not persist data');};}});
+ let demoImages=0;const errors=[],external=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+ const dom=new JSDOM(html.replace(/<script[^>]+src=[^>]+><\/script>/g,''),{url:'https://demo.test/rental_management/',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){w.Response=Response;w.HTMLCanvasElement.prototype.getContext=()=>({fillRect(){},fillText(){}});w.HTMLCanvasElement.prototype.toDataURL=()=>{demoImages++;return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==';};w.fetch=async url=>{external.push(String(url));throw Error('Unexpected external request');};w.Storage.prototype.setItem=()=>{throw Error('Demo must not persist data');};}});
  try{
   const w=dom.window,d=w.document;
   for(const file of files)w.eval(fs.readFileSync(path.join(root,file.replace(/^\.\//,'')),'utf8'));
@@ -41,7 +41,13 @@ const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>10
   nav('每月帳務');await wait(()=>d.querySelector('.billing-native')?.textContent.includes('已讀取'));
   assert(!d.querySelector('#initializeMonth')||d.querySelector('#initializeMonth').hidden);assert(!d.querySelector('#toggleCreation')||d.querySelector('#toggleCreation').hidden);
   const open=d.querySelector('.reconciliation-action-cell button');assert(open&&!open.disabled);open.click();await wait(()=>d.querySelector('.reconciliation-dialog'));visibleDisabled('儲存對帳資料');assert(d.querySelector('.reconciliation-dialog [aria-label$="實際對帳金額"]').readOnly);d.querySelector('[aria-label="關閉實際對帳"]').click();await wait(()=>!d.querySelector('.reconciliation-dialog'));
+  const originalImages=demoImages;nav('每月支出');await wait(()=>d.querySelector('.expense-status')?.textContent.includes('已讀取'));
+  assert.equal(d.title,'租屋管理 | 每月支出');assert(d.querySelector('.expense-manager').textContent.includes('展示用支出與收據皆為虛構'));assert(d.querySelector('.expense-total').textContent.includes('1,103'));visibleDisabled('新增支出');visibleDisabled('編輯');assert.equal(demoImages,originalImages,'Expense metadata must not render image bytes');
+  const expenseYear=Number(d.querySelector('.expense-controls select').value),expenseMonth=Number(d.querySelectorAll('.expense-controls select')[1].value),fakeExpenses=(await rpc('getExpenses',[expenseYear,expenseMonth])).data;
+  assert.equal(fakeExpenses.rows.length,4);assert.equal(fakeExpenses.total,1103);assert(fakeExpenses.rows.every(r=>r.notes.includes('虛構')));assert.equal((await rpc('saveExpense',[])).status,403);
+  d.querySelector('.expense-table tbody button').click();await wait(()=>d.querySelector('dialog img'));assert.equal(demoImages,originalImages+1);d.querySelector('[aria-label="關閉圖片預覽"]').click();await wait(()=>!d.querySelector('dialog'));
+  [...d.querySelectorAll('.expense-table button')].find(b=>b.textContent==='檢視明細').click();await wait(()=>d.querySelector('.expense-form'));assert(d.querySelector('.expense-form h2').textContent.includes('支出明細'));for(const field of d.querySelectorAll('.expense-fields input,.expense-fields textarea'))assert(field.disabled,'Demo expense fields must remain disabled');visibleDisabled('預覽儲存');visibleDisabled('作廢這筆支出');d.querySelector('.expense-actions button:last-child').click();await wait(()=>!d.querySelector('.expense-form'));
   assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
-  console.log('PASS: actual published snapshot artifact shows management controls disabled rather than hidden, opens readonly property/reconciliation views; all source numbers, null/zero, meter records and reports unchanged; synthetic people only; no API/image requests or writes.');
+  console.log('PASS: actual published snapshot artifact shows management controls disabled rather than hidden, opens readonly property/reconciliation views; all source numbers, null/zero, meter records and reports unchanged; synthetic people/expenses only; readonly expense details and on-click gallery; no external API/image requests or writes.');
  }finally{dom.window.close();}
 })().catch(e=>{console.error(e.message);process.exitCode=1;});

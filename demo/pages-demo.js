@@ -73,11 +73,29 @@
   }
   const demoProperty='p-00000000-0000-4000-8000-000000000002';
   const demoProperties={revision:0,workspaceName:'假資料展示工作區',items:[{id:'default',name:'示範房產 A',archived:false,folderUrl:''},{id:demoProperty,name:'示範房產 B',archived:false,folderUrl:''}]};
+  // Expenses in the public Demo are entirely synthetic, independent of rental numeric snapshots.
+  const expenseYears=()=>[...new Set([Number(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric'}).format(new Date())),2026])].sort((a,b)=>b-a);
+  function demoExpenses(year,month,propertyId){
+    if(!Number.isInteger(year)||year<1900||year>9999||!Number.isInteger(month)||month<1||month>12)throw Error('展示支出年月不正確。');
+    const prefix=propertyId===demoProperty?'00000002':'00000001',period=year+'-'+String(month).padStart(2,'0');
+    return [{day:'01',item:'示範公用清潔用品',unitPrice:293,quantity:1,receiptCount:1},{day:'12',item:'示範垃圾袋',unitPrice:270,quantity:1,receiptCount:2},{day:'25',item:'示範修繕耗材',unitPrice:270,quantity:2,receiptCount:0},{day:'26',item:'示範已作廢支出',unitPrice:100,quantity:2,receiptCount:1,voided:true}].map((r,i)=>({...r,id:'E-'+prefix+'-0000-4000-8000-'+String(year)+String(month).padStart(2,'0')+String(i+1).padStart(6,'0'),date:period+'-'+r.day,amount:r.unitPrice*r.quantity,notes:'虛構現金支出，非正式資料。',voided:r.voided===true,version:'e'.repeat(43),lastRequestId:'00000000-0000-4000-8000-'+String(i+1).padStart(12,'0')}));
+  }
+  function demoExpenseRead(action,args,propertyId){
+    if(action==='getExpenseYears')return expenseYears();
+    if(action==='getExpenses'){const rows=demoExpenses(args[0],args[1],propertyId);return {rows,total:rows.filter(r=>!r.voided).reduce((sum,r)=>sum+r.amount,0),pendingCount:0};}
+    if(action==='getExpenseReceipt'){
+      const match=/^E-[a-f0-9-]+-(\d{4})(\d{2})(\d{6})$/.exec(args[0]||'');if(!match)throw Error('示範收據不存在。');
+      const row=demoExpenses(Number(match[1]),Number(match[2]),propertyId).find(r=>r.id===args[0]);if(!row||row.version!==args[2]||!Number.isInteger(args[1])||args[1]<0||args[1]>=row.receiptCount)throw Error('示範收據不存在。');
+      return {dataUrl:samplePhoto('DEMO','日常支出收據 '+(args[1]+1))};
+    }
+    throw Error('展示支出不提供此操作。');
+  }
   function rpc(action, args, scope, propertyId='default') {
     if(action==='getWorkspaceLogo')return {version:'',dataUrl:''};
     if(action==='getRoomSetupState')return {confirmed:true,count:propertyId===demoProperty?2:tenants.length,version:'demo-room-setup',rooms:propertyId===demoProperty?[{room:'601',roomType:'套房',inactive:false},{room:'602',roomType:'雅房',inactive:false}]:tenants.map(t=>({room:t.room,roomType:t.roomType,inactive:false}))};
     if(action==='getRentalProperties')return demoProperties;
     if(!['default',demoProperty].includes(propertyId))throw Error('展示房產不存在。');
+    if(['getExpenseYears','getExpenses','getExpenseReceipt'].includes(action))return demoExpenseRead(action,args,propertyId);
     if(propertyId===demoProperty){if(action==='getTenantData')return tenants.slice(0,2).map((t,i)=>({...t,room:String(601+i),name:'示範房產 B 房客 '+(i+1)}));if(action==='getRoomSettings')return [{room:'601',roomType:'套房',inactive:false,occupied:true,version:'demo-b-601'},{room:'602',roomType:'雅房',inactive:false,occupied:true,version:'demo-b-602'}];if(action==='getAvailableBillingYears')return [2026];if(action==='getAvailableBillingMonths')return [];if(action==='getRentalSiteCapabilities')return {version:2,billing:true};throw Error('此示範房產尚無帳務資料。');}
 
     if(scope==='tenant'&&action==='previewTenantBillingNames'){const t=tenants.find(t=>t.room===args[0]);if(!t)throw Error('房號不存在。');return {room:t.room,name:t.name,startDate:t.startDate,endDate:t.endDate,changes:[],version:'demo-name-preview'};}

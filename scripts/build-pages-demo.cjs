@@ -18,7 +18,7 @@ const assets = [
   'native-tenant.js', 'native-billing.js', 'billing-transport.js',
   'photo-preview.js', 'meter-worksheet.js', 'payment-worksheet.js', 'notice-renderer.js',
   'notice-zip.js', 'notice-batch.js', 'report-data.js', 'report-charts.js',
-  'rental-reports.js', 'workspace.js'
+  'rental-reports.js', 'expenses.js', 'workspace.js'
 ];
 for (const file of assets) fs.copyFileSync(path.join(root, 'public', file), path.join(out, file));
 // Presentation differs only in the built Demo artifact; real viewer policy stays unchanged.

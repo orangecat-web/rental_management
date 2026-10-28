@@ -37,7 +37,7 @@ const click = (d, text) => { const b = [...d.querySelectorAll('button')].find(b 
   await wait(()=>d.querySelectorAll('.room-card').length===3);assert(d.querySelector('nav button').textContent.includes('房間總覽'),'Home defaults to overview');
   assert(d.body.textContent.includes('房產清單讀取失敗：服務暫時無法回應'));assert(!d.body.textContent.includes('請更新 Apps Script'));assert(d.querySelector('#property-select').textContent.includes('清單暫不可用'));assert([...d.querySelectorAll('button')].find(b=>b.textContent==='管理房產與工作區').disabled);
   await wait(()=>[...d.querySelectorAll('button')].some(b=>b.textContent==='重讀房產清單'&&!b.disabled));click(d,'重讀房產清單');await wait(()=>d.querySelector('#property-select').textContent.includes('測試房產'));assert.equal(calls.filter(c=>c.action==='getRentalProperties').length,2);assert(!d.body.textContent.includes('房產清單讀取失敗：'));assert(![...d.querySelectorAll('button')].some(b=>b.textContent==='重讀房產清單'));
-  assert.equal(d.querySelectorAll('nav button').length,4); assert(!d.querySelector('iframe'));
+  assert.equal(d.querySelectorAll('nav button').length,5); assert(!d.querySelector('iframe'));
   assert(!d.body.textContent.includes('青禾'));assert(!d.body.textContent.includes('示範'));
   assert(d.querySelector('.stats').textContent.includes('408 房'));assert(!d.querySelector('.stats').textContent.includes('合約資料夾'));
   const zeroCard=d.querySelector('[aria-label="查看 506 房"]');assert(zeroCard.textContent.includes('NT$ 0'));assert.equal(d.querySelector('.stats article:last-child div').textContent.trim(),'1間');
