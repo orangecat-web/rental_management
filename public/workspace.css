@@ -81,3 +81,5 @@
 .expense-controls{align-items:flex-end}.expense-controls>button{margin:0}
 
 .expense-table .expense-subtotal th,.expense-table .expense-subtotal td{background:#eaf0e8;font-weight:700;border-top:1px solid #cbd8c9;border-bottom:0}
+
+.expense-fields .expense-receipt-picker{display:grid;gap:8px}.expense-receipt-picker button{justify-self:start}

@@ -33,7 +33,7 @@ window.RentalTransport = function (scope) {
     let result;
     try {result = await response.json();} catch (error) {throw responseError(['AbortError','TimeoutError'].includes(error?.name) ? 'NETWORK' : 'INVALID_RESPONSE', action, status);}
     if (!result || typeof result !== 'object' || Array.isArray(result) || typeof result.ok !== 'boolean') throw responseError('INVALID_RESPONSE', action, status);
-    if (!response.ok || !result.ok) throw new Error(typeof result.error?.message === 'string' ? result.error.message : '資料處理失敗，請重新讀取確認。');
+    if (!response.ok || !result.ok) throw Object.assign(new Error(typeof result.error?.message === 'string' ? result.error.message : '資料處理失敗，請重新讀取確認。'),{code:action==='saveExpense'&&result.error?.code==='EXPENSE_NOT_SAVED'?'EXPENSE_NOT_SAVED':undefined});
     return result;
   }
   function runner(success = () => {}, failure = () => {}) {
