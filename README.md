@@ -61,3 +61,8 @@ GitHub repository → Settings → Pages → Source 選 **GitHub Actions**。推
 
 
 2026-10-28：同步[每月支出唯讀展示](docs/MONTHLY_EXPENSES.md)。支出與收據為獨立假資料，原租金／電表快照不變；可檢視明細及 Lightbox，寫入與上傳停用。
+
+
+## 2026-11-01 戶籍地址連動選單
+
+[房客與保證人地址選單、舊資料保留及唯讀行為](docs/ADDRESS_SELECT.md)。使用者要求地址完成後直接同步；無須更新 Apps Script。
