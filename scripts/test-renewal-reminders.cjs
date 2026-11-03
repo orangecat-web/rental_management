@@ -1,0 +1,24 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM,VirtualConsole}=require('jsdom');
+const wait=async fn=>{for(let i=0;i<500;i++){if(fn())return;await new Promise(r=>setTimeout(r,5));}throw Error('Renewal UI timeout');};
+(async()=>{
+ const errors=[],calls=[],paint=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+ const dom=new JSDOM('<div id="app"></div>',{url:'https://synthetic.test',runScripts:'outside-only',virtualConsole:vc}),w=dom.window,d=w.document;
+ const NativeDate=w.Date;w.Date=class extends NativeDate{constructor(...args){super(...(args.length?args:['2026-11-03T04:00:00Z']));}static now(){return new NativeDate('2026-11-03T04:00:00Z').getTime();}};
+ const make=(room,endDate,extra={})=>({room,name:'假房客',version:'v1',endDate,startDate:'2025-11-01',contractLinks:[],emergencyContacts:[],...extra});
+ const rows=[make('401','2027-02-03'),make('402','2026-12-03'),make('403','2026-11-02'),make('404','2026-11-20',{vacant:true,name:''}),make('405','2027-02-04'),make('406',''),make('407','2026-11-03')];
+ w.RentalAccess={canWrite:true};w.URL.createObjectURL=()=> 'blob:notice';w.URL.revokeObjectURL=()=>{};
+ let canvas;w.HTMLCanvasElement.prototype.getContext=function(){canvas=this;return {font:'',fillStyle:'',fillRect(){},measureText(t){return {width:Array.from(t).length*36};},fillText(t,x,y){paint.push({t,x,y});}};};w.HTMLCanvasElement.prototype.toBlob=function(cb){cb(new w.Blob(['synthetic'],{type:'image/png'}));};
+ const runner=(ok,fail)=>new Proxy({},{get(_,action){if(action==='withSuccessHandler')return handler=>runner(handler,fail);if(action==='withFailureHandler')return handler=>runner(ok,handler);return (...args)=>{calls.push(action);if(action==='getTenantData')ok(JSON.parse(JSON.stringify(rows)));else fail(Error('Unexpected action '+action));};}});
+ w.google={script:{run:runner(()=>{},e=>{throw e;})}};
+ w.RentalTransport=()=>w.google;
+ w.eval(fs.readFileSync('public/tenant-vue.global.prod.js','utf8'));w.eval(fs.readFileSync('public/native-tenant.js','utf8'));
+ const component=w.RentalComponents.tenant(),app=w.Vue.createApp(component);app.directive('write',{});app.directive('write-field',{});app.mount('#app');
+ await wait(()=>d.querySelectorAll('.room-button').length===7);
+ const buttons=[...d.querySelectorAll('.room-button')];assert(buttons[0].classList.contains('lease-soon'));assert(buttons[1].classList.contains('lease-urgent'));assert(buttons[2].classList.contains('lease-expired'));for(const i of [3,4,5])assert(!buttons[i].querySelector('.room-lease-label'));assert(buttons[6].classList.contains('lease-urgent'));
+ buttons[1].click();await w.Vue.nextTick();assert.equal(buttons[1].getAttribute('aria-pressed'),'true');assert.equal(buttons[1].querySelector('.room-lease-label').textContent,'即將到期');assert(buttons[1].querySelector('.room-lease-label').title.includes('一個月內到期'));assert.equal(buttons[1].getAttribute('aria-describedby'),'room-lease-402');
+ const preview=[...d.querySelectorAll('button')].find(b=>b.textContent==='預覽續約通知圖片');preview.click();await wait(()=>d.querySelector('.renewal-download'));
+ const body=paint.slice(1).map(p=>p.t).join('');for(const text of ['房號：402','感謝您這段期間的入住與配合，','租約到期日：2026-12-03','麻煩您回覆「續租」或「不續租」。','若仍在考慮，或有任何租屋相關問題，也歡迎提出討論。','如有意續租，我們會再與您確認續約內容及簽約時間；若不續租，則另行協調退租點交事宜。','謝謝您的配合與這段時間的愛護 😊'])assert(body.includes(text),text);
+ assert(!body.includes('回覆期限'));assert(!body.includes('這一年來'));assert(canvas.height>640);assert(paint.every(p=>p.y+12<canvas.height));assert(paint.slice(1).every(p=>Array.from(p.t).length*36<=1060));assert(calls.every(a=>a==='getTenantData'));
+ assert.equal(w.RentalLeaseReminder({endDate:'2027-02-03'}).level,'soon');assert.equal(w.RentalLeaseReminder({endDate:'2027-02-04'}),null);
+ assert.equal(errors.length,0,errors.join('\n'));app.unmount();w.close();console.log('PASS: actual room-list expiry boundaries/selected state/vacancy, complete dynamically wrapped renewal image without reply deadline or source writes.');
+})().catch(e=>{console.error(e);process.exit(1);});

@@ -40,7 +40,8 @@ const server = http.createServer((req, res) => {
         w.Date = class extends RealDate { constructor(...args) { super(...(args.length ? args : ['2026-10-18T00:00:00Z'])); } };
         w.Storage.prototype.setItem = () => { throw Error('Demo must not persist records'); };
         // No photo pixels are validated here; verify fixture shape and shared renderer validation.
-        w.HTMLCanvasElement.prototype.getContext = () => ({ fillRect() {}, fillText() {} });
+        w.HTMLCanvasElement.prototype.getContext = () => ({ fillRect() {}, measureText(t) { return {width:Array.from(t).length*36}; }, fillText() {} });
+        w.URL.createObjectURL=()=> 'blob:renewal-demo';w.URL.revokeObjectURL=()=>{};w.HTMLCanvasElement.prototype.toBlob=cb=>cb(new w.Blob(['synthetic']));
         w.HTMLCanvasElement.prototype.toDataURL = () => 'data:image/png;base64,ZGVtbw==';
       }
     });
@@ -96,6 +97,7 @@ const server = http.createServer((req, res) => {
     [...d.querySelectorAll('.room-button')].find(b=>b.textContent.trim().startsWith('508')).click();
     await wait(()=>d.querySelector('[name=tenant-508-identity]:checked'));assert.equal(d.querySelector('[name=tenant-508-identity]:checked').value,'管理人');
     assert(d.querySelector('.tenant-heading .student-tag').textContent.includes('管理人'));assert(d.querySelector('[aria-label="508 房續約"]'));assert(d.querySelector('[aria-label="508 房續約"]').disabled);
+    [...d.querySelectorAll('button')].find(b=>b.textContent==='預覽續約通知圖片').click();await wait(()=>d.querySelector('.renewal-download'));assert(d.querySelector('.renewal-download').download.includes('508'));assert(d.querySelectorAll('.room-lease-label').length>0);
     assert.equal((await rpc('saveTenantChanges',['508',{identity:'一般'},'demo-508'],'tenant')).response.status,403);
     assert.equal((await rpc('checkoutTenant',['508','demo-508'],'tenant')).response.status,403);
     assert.equal((await rpc('saveRoomSetting',['add','601','','套房',''],'tenant')).response.status,403);

@@ -39,6 +39,10 @@
     .room-button:hover:not(:disabled) { border-color: #a2b999; background: #f0f5e9; }
     .room-button[aria-pressed="true"] { color: white; border-color: var(--green); background: var(--green); box-shadow: 0 3px 9px #284e3d18; }
     .room-button[aria-pressed="true"]:hover { background: var(--green); }
+    .room-button.lease-soon,.room-button.lease-urgent,.room-button.lease-expired { border:2px solid #a00; }
+    .room-lease-label { font-size:16px;line-height:1.4;font-weight:700;color:#a00;overflow-wrap:anywhere; }
+    .room-button[aria-pressed="true"] .room-lease-label { color:#fff0c4; }
+    .room-button[aria-pressed="true"].lease-soon,.room-button[aria-pressed="true"].lease-urgent,.room-button[aria-pressed="true"].lease-expired { box-shadow:0 0 0 2px #fff,0 0 0 4px #a00; }
     .room-number { font-size: 1.15rem; font-weight: 650; }
     .room-name { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1rem; opacity: .7; }
     .tenant-panel { min-width: 0; overflow: hidden; background: white; border: 1px solid var(--line); border-radius: .85rem; box-shadow: 0 6px 24px #263c2d04; }
@@ -161,11 +165,11 @@
     <aside class="room-panel" aria-label="選擇房間">
       <div class="room-heading"><h2>房間列表</h2><span class="room-count">{{ tenants.length }} 間</span></div>
       <div class="room-list">
-        <button v-for="tenant in tenants" :key="tenant.room" class="room-button" type="button"
-          :aria-label="'選擇 ' + tenant.room + ' 房'" :aria-pressed="selectedRoom === tenant.room"
+        <button v-for="tenant in tenants" :key="tenant.room" class="room-button" :class="leaseReminder(tenant)?'lease-'+leaseReminder(tenant).level:''" type="button"
+          :aria-label="'選擇 ' + tenant.room + ' 房'" :aria-describedby="leaseReminder(tenant)?'room-lease-'+tenant.room:undefined" :aria-pressed="selectedRoom === tenant.room"
           :disabled="loading || pendingSaves > 0 || (dirtyKeys.size > 0 && selectedRoom !== tenant.room)"
           @click="selectRoom(tenant.room)">
-          <span class="room-number">{{ tenant.room }}</span>
+          <span class="room-number">{{ tenant.room }}</span><span v-if="leaseReminder(tenant)" class="room-lease-label" :id="'room-lease-'+tenant.room" :title="leaseReminder(tenant).text+'（'+tenant.endDate+'）'">{{leaseReminder(tenant).level==='expired'?'已到期':'即將到期'}}</span>
           <span class="room-name">{{ tenant.name || '空房' }} <span v-if="['學生','管理人'].includes(tenant.identity)" class="student-tag">{{ tenant.identity }}</span></span>
         </button>
       </div>
@@ -184,7 +188,7 @@
             @save-start="startSave" @save-end="finishSave"
             @saved="updateField(activeTenant, field.key, $event)" @draft-change="onDraft(field.key,$event)"
             @dirty-change="setDirty(activeTenant.room, field.key, $event)"><template v-if="field.key==='endDate'" #lease-term><div class="lease-years-control"><label :for="'tenant-'+activeTenant.room+'-leaseYears'">租期年數</label><input v-write-field :id="'tenant-'+activeTenant.room+'-leaseYears'" type="number" min="1" step="1" required inputmode="numeric" :value="leaseYears" @input="changeLeaseYears($event.target.value)" :disabled="loading||pendingSaves>0" :aria-label="activeTenant.room+' 房租期年數'"><span>年</span></div><p v-if="leaseTermMessage" class="lease-term-message" role="status">{{leaseTermMessage}}</p></template></tenant-field>
-          <section v-if="!activeTenant.vacant" class="renewal-notice" aria-label="租約到期暨續約意願通知"><h3>租約到期暨續約意願通知</h3><div class="renewal-controls"><button type="button" @click="createRenewal" :disabled="loading||pendingSaves>0||dirtyKeys.size>0">預覽續約通知圖片</button></div><p>通知列出房號、感謝詞與租約到期日；下載圖片後由管理人自行聯絡。</p><p v-if="renewalMessage" role="status">{{renewalMessage}}</p><template v-if="renewalUrl"><img :src="renewalUrl" alt="租約到期暨續約意願通知預覽" style="display:block;max-width:100%;width:600px"><a class="rental-button primary renewal-download" :href="renewalUrl" :download="activeTenant.room+'_續約意願通知.png'">下載通知圖片</a></template></section>
+          <section v-if="!activeTenant.vacant" class="renewal-notice" aria-label="租約到期暨續約意願通知"><h3>租約到期暨續約意願通知</h3><div class="renewal-controls"><button type="button" @click="createRenewal" :disabled="loading||pendingSaves>0||dirtyKeys.size>0">預覽續約通知圖片</button></div><p>通知包含房號、租約到期日與續租／退租回覆說明；下載圖片後由管理人自行聯絡。</p><p v-if="renewalMessage" role="status">{{renewalMessage}}</p><template v-if="renewalUrl"><img :src="renewalUrl" alt="租約到期暨續約意願通知預覽" style="display:block;max-width:100%;width:600px"><a class="rental-button primary renewal-download" :href="renewalUrl" :download="activeTenant.room+'_續約意願通知.png'">下載通知圖片</a></template></section>
         </div>
       </section>
 
@@ -460,6 +464,8 @@
         }
       };
 
+      function leaseReminder(room){if(room.vacant||!/^\d{4}-\d{2}-\d{2}$/.test(room.endDate||''))return null;const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const start=new Date(today+'T00:00:00Z'),end=new Date(room.endDate+'T00:00:00Z');if(!Number.isFinite(+end))return null;if(end<start)return {level:'expired',text:'已到期，請辦理續約'};const plus=n=>{const d=new Date(start);const day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+n);const max=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,max));return d;};if(end<=plus(1))return {level:'urgent',text:'一個月內到期，請確認續約'};if(end<=plus(3))return {level:'soon',text:'三個月內到期'};return null;}
+      window.RentalLeaseReminder=leaseReminder;
       const app = createApp({
         components: { TenantField, TenantContract },
         setup() {
@@ -498,12 +504,14 @@
           function clearRenewal(){if(renewalUrl.value)URL.revokeObjectURL(renewalUrl.value);renewalUrl.value='';renewalMessage.value='';}
           watch(()=>[selectedRoom.value,activeTenant.value?.endDate],clearRenewal);
           onBeforeUnmount(clearRenewal);
-          async function createRenewal(){clearRenewal();try{const t=activeTenant.value,valid=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'')&&new Date(v+'T00:00:00Z').toISOString().slice(0,10)===v;if(!t||!valid(t.endDate))throw Error('請先填妥租約到期日。');const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=640;const c=canvas.getContext('2d');
-            c.fillStyle='#ffffff';c.fillRect(0,0,canvas.width,canvas.height);c.fillStyle='#284e3d';c.fillRect(0,0,1200,180);
+          async function createRenewal(){clearRenewal();try{const t=activeTenant.value,valid=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'')&&new Date(v+'T00:00:00Z').toISOString().slice(0,10)===v;if(!t||!valid(t.endDate))throw Error('請先填妥租約到期日。');const canvas=document.createElement('canvas');canvas.width=1200;const c=canvas.getContext('2d');if(!c)throw Error('無法產生通知圖片。');
+            const paragraphs=[['房號：'+t.room,40],['感謝您這段期間的入住與配合，\n也謝謝您對房屋的愛惜與照顧。',36],['租約到期日：'+t.endDate,40],['麻煩您回覆「續租」或「不續租」。若仍在考慮，或有任何租屋相關問題，也歡迎提出討論。',36],['如有意續租，我們會再與您確認續約內容及簽約時間；若不續租，則另行協調退租點交事宜。',36],['謝謝您的配合與這段時間的愛護 😊',36]];
+            const lines=[];let y=270;
+            for(const [text,size] of paragraphs){c.font=size+'px sans-serif';for(const paragraph of text.split('\n')){let line='';for(const character of Array.from(paragraph)){if(line&&c.measureText(line+character).width>1060){lines.push({text:line,size,y});y+=60;line='';}line+=character;}lines.push({text:line,size,y});y+=60;}y+=30;}
+            canvas.height=y+30;c.fillStyle='#ffffff';c.fillRect(0,0,canvas.width,canvas.height);c.fillStyle='#284e3d';c.fillRect(0,0,1200,180);
             c.fillStyle='#ffffff';c.font='bold 48px sans-serif';c.fillText('租約到期暨續約意願通知',60,112);
-            c.fillStyle='#284e3d';c.font='40px sans-serif';c.fillText('房號：'+t.room,70,270);
-            c.font='36px sans-serif';['感謝您這一年來的入住與配合，','也謝謝您對房屋的愛惜與照顧。'].forEach((line,i)=>c.fillText(line,70,360+i*60));
-            c.font='40px sans-serif';c.fillText('租約到期日：'+t.endDate,70,540);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('圖片產生失敗');renewalUrl.value=URL.createObjectURL(blob);renewalMessage.value='圖片已產生，請下載後人工聯絡房客。';}catch(e){renewalMessage.value=e.message;}}
+            c.fillStyle='#284e3d';for(const line of lines){c.font=line.size+'px sans-serif';c.fillText(line.text,70,line.y);}
+            const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('圖片產生失敗');renewalUrl.value=URL.createObjectURL(blob);renewalMessage.value='圖片已產生，請下載後人工聯絡房客。';}catch(e){renewalMessage.value=e.message;}}
           const fieldEditors=new Map(),contacts=ref([]),savedContacts=ref([]),checkoutConfirm=ref(false);
           const leaseYears=ref('1'),leaseTermMessage=ref('');let resettingLease=false,leaseYearsChosen=false;
           function initLeaseTerm(t){leaseYearsChosen=false;leaseYears.value=String(leaseYearCount(t?.startDate,t?.endDate)||1);leaseTermMessage.value='';}
@@ -609,7 +617,7 @@
             }
           }
           onMounted(loadTenants);
-          return {moveInPreview,moveInMonths,moveInMessage,previewMoveIn,confirmMoveIn,rentFormat,renewalUrl,renewalMessage,createRenewal,billingNamePreview,selectedBillingNames,selectAllBillingNames,previewBillingNames,syncBillingNames,formatPhone,openCheckout,previewCheckout,checkoutPeriod,checkoutOptions,checkoutPreview,checkoutMessage,leaseYears,leaseTermMessage,changeLeaseYears,onDraft,resetAll,registerField,contacts,addContact,saveAll,checkoutConfirm,checkout,selectedRoom, activeTenant, selectRoom, rentText, tenants, loading, loadFailed, pendingSaves, dirtyKeys, status, revision,
+          return {leaseReminder,moveInPreview,moveInMonths,moveInMessage,previewMoveIn,confirmMoveIn,rentFormat,renewalUrl,renewalMessage,createRenewal,billingNamePreview,selectedBillingNames,selectAllBillingNames,previewBillingNames,syncBillingNames,formatPhone,openCheckout,previewCheckout,checkoutPeriod,checkoutOptions,checkoutPreview,checkoutMessage,leaseYears,leaseTermMessage,changeLeaseYears,onDraft,resetAll,registerField,contacts,addContact,saveAll,checkoutConfirm,checkout,selectedRoom, activeTenant, selectRoom, rentText, tenants, loading, loadFailed, pendingSaves, dirtyKeys, status, revision,
             basicFields, noteField, extraFields, guarantorFields, setDirty, startSave, finishSave, updateField, loadTenants };
         }
       });
