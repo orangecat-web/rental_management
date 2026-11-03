@@ -45,7 +45,7 @@ window.RentalNotice = (() => {
       const photoHeight = photo ? photo.naturalHeight * scale : 0;
 
       canvas.width = 1080;
-      canvas.height = meter ? 1100 + Math.ceil(photoHeight) + (data.arrears>0?65:0) + (data.creditApplied>0?65:0) : 700;
+      canvas.height = meter ? 1270 + Math.ceil(photoHeight) + (data.arrears>0?65:0) + (data.creditApplied>0?65:0) : 700;
 
       const ctx = canvas.getContext('2d');
       const font = 'system-ui, sans-serif';
@@ -73,15 +73,15 @@ window.RentalNotice = (() => {
 
       let y = 340;
 
-      function row(label, value) {
-        text(label, 80, y, 34);
+      function row(label, value, size=34, bold=false, gap=65) {
+        text(label, 80, y, size, '#294638', bold);
         ctx.textAlign = 'right';
         ctx.fillText(value, 1000, y);
         ctx.textAlign = 'left';
-        y += 65;
+        y += gap;
       }
 
-      if (data.dueDate) row('應繳日期', data.dueDate);
+      if (data.dueDate) row('應繳日期', data.dueDate, 46, true, 82);
 
       row('房租', 'NT$ ' + money.format(data.rent));
 
@@ -99,6 +99,8 @@ window.RentalNotice = (() => {
       ctx.fillText('NT$ ' + money.format(data.total), 1000, y + 60);
       ctx.textAlign = 'left';
       y += 165;
+      text('這是本期租金與電費的例行通知，供您核對。',80,y,30,'#52685a');y+=48;
+      text('如有疑問，歡迎與我們聯繫，謝謝您的配合。',80,y,30,'#52685a');y+=83;
 
       if (meter) {
         text('電費明細', 80, y, 38, '#294638', true);
