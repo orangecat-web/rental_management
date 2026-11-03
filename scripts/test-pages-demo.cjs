@@ -28,7 +28,7 @@ const server = http.createServer((req, res) => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   try {
     const base = `http://127.0.0.1:${server.address().port}/rental_management/`;
-    const vc = new VirtualConsole(); vc.on('jsdomError', e => errors.push(e.message));
+    const renewalPaint=[];const vc = new VirtualConsole(); vc.on('jsdomError', e => errors.push(e.message));
     dom = await JSDOM.fromURL(base, {
       resources: 'usable', runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole: vc,
       beforeParse(w) {
@@ -40,7 +40,7 @@ const server = http.createServer((req, res) => {
         w.Date = class extends RealDate { constructor(...args) { super(...(args.length ? args : ['2026-10-18T00:00:00Z'])); } };
         w.Storage.prototype.setItem = () => { throw Error('Demo must not persist records'); };
         // No photo pixels are validated here; verify fixture shape and shared renderer validation.
-        w.HTMLCanvasElement.prototype.getContext = () => ({ fillRect() {}, measureText(t) { return {width:Array.from(t).length*36}; }, fillText() {} });
+        w.HTMLCanvasElement.prototype.getContext = () => ({ fillRect() {}, measureText(t) { return {width:Array.from(t).length*36}; }, fillText(t) {renewalPaint.push({text:t,font:this.font});} });
         w.URL.createObjectURL=()=> 'blob:renewal-demo';w.URL.revokeObjectURL=()=>{};w.HTMLCanvasElement.prototype.toBlob=cb=>cb(new w.Blob(['synthetic']));
         w.HTMLCanvasElement.prototype.toDataURL = () => 'data:image/png;base64,ZGVtbw==';
       }
@@ -97,7 +97,7 @@ const server = http.createServer((req, res) => {
     [...d.querySelectorAll('.room-button')].find(b=>b.textContent.trim().startsWith('508')).click();
     await wait(()=>d.querySelector('[name=tenant-508-identity]:checked'));assert.equal(d.querySelector('[name=tenant-508-identity]:checked').value,'管理人');
     assert(d.querySelector('.tenant-heading .student-tag').textContent.includes('管理人'));assert(d.querySelector('[aria-label="508 房續約"]'));assert(d.querySelector('[aria-label="508 房續約"]').disabled);
-    [...d.querySelectorAll('button')].find(b=>b.textContent==='預覽續約通知圖片').click();await wait(()=>d.querySelector('.renewal-download'));assert(d.querySelector('.renewal-download').download.includes('508'));assert(d.querySelectorAll('.room-lease-label').length>0);
+    [...d.querySelectorAll('button')].find(b=>b.textContent==='預覽續約通知圖片').click();await wait(()=>d.querySelector('.renewal-download'));assert(d.querySelector('.renewal-download').download.includes('508'));assert(renewalPaint.map(p=>p.text).join('').includes('我們很歡迎您繼續入住！'));assert(renewalPaint.map(p=>p.text).join('').includes('協調退租及點交事宜。'));assert(renewalPaint.find(p=>p.text.startsWith('租約到期日：')).font==='bold 56px sans-serif');assert(d.querySelectorAll('.room-lease-label').length>0);
     assert.equal((await rpc('saveTenantChanges',['508',{identity:'一般'},'demo-508'],'tenant')).response.status,403);
     assert.equal((await rpc('checkoutTenant',['508','demo-508'],'tenant')).response.status,403);
     assert.equal((await rpc('saveRoomSetting',['add','601','','套房',''],'tenant')).response.status,403);
