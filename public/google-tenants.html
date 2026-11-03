@@ -131,7 +131,12 @@
     .renewal-controls{display:flex;align-items:flex-end;flex-wrap:nowrap;gap:8px;min-width:0}
     .renewal-controls>label{flex:1 0 150px;min-width:0}
     .renewal-controls>button{flex:0 1 176px;min-width:0}
-    .tenant-contract-section{margin:20px 0}
+    .tenant-detail-group{margin:20px 0;padding:20px;border:1px solid #d9e2d4;border-radius:12px;background:#fff;min-width:0}
+    .tenant-detail-group .section-heading{margin-bottom:16px}
+    .tenant-detail-group h3{margin:0;font-size:18px;color:#264e40}
+    .tenant-detail-group .editor{min-width:0}
+    .tenant-data-value{padding:10px 0;min-height:44px;overflow-wrap:anywhere;white-space:pre-wrap}
+    @media(max-width:700px){.tenant-detail-group{padding:16px}.tenant-detail-group .field-grid{grid-template-columns:minmax(0,1fr)}.tenant-detail-group .section-heading{flex-wrap:wrap}}
     @container tenant-lease (max-width:600px){.renewal-notice{grid-column:1/-1}}
     .address-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: start; }
     .address-controls select, .address-controls input { min-width: 0; width: 100%; font: inherit; font-size: 16px; box-sizing: border-box; }
@@ -206,20 +211,23 @@
       <section class="form-section">
         <details class="other-data">
           <summary>其他聯絡與房間資料</summary>
-          <section class="tenant-contract-section" aria-label="簽約資料">
-        <div class="section-heading"><h3>簽約資料</h3><span class="section-hint">Google Drive 合約資料夾</span></div>
+          <section class="tenant-contract-section tenant-detail-group" aria-label="簽約文件">
+        <div class="section-heading"><h3>簽約文件</h3><span class="section-hint">Google Drive 合約資料夾</span></div>
         <tenant-contract :ref="el=>registerField('contractLinks',el)" :tenant="activeTenant" :blocked="loading"
           @save-start="startSave" @save-end="finishSave"
           @saved="updateField(activeTenant, 'contractLinks', $event)"
           @dirty-change="setDirty(activeTenant.room, 'contractLinks', $event)"></tenant-contract>
       </section>
-          <div class="field-grid">
-            <tenant-field v-for="field in extraFields" :key="field.key" :ref="el=>registerField(field.key,el)" :tenant="activeTenant" :field="field" :blocked="loading" :initial-meter-allowed="contractKindDraft==='新約'" show-title
-              @save-start="startSave" @save-end="finishSave"
-              @saved="updateField(activeTenant, field.key, $event)" @draft-change="onDraft(field.key,$event)"
-              @dirty-change="setDirty(activeTenant.room, field.key, $event)"></tenant-field>
-          </div>
-          <h3>連帶保證人（丙方）</h3><div class="field-grid"><tenant-field v-for="field in guarantorFields" :key="field.key" :ref="el=>registerField(field.key,el)" :tenant="activeTenant" :field="field" :blocked="loading" show-title @draft-change="onDraft(field.key,$event)" @dirty-change="setDirty(activeTenant.room,field.key,$event)"></tenant-field></div>
+          <section v-for="group in extraGroups" :key="group.title" class="tenant-detail-group" :aria-label="group.title">
+            <div class="section-heading"><h3>{{group.title}}</h3></div>
+            <div class="field-grid">
+              <tenant-field v-for="field in group.fields" :key="field.key" :ref="el=>registerField(field.key,el)" :tenant="activeTenant" :field="field" :blocked="loading" :initial-meter-allowed="contractKindDraft==='新約'" show-title
+                @save-start="startSave" @save-end="finishSave"
+                @saved="updateField(activeTenant, field.key, $event)" @draft-change="onDraft(field.key,$event)"
+                @dirty-change="setDirty(activeTenant.room, field.key, $event)"></tenant-field>
+            </div>
+          </section>
+          <section class="tenant-detail-group" aria-label="連帶保證人（丙方）"><div class="section-heading"><h3>連帶保證人（丙方）</h3></div><div class="field-grid"><tenant-field v-for="field in guarantorFields" :key="field.key" :ref="el=>registerField(field.key,el)" :tenant="activeTenant" :field="field" :blocked="loading" show-title @draft-change="onDraft(field.key,$event)" @dirty-change="setDirty(activeTenant.room,field.key,$event)"></tenant-field></div></section>
         </details>
       </section>
     </article>
@@ -231,7 +239,8 @@
   <template id="tenant-field-template">
     <div class="editor" :class="{ multiline: field.multiline, phone: field.type === 'tel' }">
       <label v-if="showTitle" class="editor-label" :for="inputId">{{ field.title }}</label>
-      <textarea v-if="field.multiline" ref="inputElement" :id="inputId"
+      <div v-if="cohabitantReadonly" :id="inputId" class="tenant-data-value">{{draft || '—'}}</div>
+      <textarea v-else-if="field.multiline" ref="inputElement" :id="inputId"
         v-model="draft" rows="3" maxlength="2000" :aria-label="label"
         :disabled="saving || blocked"></textarea>
       <div v-else-if="field.radio" class="tenant-radio" role="group" :aria-label="label"><label v-for="option in field.options" :key="option"><input v-write-field type="radio" :name="inputId" :value="option" v-model="draft" :disabled="saving || blocked" :aria-label="label+' '+option">{{option}}</label></div>
@@ -252,7 +261,7 @@
         :min="['rent','initialReading'].includes(field.key) ? 0 : undefined"
         :max="field.key === 'rent' ? 1000000 : field.key === 'initialReading' ? 100000000 : undefined"
         :step="['rent','initialReading'].includes(field.key) ? '0.01' : undefined"
-        :maxlength="field.key === 'defaultTransferLastFive' ? 5 : ['registeredAddress','guarantorAddress'].includes(field.key) ? 500 : field.type === 'date' || ['rent','initialReading'].includes(field.key) ? undefined : 100"
+        :maxlength="field.key === 'defaultTransferLastFive' ? 5 : ['registeredAddress','guarantorAddress','cohabitantAddress'].includes(field.key) ? 500 : field.type === 'date' || ['rent','initialReading'].includes(field.key) ? undefined : 100"
         :inputmode="field.key === 'defaultTransferLastFive' ? 'numeric' : undefined"
         :pattern="field.key === 'defaultTransferLastFive' ? '[0-9]{0,5}' : undefined"
         :placeholder="field.key === 'defaultTransferLastFive' ? '例如 01234' : undefined">
@@ -355,10 +364,11 @@
           const saving = ref(false);
           const message = ref('');
           const inputElement = ref(null);
-          const label = computed(() => props.tenant.room + ' 房' + props.field.title);
+          const label = computed(() => props.tenant.room + ' 房' + (props.field.label || props.field.title));
           const inputId = computed(() => 'tenant-' + props.tenant.room + '-' + props.field.key);
-          const isAddress=computed(()=>['registeredAddress','guarantorAddress'].includes(props.field.key));
+          const isAddress=computed(()=>['registeredAddress','guarantorAddress','cohabitantAddress'].includes(props.field.key));
           const addressEditable=computed(()=>window.RentalAccess?.canWrite!==false);
+          const cohabitantReadonly=computed(()=>!addressEditable.value&&props.field.key.startsWith('cohabitant'));
           const addressCities=Object.keys(TW_ADDRESS_DISTRICTS),addressCity=ref(''),addressDistrict=ref(''),addressDetail=ref(''),addressUnparsed=ref(false);
           const addressDistricts=computed(()=>TW_ADDRESS_DISTRICTS[addressCity.value]||[]);let composingAddress=false;
           watch(draft,value=>{if(!isAddress.value||composingAddress)return;const parsed=splitTaiwanAddress(value);addressCity.value=parsed.city;addressDistrict.value=parsed.district;addressDetail.value=parsed.detail;addressUnparsed.value=parsed.unparsed;},{immediate:true,flush:'sync'});
@@ -403,7 +413,7 @@
               emit('save-end');
             }
           }
-          return { isAddress,addressEditable,addressCities,addressCity,addressDistrict,addressDetail,addressUnparsed,addressDistricts,changeAddressCity,changeAddressDistrict,changeAddressDetail,draft, saving, message, inputElement, inputId, label, dirty, reset, save,formatTelephone };
+          return { cohabitantReadonly,isAddress,addressEditable,addressCities,addressCity,addressDistrict,addressDetail,addressUnparsed,addressDistricts,changeAddressCity,changeAddressDistrict,changeAddressDetail,draft, saving, message, inputElement, inputId, label, dirty, reset, save,formatTelephone };
         }
       };
 
@@ -567,11 +577,20 @@
             { key: 'initialReading', title: '初始電表（度）', type: 'number' },
             { key: 'signingDate', title: '簽約日', type: 'date' },
             { key: 'defaultTransferLastFive', title: '預設轉帳後五碼' },
-            { key: 'cohabitant', title: '同居人' },
-            { key: 'cohabitantPhone', title: '同居人電話', type: 'tel' },
+            { key: 'cohabitant', label: '同居人姓名', title: '姓名' },
+            { key: 'cohabitantPhone', label: '同居人電話', title: '電話', type: 'tel' },
+            { key: 'cohabitantAddress', label: '同居人戶籍地址', title: '戶籍地址' },
+            { key: 'cohabitantId', label: '同居人身分證字號', title: '身分證字號' },
+            { key: 'cohabitantBirthDate', label: '同居人出生年月日', title: '出生年月日', type: 'date' },
             { key: 'introduction', title: '基本介紹', multiline: true },
             { key: 'maintenance', title: '房間維護整修紀錄', multiline: true }
           ];
+          const extraGroups = [
+            {title:'承租人資料',keys:['registeredAddress','nationalId','birthDate']},
+            {title:'租約與繳費設定',keys:['contractKind','signingDate','initialReading','defaultTransferLastFive']},
+            {title:'同居人資料',keys:['cohabitant','cohabitantPhone','cohabitantAddress','cohabitantId','cohabitantBirthDate']},
+            {title:'房間補充資料',keys:['introduction','maintenance']}
+          ].map(group=>({title:group.title,fields:group.keys.map(key=>extraFields.find(field=>field.key===key))}));
           function setDirty(room, field, value) {
             const key = room + ':' + field;
             if (value) dirtyKeys.add(key); else dirtyKeys.delete(key);
@@ -620,7 +639,7 @@
           }
           onMounted(loadTenants);
           return {contractKindDraft,leaseReminder,moveInPreview,moveInMonths,moveInMessage,previewMoveIn,confirmMoveIn,rentFormat,renewalUrl,renewalMessage,createRenewal,billingNamePreview,selectedBillingNames,selectAllBillingNames,previewBillingNames,syncBillingNames,formatPhone,openCheckout,previewCheckout,checkoutPeriod,checkoutOptions,checkoutPreview,checkoutMessage,leaseYears,leaseTermMessage,changeLeaseYears,onDraft,resetAll,registerField,contacts,addContact,saveAll,checkoutConfirm,checkout,selectedRoom, activeTenant, selectRoom, rentText, tenants, loading, loadFailed, pendingSaves, dirtyKeys, status, revision,
-            basicFields, noteField, extraFields, guarantorFields, setDirty, startSave, finishSave, updateField, loadTenants };
+            basicFields, noteField, extraFields, extraGroups, guarantorFields, setDirty, startSave, finishSave, updateField, loadTenants };
         }
       });
       app.config.errorHandler = () => {

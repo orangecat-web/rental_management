@@ -28,6 +28,12 @@ access=access.replace(privateHook,"const writeHook=el=>{if(!state.canWrite){el.h
 // Production annual billing opens the current month and omits obsolete initialization controls.
 const billingFile=path.join(out,'native-billing.js');let billing=fs.readFileSync(billingFile,'utf8');if(billing.split('const annualMode=ref(false)').length!==2)throw Error('Review Demo annual view after billing changes.');billing=billing.replace('const annualMode=ref(false)','const annualMode=ref(true)');fs.writeFileSync(billingFile,billing);
 
+// The full Demo keeps cohabitant controls visible and disabled, just like other fields.
+const tenantFile=path.join(out,'native-tenant.js');let tenant=fs.readFileSync(tenantFile,'utf8');
+const readonlyCohabitant="const cohabitantReadonly=computed(()=>!addressEditable.value&&props.field.key.startsWith('cohabitant'));";
+if(tenant.split(readonlyCohabitant).length!==2)throw Error('Review Demo cohabitant presentation after tenant changes.');
+tenant=tenant.replace(readonlyCohabitant,'const cohabitantReadonly=computed(()=>false);');fs.writeFileSync(tenantFile,tenant);
+
 // Keep the demo self-contained even when Google Fonts is unavailable.
 const style = path.join(out, 'style.css');
 fs.writeFileSync(style, fs.readFileSync(style, 'utf8').replace(/@import\s+url\([^)]*\);?/g, ''));

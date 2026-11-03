@@ -20,6 +20,7 @@ const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>10
   assert.deepEqual((await rpc('getAvailableBillingYears')).data,[...new Set(snapshot.periods.map(p=>p.year))].sort((a,b)=>b-a));
   const tenants=(await rpc('getTenantData',[],'tenant')).data;
   for(const t of tenants){assert(!t.name||t.name.startsWith('示範房客'));assert(t.registeredAddress.includes('示範'));}
+  assert.equal(tenants[0].cohabitant,'示範同居人');assert.equal(tenants[0].cohabitantId,'DEMO-COHABITANT-INVALID');assert.equal(tenants[0].cohabitantBirthDate,'2000-02-29');assert(tenants[0].cohabitantAddress.includes('非真實地址'));assert(tenants.slice(1).every(t=>!t.cohabitantId&&!t.cohabitantBirthDate));
   for(const period of snapshot.periods){
    const rows=(await rpc('getMonthlyAccounts',[period.year,period.month])).data;assert.equal(rows.length,period.accounts.length);
    for(const original of period.accounts){const row=rows.find(a=>a.room===original.room);for(const [key,value] of Object.entries(original))assert.deepEqual(row[key],value,'Snapshot field differs: '+key);assert(['空房',''].includes(row.name)||row.name.startsWith('示範房客'));assert.equal(row.paymentScreenshot,'');}
@@ -34,6 +35,7 @@ const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>10
   for(const label of ['儲存工作區名稱','上傳並套用 Logo','儲存房產','新增房產','儲存房號／房型'])visibleDisabled(label);
   const logo=d.querySelector('[aria-label="選擇工作區 Logo 圖片"]');assert(logo&&!logo.hidden&&logo.disabled);manage.click();await wait(()=>!d.querySelector('.property-editor'));
   nav('房客資料');await wait(()=>d.querySelector('.tenant-batch-actions'));
+  await wait(()=>d.querySelector('#tenant-401-cohabitantId'));const cohabitantGroup=d.querySelector('[aria-label="同居人資料"]');assert.equal(cohabitantGroup.querySelectorAll('.editor').length,5);assert.equal(d.querySelector('#tenant-401-cohabitantId').value,'DEMO-COHABITANT-INVALID');assert(d.querySelector('#tenant-401-cohabitantId').readOnly);assert(d.querySelector('#tenant-401-cohabitantBirthDate').readOnly);assert(d.querySelector('#tenant-401-cohabitantAddress').readOnly);assert(!d.querySelector('#tenant-401-cohabitantAddress-city'));assert.equal((await rpc('saveTenantChanges',['401',{cohabitantId:'MODIFIED'},'demo-401'],'tenant')).status,403);assert.equal((await rpc('getTenantData',[],'tenant')).data[0].cohabitantId,'DEMO-COHABITANT-INVALID');
   const occupied=snapshot.tenants.find(t=>!t.vacant);if(occupied){const room=[...d.querySelectorAll('.room-button')].find(b=>b.textContent.trim().startsWith(occupied.room));assert(room);room.click();await wait(()=>d.querySelector('#tenant-'+occupied.room+'-rent'));}
   for(const label of ['儲存全部修改','還原全部未儲存','退租','確認入住與更新帳務','同步帳務姓名'])visibleDisabled(label);
   if(occupied)assert(d.querySelector('.renewal-controls button')&&!d.querySelector('.renewal-controls button').disabled);

@@ -5,6 +5,7 @@
   const formatPhone=v=>/^09\d{8}$/.test(v)?v.slice(0,4)+'-'+v.slice(4,7)+'-'+v.slice(7):v;
   const rooms = ['401','402','403','404','405','406','407','501','502','503','504','505','506','507','508'];
   const tenants = rooms.map((room, i) => ({
+    cohabitant:i===0?'示範同居人':'',cohabitantPhone:i===0?'0900000098':'',cohabitantAddress:i===0?'桃園市龜山區測試用虛構路1號（非真實地址）':'',cohabitantId:i===0?'DEMO-COHABITANT-INVALID':'',cohabitantBirthDate:i===0?'2000-02-29':'',
     registeredAddress:'示範市範例區虛構路 1 號',nationalId:'DEMO-INVALID',birthDate:'2000-01-01',guarantorName:'示範保證人',guarantorAddress:'示範地址（非真實）',guarantorId:'DEMO-INVALID',guarantorBirthDate:'1970-01-01',guarantorPhone:'0900000099',vacant:false,version:'demo-'+room,contractKind:i%2?'新約':'續約',emergencyContacts:i===0?[{name:'示範聯絡人甲',phone:'0900000001'},{name:'示範聯絡人乙',phone:'0900000002'}]:[],room, roomType: i === 14 ? '' : i % 2 === 0 ? '套房' : '雅房', name: '示範房客 ' + String.fromCharCode(65 + i),
     phone: '09000000' + String(i).padStart(2, '0'),
     rent: room === '506' ? 0 : 5800 + (i % 4) * 200,
