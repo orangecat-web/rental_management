@@ -25,15 +25,16 @@ window.RentalComponents.meterWorksheet = function (api) {
       <div class="meter-room-title"><h2>{{entry.room}} 房</h2><span>{{entry.name||'未填居住者'}}</span><span v-if="entry.conflict" class="meter-field-error">試算表已有其他修改，請還原此房或重新輸入後再儲存。</span></div>
       <div class="meter-row-values">
         <div class="meter-previous"><span>前期電表</span><strong>{{format(entry.previousReading)}} 度</strong><span>{{entry.previousDate||'前期日期待補'}}</span></div>
-        <label class="meter-current">本期電表<input type="number" step="any" :min="entry.previousReading ?? 0" v-model="entry.draft" :disabled="historical || locked || entry.previousReading===null" @input="entry.conflict=false;entry.message=''" :aria-label="entry.room+' 房本期電表'"><span>試算表目前：{{format(entry.savedReading)}} 度</span></label>
-        <div class="meter-amount"><span>本期使用</span><strong>{{usage(entry)===null?'—':format(usage(entry))+' 度'}}</strong><span>電費 NT$ {{usage(entry)===null?'—':format(usage(entry)*5)}}</span></div>
+        <label class="meter-current">本期電表<input type="number" step="any" :min="entry.previousReading ?? 0" v-model="entry.draft" :disabled="historical || locked || entry.previousReading===null || entry.billingApplicable===false" @input="entry.conflict=false;entry.message=''" :aria-label="entry.room+' 房本期電表'"><span>試算表目前：{{format(entry.savedReading)}} 度</span></label>
+        <div class="meter-amount"><span>{{entry.billingApplicable===false?'本期不計用電':'本期使用'}}</span><strong>{{usage(entry)===null?'—':format(usage(entry))+' 度'}}</strong><span>電費 NT$ {{entry.billingApplicable===false?'0':usage(entry)===null?'—':format(usage(entry)*5)}}</span></div>
         <div class="meter-date-detail"><span>本期抄表日</span><strong>{{commonDate||entry.savedDate||'待填寫'}}</strong><span v-if="commonDate!==entry.savedDate">已儲存：{{entry.savedDate||'未填寫'}}</span></div>
       </div>
+      <p v-if="entry.billingApplicable===false" class="meter-sheet-hint">{{entry.billingMessage}}</p>
       <p v-if="readingError(entry)" class="meter-field-error">{{readingError(entry)}}</p>
       <p v-if="entry.message" class="meter-row-message" role="status">{{entry.message}}</p>
       <button v-if="entry.conflict" class="secondary" type="button" @click="restoreEntry(entry)" :disabled="locked">還原此房</button>
       <div class="meter-row-photo"><div class="meter-photo-status"><span class="meter-photo-message">{{entry.photoMessage||'點擊連結才開啟圖片，不預先載入。'}}</span></div><div class="meter-photo-actions"><a v-if="entry.savedDate&&(!commonDate||commonDate===entry.savedDate)" :href="entry.driveLink||'#'" @click.prevent="openPhoto(entry)" :aria-label="entry.room+' 房開啟本期電表照片'">本期電表照片</a><p v-else class="meter-sheet-hint">請先儲存本期抄表日期，再開啟對應照片。</p>
-      <div v-if="noticeUrl" class="meter-notice"><a v-if="!dirty&&!reviewRequired&&!locked" class="notice-link" :href="noticeUrl({room:entry.room,year,month})" target="_blank" rel="noopener noreferrer" :aria-label="month+' 月 '+entry.room+' 房電費通知預覽'">預覽電費通知</a><p v-else class="meter-sheet-hint">請先儲存並核對抄表資料，再預覽電費通知。</p></div></div></div>
+      <div v-if="noticeUrl" class="meter-notice"><a v-if="entry.billingApplicable!==false&&!dirty&&!reviewRequired&&!locked" class="notice-link" :href="noticeUrl({room:entry.room,year,month})" target="_blank" rel="noopener noreferrer" :aria-label="month+' 月 '+entry.room+' 房電費通知預覽'">預覽電費通知</a><p v-else-if="entry.billingApplicable!==false" class="meter-sheet-hint">請先儲存並核對抄表資料，再預覽電費通知。</p></div></div></div>
     </article>
   </div>
 </section>`,
@@ -50,7 +51,7 @@ window.RentalComponents.meterWorksheet = function (api) {
       const locked = computed(()=>props.blocked || working.value || photoBusy.value);
       const rawDraft = entry => entry.draft === '' ? null : Number(entry.draft);
       const readingDirty = entry => String(entry.draft ?? '') !== String(entry.savedReading ?? '');
-      const dateDirty = entry => commonDate.value !== initialDate && commonDate.value !== entry.savedDate;
+      const dateDirty = entry => entry.billingApplicable!==false && commonDate.value !== initialDate && commonDate.value !== entry.savedDate;
       const dirty = computed(()=>entries.value.some(e=>readingDirty(e)||dateDirty(e)));
       watch(dirty, value=>emit('dirty-change',value),{immediate:true});
       watch(()=>working.value||photoBusy.value,value=>emit('busy-change',value),{immediate:true});
@@ -60,7 +61,7 @@ window.RentalComponents.meterWorksheet = function (api) {
         entries.value=records.filter(a=>a.meter).map(a=>{
           const e=old.get(a.room), m=a.meter, hadDraft=e&&readingDirty(e);
           const changed=e&&m.currentReading!==e.savedReading&&String(m.currentReading??'')!==String(e.draft??'');
-          return {room:a.room,name:a.name,previousReading:typeof m.previousReading==='number'?m.previousReading:null,
+          return {room:a.room,name:a.name,billingApplicable:m.billingApplicable,billingMessage:m.billingMessage||'',previousReading:typeof m.previousReading==='number'?m.previousReading:null,
             previousDate:m.previousReadingDate||'',savedDate:m.currentReadingDate||'',savedReading:m.currentReading??null,
             draft:hadDraft?e.draft:String(m.currentReading??''),conflict:!!(hadDraft&&(changed||e?.conflict)),message:e?.message||'',
             driveLink:e?.photoDate===(m.currentReadingDate||'')?e.driveLink||'':'',photoDate:e?.photoDate===(m.currentReadingDate||'')?e.photoDate:'',photoMessage:e?.photoDate===(m.currentReadingDate||'')?e.photoMessage||'':''};
@@ -72,6 +73,7 @@ window.RentalComponents.meterWorksheet = function (api) {
       watch(()=>props.accounts,sync,{immediate:true});
       function acknowledgeDate(){status.value=''}
       function readingError(e){
+        if(e.billingApplicable===false)return '';
         if(e.previousReading===null)return '前期度數尚未帶入，請先初始化本月或補齊前期紀錄。';
         if(e.draft==='')return '';
         const n=rawDraft(e);
@@ -79,7 +81,7 @@ window.RentalComponents.meterWorksheet = function (api) {
         if(n<e.previousReading)return '本期電表不能小於前期電表。';
         return '';
       }
-      const usage=e=>e.draft===''||readingError(e)?null:rawDraft(e)-e.previousReading;
+      const usage=e=>e.billingApplicable===false||e.draft===''||readingError(e)?null:rawDraft(e)-e.previousReading;
       function restoreEntry(e){e.draft=String(e.savedReading??'');e.conflict=false;e.message='已還原此房度數。'}
       function restore(){entries.value.forEach(restoreEntry);commonDate.value=initialDate;status.value='已還原尚未儲存的輸入。已寫入試算表的資料仍保留。'}
       function validateRecords(records){
@@ -94,7 +96,7 @@ window.RentalComponents.meterWorksheet = function (api) {
       }
       async function persist(mode){if(historical.value)return false;
         if(locked.value||reviewRequired.value||!validDate.value)return false;
-        const targets=entries.value.filter(e=>mode==='date'?commonDate.value!==e.savedDate:readingDirty(e)||commonDate.value!==e.savedDate);
+        const targets=entries.value.filter(e=>e.billingApplicable!==false&&(mode==='date'?commonDate.value!==e.savedDate:readingDirty(e)||commonDate.value!==e.savedDate));
         if(targets.some(e=>e.conflict)){status.value='有其他修改尚未核對，請先處理標示的房間。';return false}
         if(mode!=='date'&&targets.some(e=>readingDirty(e)&&readingError(e))){status.value='請先修正各房標示的電表度數。';return false}
         working.value=true;const year=props.year,month=props.month,date=commonDate.value;let completed=0;

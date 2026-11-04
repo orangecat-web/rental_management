@@ -8,3 +8,5 @@ assert.throws(()=>account({...raw,rent:'PRIVATE'},2026,1));assert.throws(()=>acc
 assert.equal(account({...raw,dueDate:'10'},2026,1).dueDate,'10');assert.throws(()=>account({...raw,dueDate:'32'},2026,1));
 
 const planned=account({...raw,planned:true,historySettlement:'planned'},2026,1);assert.equal(planned.planned,true);assert.equal(planned.historySettlement,'planned');
+
+assert.equal(account({...raw,historySettlement:'not_applicable'},2026,1).historySettlement,'not_applicable');

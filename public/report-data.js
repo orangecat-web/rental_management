@@ -9,6 +9,7 @@
   }
   function meter(account) {
     const m = account.meter;
+    if(m?.billingApplicable===false)return {valid:false,notApplicable:true,reason:m.billingMessage||'本期不計用電'};
     if (!m) return {valid:false,reason:'沒有電表紀錄'};
     if (!number(m.previousReading) || !number(m.currentReading)) return {valid:false,reason:'待補電表度數'};
     const usage = Math.round((m.currentReading-m.previousReading)*1000000)/1000000;
@@ -30,8 +31,8 @@
       rooms.add(String(a.room));
     }
     const odd=month%2===1;
-    const rows=accounts.map(a=>({historical:a.historical===true,historySettlement:a.historySettlement,room:String(a.room),name:String(a.name||'').trim(),occupantKey:a.occupantKey,vacant:a.vacant===true,arrears:a.arrears,creditApplied:a.creditApplied,rent:a.rent,electricityFee:a.planned&&odd&&!meter(a).valid?null:a.electricityFee,totalDue:a.totalDue,effectivePaid:a.effectivePaid,netDue:a.netDue,unpaid:a.unpaid,overpaid:a.overpaid,creditWarning:a.creditWarning||'',meter:meter(a)}));
-    return {year,month,rows,rent:aggregate(rows,a=>a.rent),electricity:aggregate(rows,a=>odd?a.electricityFee:0),paid:aggregate(rows,a=>a.effectivePaid),debt:aggregate(rows,a=>a.unpaid),credit:aggregate(rows,a=>a.overpaid),warnings:rows.filter(a=>a.creditWarning).length};
+    const rows=accounts.map(a=>({historical:a.historical===true,historySettlement:a.historySettlement,room:String(a.room),name:String(a.name||'').trim(),occupantKey:a.occupantKey,vacant:a.vacant===true,arrears:a.arrears,creditApplied:a.creditApplied,rent:a.rent,electricityFee:a.planned&&odd&&!meter(a).valid&&!meter(a).notApplicable?null:a.electricityFee,totalDue:a.totalDue,effectivePaid:a.effectivePaid,netDue:a.netDue,unpaid:a.unpaid,overpaid:a.overpaid,creditWarning:a.creditWarning||'',meter:meter(a)}));
+    return {year,month,rows,rent:aggregate(rows,a=>a.rent),electricity:aggregate(rows,a=>odd?a.electricityFee:0),paid:aggregate(rows,a=>a.historySettlement==='not_applicable'?0:a.effectivePaid),debt:aggregate(rows,a=>a.unpaid),credit:aggregate(rows,a=>a.overpaid),warnings:rows.filter(a=>a.creditWarning).length};
   }
   /** Allocate funds once, FIFO: old claims, current rent, then electricity.
    * Cohorts retain their original month, so later receipts settle old rent without duplication.
@@ -47,6 +48,7 @@
         let queue=inherited?prior.queue:[];
         const rent=cents(a.rent),fee=p.month%2?cents(a.electricityFee):0,gross=cents(a.totalDue),cash=cents(a.effectivePaid),credit=cents(a.creditApplied),arrears=cents(a.arrears);
         const record={year:p.year,month:p.month,room:a.room,rent,paid:0,valid:rent!==null};records.push(record);
+        if(a.vacant&&rent===0&&fee===0&&gross===0&&credit===0&&arrears===0){histories.set(a.room,{serial,identity,queue:[]});continue;}
         if(a.historical&&a.historySettlement==='settled'&&rent!==null&&fee!==null&&gross===rent+fee){
           record.paid=rent;record.settledByHistory=true;histories.set(a.room,{serial,identity,queue:[]});continue;
         }
