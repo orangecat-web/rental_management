@@ -1,0 +1,2162 @@
+[
+  {
+    "key": "A-sage-desktop",
+    "page": "A",
+    "title": "今天・本月概況",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/01-A-sage-desktop.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "B-sage-desktop",
+    "page": "B",
+    "title": "房間列表",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/02-B-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "C-sage-desktop",
+    "page": "C",
+    "title": "房客詳情彈窗",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/03-C-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "D-sage-desktop",
+    "page": "D",
+    "title": "每月帳務",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/04-D-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "E-sage-desktop",
+    "page": "E",
+    "title": "抄表",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/05-E-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "F-sage-desktop",
+    "page": "F",
+    "title": "每月支出",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/06-F-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "G-sage-desktop",
+    "page": "G",
+    "title": "更多",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/07-G-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "H-sage-desktop",
+    "page": "H",
+    "title": "租金與實收",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/08-H-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "I-sage-desktop",
+    "page": "I",
+    "title": "簽約款與歷史核對",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/09-I-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "J-sage-desktop",
+    "page": "J",
+    "title": "用電統計",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/10-J-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "K-sage-desktop",
+    "page": "K",
+    "title": "編輯房客資料",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/11-K-sage-desktop.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "L-sage-desktop",
+    "page": "L",
+    "title": "合租人與聯絡資料",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/12-L-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "M-sage-desktop",
+    "page": "M",
+    "title": "入住與帳務核對",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/13-M-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "N-sage-desktop",
+    "page": "N",
+    "title": "退租確認",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/14-N-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "O-sage-desktop",
+    "page": "O",
+    "title": "每月帳務明細",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/15-O-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "P-sage-desktop",
+    "page": "P",
+    "title": "通知預覽與下載",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/16-P-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "Q-sage-desktop",
+    "page": "Q",
+    "title": "新增／編輯支出・儲存前核對",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/17-Q-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "R-sage-desktop",
+    "page": "R",
+    "title": "照片與單據預覽",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/18-R-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "S-sage-desktop",
+    "page": "S",
+    "title": "房產與工作區",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/19-S-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "T-sage-desktop",
+    "page": "T",
+    "title": "房間設定",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/20-T-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "U-sage-desktop",
+    "page": "U",
+    "title": "公開唯讀頁",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/21-U-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "V-sage-desktop",
+    "page": "V",
+    "title": "互動狀態",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/22-V-sage-desktop.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "PAY-sage-desktop",
+    "page": "PAY",
+    "title": "收款核對彈窗",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/23-PAY-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "EXP-sage-desktop",
+    "page": "EXP",
+    "title": "新增支出彈窗",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "desktop",
+    "file": "sage/desktop/24-EXP-sage-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "A-sage-mobile",
+    "page": "A",
+    "title": "今天・本月概況",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/01-A-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "B-sage-mobile",
+    "page": "B",
+    "title": "房間列表",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/02-B-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "C-sage-mobile",
+    "page": "C",
+    "title": "房客詳情彈窗",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/03-C-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "D-sage-mobile",
+    "page": "D",
+    "title": "每月帳務",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/04-D-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "E-sage-mobile",
+    "page": "E",
+    "title": "抄表",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/05-E-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "F-sage-mobile",
+    "page": "F",
+    "title": "每月支出",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/06-F-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "G-sage-mobile",
+    "page": "G",
+    "title": "更多",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/07-G-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "H-sage-mobile",
+    "page": "H",
+    "title": "租金與實收",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/08-H-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "I-sage-mobile",
+    "page": "I",
+    "title": "簽約款與歷史核對",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/09-I-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "J-sage-mobile",
+    "page": "J",
+    "title": "用電統計",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/10-J-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "K-sage-mobile",
+    "page": "K",
+    "title": "編輯房客資料",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/11-K-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "L-sage-mobile",
+    "page": "L",
+    "title": "合租人與聯絡資料",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/12-L-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "M-sage-mobile",
+    "page": "M",
+    "title": "入住與帳務核對",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/13-M-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "N-sage-mobile",
+    "page": "N",
+    "title": "退租確認",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/14-N-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "O-sage-mobile",
+    "page": "O",
+    "title": "每月帳務明細",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/15-O-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "P-sage-mobile",
+    "page": "P",
+    "title": "通知預覽與下載",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/16-P-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "Q-sage-mobile",
+    "page": "Q",
+    "title": "新增／編輯支出・儲存前核對",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/17-Q-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "R-sage-mobile",
+    "page": "R",
+    "title": "照片與單據預覽",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/18-R-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "S-sage-mobile",
+    "page": "S",
+    "title": "房產與工作區",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/19-S-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "T-sage-mobile",
+    "page": "T",
+    "title": "房間設定",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/20-T-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "U-sage-mobile",
+    "page": "U",
+    "title": "公開唯讀頁",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/21-U-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "V-sage-mobile",
+    "page": "V",
+    "title": "互動狀態",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/22-V-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "PAY-sage-mobile",
+    "page": "PAY",
+    "title": "收款核對彈窗",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/23-PAY-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "EXP-sage-mobile",
+    "page": "EXP",
+    "title": "新增支出彈窗",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "mobile",
+    "file": "sage/mobile/24-EXP-sage-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "A-sage-tablet",
+    "page": "A",
+    "title": "今天・本月概況",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/01-A-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "B-sage-tablet",
+    "page": "B",
+    "title": "房間列表",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/02-B-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "C-sage-tablet",
+    "page": "C",
+    "title": "房客詳情彈窗",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/03-C-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "D-sage-tablet",
+    "page": "D",
+    "title": "每月帳務",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/04-D-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "E-sage-tablet",
+    "page": "E",
+    "title": "抄表",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/05-E-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "F-sage-tablet",
+    "page": "F",
+    "title": "每月支出",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/06-F-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "G-sage-tablet",
+    "page": "G",
+    "title": "更多",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/07-G-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "H-sage-tablet",
+    "page": "H",
+    "title": "租金與實收",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/08-H-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "I-sage-tablet",
+    "page": "I",
+    "title": "簽約款與歷史核對",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/09-I-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "J-sage-tablet",
+    "page": "J",
+    "title": "用電統計",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/10-J-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "K-sage-tablet",
+    "page": "K",
+    "title": "編輯房客資料",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/11-K-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "L-sage-tablet",
+    "page": "L",
+    "title": "合租人與聯絡資料",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/12-L-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "M-sage-tablet",
+    "page": "M",
+    "title": "入住與帳務核對",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/13-M-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "N-sage-tablet",
+    "page": "N",
+    "title": "退租確認",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/14-N-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "O-sage-tablet",
+    "page": "O",
+    "title": "每月帳務明細",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/15-O-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "P-sage-tablet",
+    "page": "P",
+    "title": "通知預覽與下載",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/16-P-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "Q-sage-tablet",
+    "page": "Q",
+    "title": "新增／編輯支出・儲存前核對",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/17-Q-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "R-sage-tablet",
+    "page": "R",
+    "title": "照片與單據預覽",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/18-R-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "S-sage-tablet",
+    "page": "S",
+    "title": "房產與工作區",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/19-S-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "T-sage-tablet",
+    "page": "T",
+    "title": "房間設定",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/20-T-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "U-sage-tablet",
+    "page": "U",
+    "title": "公開唯讀頁",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/21-U-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "V-sage-tablet",
+    "page": "V",
+    "title": "互動狀態",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/22-V-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "PAY-sage-tablet",
+    "page": "PAY",
+    "title": "收款核對彈窗",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/23-PAY-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "EXP-sage-tablet",
+    "page": "EXP",
+    "title": "新增支出彈窗",
+    "theme": "sage",
+    "themeName": "霧湖鼠尾草綠",
+    "device": "tablet",
+    "file": "sage/tablet/24-EXP-sage-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "A-warm-desktop",
+    "page": "A",
+    "title": "今天・本月概況",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/01-A-warm-desktop.png",
+    "size": [
+      1586,
+      992
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "B-warm-desktop",
+    "page": "B",
+    "title": "房間列表",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/02-B-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "C-warm-desktop",
+    "page": "C",
+    "title": "房客詳情彈窗",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/03-C-warm-desktop.png",
+    "size": [
+      1586,
+      992
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "D-warm-desktop",
+    "page": "D",
+    "title": "每月帳務",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/04-D-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "E-warm-desktop",
+    "page": "E",
+    "title": "抄表",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/05-E-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "F-warm-desktop",
+    "page": "F",
+    "title": "每月支出",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/06-F-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "G-warm-desktop",
+    "page": "G",
+    "title": "更多",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/07-G-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "H-warm-desktop",
+    "page": "H",
+    "title": "租金與實收",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/08-H-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "I-warm-desktop",
+    "page": "I",
+    "title": "簽約款與歷史核對",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/09-I-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "J-warm-desktop",
+    "page": "J",
+    "title": "用電統計",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/10-J-warm-desktop.png",
+    "size": [
+      1586,
+      992
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "K-warm-desktop",
+    "page": "K",
+    "title": "編輯房客資料",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/11-K-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "L-warm-desktop",
+    "page": "L",
+    "title": "合租人與聯絡資料",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/12-L-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "M-warm-desktop",
+    "page": "M",
+    "title": "入住與帳務核對",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/13-M-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "N-warm-desktop",
+    "page": "N",
+    "title": "退租確認",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/14-N-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "O-warm-desktop",
+    "page": "O",
+    "title": "每月帳務明細",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/15-O-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "P-warm-desktop",
+    "page": "P",
+    "title": "通知預覽與下載",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/16-P-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "Q-warm-desktop",
+    "page": "Q",
+    "title": "新增／編輯支出・儲存前核對",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/17-Q-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "R-warm-desktop",
+    "page": "R",
+    "title": "照片與單據預覽",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/18-R-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "S-warm-desktop",
+    "page": "S",
+    "title": "房產與工作區",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/19-S-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "T-warm-desktop",
+    "page": "T",
+    "title": "房間設定",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/20-T-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "U-warm-desktop",
+    "page": "U",
+    "title": "公開唯讀頁",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/21-U-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 2
+  },
+  {
+    "key": "V-warm-desktop",
+    "page": "V",
+    "title": "互動狀態",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/22-V-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "PAY-warm-desktop",
+    "page": "PAY",
+    "title": "收款核對彈窗",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/23-PAY-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "EXP-warm-desktop",
+    "page": "EXP",
+    "title": "新增支出彈窗",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "desktop",
+    "file": "warm/desktop/24-EXP-warm-desktop.png",
+    "size": [
+      1672,
+      941
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "A-warm-mobile",
+    "page": "A",
+    "title": "今天・本月概況",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/01-A-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "B-warm-mobile",
+    "page": "B",
+    "title": "房間列表",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/02-B-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "C-warm-mobile",
+    "page": "C",
+    "title": "房客詳情彈窗",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/03-C-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "D-warm-mobile",
+    "page": "D",
+    "title": "每月帳務",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/04-D-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "E-warm-mobile",
+    "page": "E",
+    "title": "抄表",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/05-E-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "F-warm-mobile",
+    "page": "F",
+    "title": "每月支出",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/06-F-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "G-warm-mobile",
+    "page": "G",
+    "title": "更多",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/07-G-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "H-warm-mobile",
+    "page": "H",
+    "title": "租金與實收",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/08-H-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "I-warm-mobile",
+    "page": "I",
+    "title": "簽約款與歷史核對",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/09-I-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "J-warm-mobile",
+    "page": "J",
+    "title": "用電統計",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/10-J-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "K-warm-mobile",
+    "page": "K",
+    "title": "編輯房客資料",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/11-K-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "L-warm-mobile",
+    "page": "L",
+    "title": "合租人與聯絡資料",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/12-L-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "M-warm-mobile",
+    "page": "M",
+    "title": "入住與帳務核對",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/13-M-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "N-warm-mobile",
+    "page": "N",
+    "title": "退租確認",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/14-N-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "O-warm-mobile",
+    "page": "O",
+    "title": "每月帳務明細",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/15-O-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "P-warm-mobile",
+    "page": "P",
+    "title": "通知預覽與下載",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/16-P-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "Q-warm-mobile",
+    "page": "Q",
+    "title": "新增／編輯支出・儲存前核對",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/17-Q-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "R-warm-mobile",
+    "page": "R",
+    "title": "照片與單據預覽",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/18-R-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "S-warm-mobile",
+    "page": "S",
+    "title": "房產與工作區",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/19-S-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "T-warm-mobile",
+    "page": "T",
+    "title": "房間設定",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/20-T-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "U-warm-mobile",
+    "page": "U",
+    "title": "公開唯讀頁",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/21-U-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "V-warm-mobile",
+    "page": "V",
+    "title": "互動狀態",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/22-V-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "PAY-warm-mobile",
+    "page": "PAY",
+    "title": "收款核對彈窗",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/23-PAY-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "EXP-warm-mobile",
+    "page": "EXP",
+    "title": "新增支出彈窗",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "mobile",
+    "file": "warm/mobile/24-EXP-warm-mobile.png",
+    "size": [
+      948,
+      1659
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "A-warm-tablet",
+    "page": "A",
+    "title": "今天・本月概況",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/01-A-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "B-warm-tablet",
+    "page": "B",
+    "title": "房間列表",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/02-B-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "C-warm-tablet",
+    "page": "C",
+    "title": "房客詳情彈窗",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/03-C-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "D-warm-tablet",
+    "page": "D",
+    "title": "每月帳務",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/04-D-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "E-warm-tablet",
+    "page": "E",
+    "title": "抄表",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/05-E-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "F-warm-tablet",
+    "page": "F",
+    "title": "每月支出",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/06-F-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "G-warm-tablet",
+    "page": "G",
+    "title": "更多",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/07-G-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "H-warm-tablet",
+    "page": "H",
+    "title": "租金與實收",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/08-H-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "I-warm-tablet",
+    "page": "I",
+    "title": "簽約款與歷史核對",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/09-I-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "J-warm-tablet",
+    "page": "J",
+    "title": "用電統計",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/10-J-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "K-warm-tablet",
+    "page": "K",
+    "title": "編輯房客資料",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/11-K-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "L-warm-tablet",
+    "page": "L",
+    "title": "合租人與聯絡資料",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/12-L-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "M-warm-tablet",
+    "page": "M",
+    "title": "入住與帳務核對",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/13-M-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "N-warm-tablet",
+    "page": "N",
+    "title": "退租確認",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/14-N-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "O-warm-tablet",
+    "page": "O",
+    "title": "每月帳務明細",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/15-O-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "P-warm-tablet",
+    "page": "P",
+    "title": "通知預覽與下載",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/16-P-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "Q-warm-tablet",
+    "page": "Q",
+    "title": "新增／編輯支出・儲存前核對",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/17-Q-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "R-warm-tablet",
+    "page": "R",
+    "title": "照片與單據預覽",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/18-R-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "S-warm-tablet",
+    "page": "S",
+    "title": "房產與工作區",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/19-S-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "T-warm-tablet",
+    "page": "T",
+    "title": "房間設定",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/20-T-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "U-warm-tablet",
+    "page": "U",
+    "title": "公開唯讀頁",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/21-U-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "V-warm-tablet",
+    "page": "V",
+    "title": "互動狀態",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/22-V-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "PAY-warm-tablet",
+    "page": "PAY",
+    "title": "收款核對彈窗",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/23-PAY-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  },
+  {
+    "key": "EXP-warm-tablet",
+    "page": "EXP",
+    "title": "新增支出彈窗",
+    "theme": "warm",
+    "themeName": "暖色・杏橙琥珀",
+    "device": "tablet",
+    "file": "warm/tablet/24-EXP-warm-tablet.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "stage": "visual-design",
+    "edition": 1
+  }
+]
