@@ -7,38 +7,23 @@ window.RentalComponents.meterWorksheet = function (api) {
     emits: ['dirty-change','busy-change','field-saved','reconciled','refresh-request'],
     template: `
 <section class="meter-sheet" aria-label="整月電表抄錄表">
-  <div class="meter-sheet-toolbar">
-    <label v-write  class="meter-common-date">本期共同抄表日<input type="date" v-model="commonDate" :disabled="locked || historical" @input="acknowledgeDate" aria-label="本期共同抄表日"></label>
-    <div class="meter-sheet-actions">
-      <button type="button" class="secondary" @click="loadPhotos" :disabled="locked">更新照片連結</button>
-      <button type="button" class="primary" @click="applyDateAndPhotos" :disabled="historical || locked || reviewRequired || !validDate">套用抄表日期並更新連結</button>
-      <button type="button" class="primary" @click="saveAll" :disabled="historical || locked || reviewRequired || !dirty || !validDate">儲存全部抄表</button>
-      <button type="button" class="secondary" @click="restore" :disabled="locked || !dirty">還原全部未儲存輸入</button>
-      <button v-if="reviewRequired" type="button" class="secondary" @click="reconcile" :disabled="locked">重新讀取核對，保留未完成輸入</button>
-    </div>
-  </div>
-  <p class="meter-sheet-hint">日期只填一次。照片只顯示連結，不預先下載；點擊後才載入單張圖片並彈出預覽視窗。連結依已儲存的抄表日配對；度數填完後按「儲存全部抄表」。空間不足會換行。</p>
-  <p v-if="!validDate" class="meter-sheet-hint">請選擇有效的共同抄表日期（可與帳務月份不同）；原有日期仍顯示在各房資料中。</p>
-  <p class="meter-batch-status" role="status" aria-live="polite">{{status}}</p>
-  <div class="meter-sheet-rows" role="table" aria-label="各房電表度數">
-    <article v-for="entry in entries" :key="entry.room" class="meter-sheet-row" role="row" :aria-label="entry.room+' 房電表'">
-      <div class="meter-room-title"><h2>{{entry.room}} 房</h2><span>{{entry.name||'未填居住者'}}</span><span v-if="entry.conflict" class="meter-field-error">試算表已有其他修改，請還原此房或重新輸入後再儲存。</span></div>
-      <div class="meter-row-values">
-        <div class="meter-previous"><span>前期電表</span><strong>{{format(entry.previousReading)}} 度</strong><span>{{entry.previousDate||'前期日期待補'}}</span></div>
-        <label class="meter-current">本期電表<input type="number" step="any" :min="entry.previousReading ?? 0" v-model="entry.draft" :disabled="historical || locked || entry.previousReading===null || entry.billingApplicable===false" @input="entry.conflict=false;entry.message=''" :aria-label="entry.room+' 房本期電表'"><span>試算表目前：{{format(entry.savedReading)}} 度</span></label>
-        <div class="meter-amount"><span>{{entry.billingApplicable===false?'本期不計用電':'本期使用'}}</span><strong>{{usage(entry)===null?'—':format(usage(entry))+' 度'}}</strong><span>電費 NT$ {{entry.billingApplicable===false?'0':usage(entry)===null?'—':format(usage(entry)*5)}}</span></div>
-        <div class="meter-date-detail"><span>本期抄表日</span><strong>{{commonDate||entry.savedDate||'待填寫'}}</strong><span v-if="commonDate!==entry.savedDate">已儲存：{{entry.savedDate||'未填寫'}}</span></div>
-      </div>
-      <p v-if="entry.billingApplicable===false" class="meter-sheet-hint">{{entry.billingMessage}}</p>
-      <p v-if="readingError(entry)" class="meter-field-error">{{readingError(entry)}}</p>
-      <p v-if="entry.message" class="meter-row-message" role="status">{{entry.message}}</p>
-      <button v-if="entry.conflict" class="secondary" type="button" @click="restoreEntry(entry)" :disabled="locked">還原此房</button>
-      <div class="meter-row-photo"><div class="meter-photo-status"><span class="meter-photo-message">{{entry.photoMessage||'點擊連結才開啟圖片，不預先載入。'}}</span></div><div class="meter-photo-actions"><a v-if="entry.savedDate&&(!commonDate||commonDate===entry.savedDate)" :href="entry.driveLink||'#'" @click.prevent="openPhoto(entry)" :aria-label="entry.room+' 房開啟本期電表照片'">本期電表照片</a><p v-else class="meter-sheet-hint">請先儲存本期抄表日期，再開啟對應照片。</p>
-      <div v-if="noticeUrl" class="meter-notice"><a v-if="entry.billingApplicable!==false&&!dirty&&!reviewRequired&&!locked" class="notice-link" :href="noticeUrl({room:entry.room,year,month})" target="_blank" rel="noopener noreferrer" :aria-label="month+' 月 '+entry.room+' 房電費通知預覽'">預覽電費通知</a><p v-else-if="entry.billingApplicable!==false" class="meter-sheet-hint">請先儲存並核對抄表資料，再預覽電費通知。</p></div></div></div>
+  <div class="meter-sheet-toolbar"><div class="meter-mode" role="group" aria-label="抄表模式"><button @click="meterMode='single'" :aria-pressed="meterMode==='single'">逐房</button><button @click="meterMode='batch'" :aria-pressed="meterMode==='batch'">整批</button></div><label v-write class="meter-common-date">本期抄表日：<input type="date" v-model="commonDate" :disabled="locked||historical" @input="acknowledgeDate" aria-label="本期共同抄表日"></label><label v-if="meterMode==='single'">房間<select v-model="selectedMeterRoom" aria-label="逐房抄表房間"><option v-for="entry in entries" :value="entry.room">{{entry.room}} 房</option></select></label><slot name="notices"></slot></div>
+  <p class="meter-batch-status" role="status" aria-live="polite">{{status}}</p><p v-if="!validDate" class="meter-sheet-hint">請選擇有效的共同抄表日期；可以與帳務月份不同。</p>
+  <div class="meter-sheet-rows" role="table" aria-label="各房電表度數"><div class="meter-column-head" role="row"><span>房間</span><span>前期電表與日期</span><span>本期電表</span><span>本期用電與電費</span><span>照片與通知</span></div>
+    <article v-for="entry in visibleEntries" :key="entry.room" class="meter-sheet-row" role="row" :aria-label="entry.room+' 房電表'">
+      <div class="meter-room-title"><h2>{{entry.room}}</h2><span>{{entry.name||'未填居住者'}}</span></div>
+      <div class="meter-previous"><strong>{{format(entry.previousReading)}} 度</strong><span>{{entry.previousDate||'前期日期待補'}}</span></div>
+      <label class="meter-current"><span>本期電表</span><input type="number" step="any" :min="entry.previousReading??0" v-model="entry.draft" :disabled="historical||locked||entry.previousReading===null||entry.billingApplicable===false" @input="entry.conflict=false;entry.message=''" :aria-label="entry.room+' 房本期電表'" :placeholder="entry.billingApplicable===false?'不需填寫':'待抄表'"><span>原紀錄：{{format(entry.savedReading)}} 度</span><span v-if="commonDate!==entry.savedDate">已儲存抄表日：{{entry.savedDate||'未填寫'}}</span></label>
+      <div class="meter-amount"><strong>{{entry.billingApplicable===false?'本期不計用電':usage(entry)===null?'本期用電：待計算':format(usage(entry))+' 度'}}</strong><span>電費 NT$ {{entry.billingApplicable===false?'0':usage(entry)===null?'—':format(usage(entry)*5)}}</span></div>
+      <div class="meter-row-photo"><div class="meter-photo-actions"><a v-if="entry.savedDate&&(!commonDate||commonDate===entry.savedDate)" :href="entry.driveLink||'#'" @click.prevent="openPhoto(entry)" :aria-label="entry.room+' 房開啟本期電表照片'">本期電表照片</a><p v-else>請先儲存抄表日期</p><div v-if="noticeUrl" class="meter-notice"><a v-if="entry.billingApplicable!==false&&!dirty&&!reviewRequired&&!locked" class="notice-link" :href="noticeUrl({room:entry.room,year,month})" target="_blank" rel="noopener noreferrer" :aria-label="month+' 月 '+entry.room+' 房電費通知預覽'">預覽電費通知</a><p v-else-if="entry.billingApplicable!==false">儲存核對後可預覽通知</p></div></div></div>
+      <div v-if="entry.conflict||entry.billingApplicable===false||readingError(entry)||entry.message||entry.photoMessage" class="meter-row-alerts"><p v-if="entry.conflict" class="meter-field-error">試算表已有其他修改，請還原此房或重新核對。</p><p v-if="entry.billingApplicable===false" class="meter-sheet-hint">{{entry.billingMessage}}</p><p v-if="readingError(entry)" class="meter-field-error">{{readingError(entry)}}</p><p v-if="entry.message" class="meter-row-message" role="status">{{entry.message}}</p><span v-if="entry.photoMessage" class="meter-photo-message">{{entry.photoMessage}}</span><button v-if="entry.conflict" @click="restoreEntry(entry)" :disabled="locked">還原此房</button></div>
     </article>
   </div>
+  <div class="meter-sheet-actions"><button @click="loadPhotos" :disabled="locked">更新照片連結</button><button v-write @click="applyDateAndPhotos" :disabled="historical||locked||reviewRequired||!validDate">套用抄表日期並更新連結</button><button v-write @click="restore" :disabled="locked||!dirty">還原全部未儲存輸入</button><button v-write class="primary" @click="saveAll" :disabled="historical||locked||reviewRequired||!dirty||!validDate">儲存全部抄表</button><button v-if="reviewRequired" @click="reconcile" :disabled="locked">重新讀取核對，保留未完成輸入</button></div>
+  <p class="meter-sheet-hint">單月既有住戶計費；雙月、新入住當月及空房免電費。缺值不當 0。照片點擊才載入。</p>
 </section>`,
     setup(props, { emit }) {
+      const meterMode=ref('batch'),selectedMeterRoom=ref('');
       const preview=window.RentalPhotoPreview.create();
       onBeforeUnmount(()=>preview.close());
       const historical=computed(()=>props.accounts.some(a=>a.financialLocked&&!a.meterEditable));
@@ -150,7 +135,8 @@ window.RentalComponents.meterWorksheet = function (api) {
         });
       }
       async function applyDateAndPhotos(){if(await persist('date')){await nextTick();await loadPhotos()}}
-      return {openPhoto,historical,entries,commonDate,status,working,photoBusy,reviewRequired,minDate,maxDate,validDate,locked,dirty,format,usage,readingError,acknowledgeDate,restoreEntry,restore,reconcile,saveAll,applyDateAndPhotos,loadPhotos};
+      const visibleEntries=computed(()=>meterMode.value==='batch'?entries.value:entries.value.filter(e=>e.room===(selectedMeterRoom.value||entries.value[0]?.room)));
+      return {meterMode,selectedMeterRoom,visibleEntries,openPhoto,historical,entries,commonDate,status,working,photoBusy,reviewRequired,minDate,maxDate,validDate,locked,dirty,format,usage,readingError,acknowledgeDate,restoreEntry,restore,reconcile,saveAll,applyDateAndPhotos,loadPhotos};
     }
   };
 };

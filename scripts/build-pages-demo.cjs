@@ -18,9 +18,11 @@ const assets = [
   'native-tenant.js', 'native-billing.js', 'billing-transport.js',
   'photo-preview.js', 'meter-worksheet.js', 'payment-worksheet.js', 'notice-renderer.js',
   'notice-zip.js', 'notice-batch.js', 'report-data.js', 'report-charts.js',
-  'rental-reports.js', 'expenses.js', 'workspace.js'
+  'rental-reports.js', 'expenses.js', 'workspace.js',
+  'appearance.js','glass-workspace.css','design-fidelity.css','detail-review.css','reports-review.css','typography.css','ui-review.css','warm-ab.css','workspace-button-legacy.css','ui-icons.svg','warm-ab-icons.svg','renewal-notice.js',
+  'artwork/amber-waves.svg','artwork/sage-lake.webp','fonts/rental-warm-tc-400.woff2','fonts/rental-warm-tc-700.woff2','fonts/rental-warm-tc-800.woff2'
 ];
-for (const file of assets) fs.copyFileSync(path.join(root, 'public', file), path.join(out, file));
+for (const file of assets) {fs.mkdirSync(path.dirname(path.join(out,file)),{recursive:true});fs.copyFileSync(path.join(root, 'public', file), path.join(out, file));}
 // Presentation differs only in the built Demo artifact; real viewer policy stays unchanged.
 const accessFile=path.join(out,'access-session.js'),privateHook='const writeHook=el=>{if(!state.canWrite)el.hidden=true;};';
 let access=fs.readFileSync(accessFile,'utf8');if(access.split(privateHook).length!==2)throw Error('Review Demo control presentation after session policy changes.');
@@ -33,6 +35,12 @@ const tenantFile=path.join(out,'native-tenant.js');let tenant=fs.readFileSync(te
 const readonlyCohabitant="const cohabitantReadonly=computed(()=>!addressEditable.value&&props.field.key.startsWith('cohabitant'));";
 if(tenant.split(readonlyCohabitant).length!==2)throw Error('Review Demo cohabitant presentation after tenant changes.');
 tenant=tenant.replace(readonlyCohabitant,'const cohabitantReadonly=computed(()=>false);');fs.writeFileSync(tenantFile,tenant);
+
+// Viewing the form is navigation; all fields and save actions remain readonly.
+const reviewTenantFile=path.join(out,'native-tenant.js');let reviewTenant=fs.readFileSync(reviewTenantFile,'utf8');
+const editPresentation=JSON.stringify('v-write class="primary" @click="editingTenant=true"').slice(1,-1);
+if(!reviewTenant.includes(editPresentation))throw Error('Review Demo form-view button after template changes');
+reviewTenant=reviewTenant.replace(editPresentation,JSON.stringify('class="primary" @click="editingTenant=true"').slice(1,-1));fs.writeFileSync(reviewTenantFile,reviewTenant);
 
 // Keep the demo self-contained even when Google Fonts is unavailable.
 const style = path.join(out, 'style.css');

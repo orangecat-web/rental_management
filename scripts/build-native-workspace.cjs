@@ -29,28 +29,42 @@ for (const [kind, file] of [['tenant','google-tenants.html'], ['billing','google
   const rootId = kind === 'tenant' ? 'tenant-app' : 'billing-app';
   let template = html.match(new RegExp('<main id="' + rootId + '"[^>]*>([\\s\\S]*?)<\\/main>'))[1];
   if (kind === 'tenant') template = template.replace(/<div class="page-heading">[\s\S]*?<\/div>\s*<p class="status"/, '<div class="page-heading"><button class="reload" type="button" @click="loadTenants" :disabled="loading || pendingSaves > 0 || dirtyKeys.size > 0">重新讀取</button></div><p class="status"');
+  if(kind==='tenant')template=require('./native-layouts.cjs').tenant(template);
   if (kind === 'billing') {
-    const controls=template.match(/<div class="controls">[\s\S]*?<\/div>/)[0];
-    template=template.replace(controls,'');
-    template = `<div class="billing-tabs billing-toolbar" role="group" aria-label="帳務工作表"><div class="billing-tab-buttons segmented"><button type="button" :class="{selected:billingView==='accounts'}" @click="changeBillingView('accounts')" :disabled="controlsLocked">帳務資料</button><button type="button" :class="{selected:billingView==='meters'}" @click="changeBillingView('meters')" :disabled="controlsLocked">電表抄錄與通知</button></div>${controls}</div>` + template;
+    const originalControls=template.match(/<div class="controls">[\s\S]*?<\/div>/)[0];
+    let controls=originalControls;
+    controls=controls.replace(/(<button id="toggleCreation"[\s\S]*?<button id="initializeMonth"[\s\S]*?<\/button>)/,'<details v-if="!historicalMode&&!annualMode" class="billing-month-menu"><summary>月份管理</summary><div>$1</div></details>');
+    template=template.replace(originalControls,'');
+    template = `<div class="billing-tabs billing-toolbar" role="group" aria-label="帳務工作表"><div class="billing-tab-buttons segmented"><button type="button" :class="{selected:billingView==='accounts'}" @click="changeBillingView('accounts')" :disabled="controlsLocked">帳務明細</button><button type="button" :class="{selected:billingView==='meters'}" @click="changeBillingView('meters')" :disabled="controlsLocked">抄表</button></div>${controls}</div>` + template;
     template = template.replace('v-for="value in months"', 'v-for="value in displayMonths"').replace('v-if="!months.length"', 'v-if="!displayMonths.length"');
+    template=template.replace('v-if="accounts.length" class="cash-summary"', 'v-if="accounts.length && billingView===\'accounts\'" class="cash-summary"');
     template = template.replace('class="account-batch-actions"', 'v-if="false" class="account-batch-actions"');
     template = template.replace('v-if="accounts.length" class="table-wrap"', 'v-if="accounts.length && billingView===\'accounts\'" class="table-wrap"');
-    template += `<p v-if="billingView==='meters' && !displayMonths.length" class="notice">本年度尚無已建立的單數月份。</p><meter-worksheet v-if="billingView==='meters' && month%2===1 && accounts.length" :key="year+':'+month" :accounts="accounts" :year="year" :month="month" :blocked="editorsBlocked" :notice-url="noticeUrl" @dirty-change="setDirty('all','meterWorksheet',$event)" @busy-change="operation=$event" @field-saved="onMeterFieldSaved" @reconciled="onMeterReconciled" @refresh-request="refreshAfterMeter"></meter-worksheet>`;
-    template += `<notice-batch v-if="billingView==='meters' && month%2===1 && accounts.length" :key="year+':'+month" :accounts="accounts" :year="year" :month="month" :blocked="editorsBlocked||dirtyKeys.size>0" @busy-change="operation=$event"></notice-batch>`;
+    template += `<p v-if="billingView==='meters' && !displayMonths.length" class="notice">本年度尚無已建立的單數月份。</p><meter-worksheet v-if="billingView==='meters' && month%2===1 && accounts.length" :key="year+':'+month" :accounts="accounts" :year="year" :month="month" :blocked="editorsBlocked" :notice-url="noticeUrl" @dirty-change="setDirty('all','meterWorksheet',$event)" @busy-change="operation=$event" @field-saved="onMeterFieldSaved" @reconciled="onMeterReconciled" @refresh-request="refreshAfterMeter"><template #notices><notice-batch :accounts="accounts" :year="year" :month="month" :blocked="editorsBlocked||dirtyKeys.size>0" @busy-change="operation=$event"></notice-batch></template></meter-worksheet>`;
+    template = `<notice-batch v-if="accounts.length&&billingView==='accounts'" :key="year+':'+month" :accounts="accounts" :year="year" :month="month" :blocked="editorsBlocked||dirtyKeys.size>0" @busy-change="operation=$event"></notice-batch>` + template;
     template += `<reconciliation-dialog v-if="reconciliationAccount" :key="year+':'+month+':'+reconciliationRoom" :account="reconciliationAccount" :year="year" :month="month" @close="closeReconciliation" @busy-change="operation=$event" @dirty-change="setDirty('all','paymentWorksheet',$event)" @reconciled="onPaymentReconciled" @field-saved="onPaymentFieldSaved" @selection-saved="onPaymentSelectionSaved"></reconciliation-dialog>`;
     template = template.replace('<template v-if="column.key===\'name\'">', `<template v-if="column.key==='reconciliation'"><button type="button" class="primary" @click="openReconciliation(account)" :disabled="controlsLocked" :aria-label="account.room+' 房實際對帳'">實際對帳</button></template><span v-else-if="column.key==='receiptStatus'" class="receipt-status" :class="{pending:!account.isReceived&&account.historySettlement!=='not_applicable',short:account.isReceived&&account.unpaid>0}">{{receiptStatus(account)}}</span><template v-else-if="column.key==='name'">`);
 
-    template = template.replace(':key="column.key" scope="col"', ':key="column.key" :class="{\'reconciliation-action-cell\':column.key===\'reconciliation\',\'reconciliation-status-cell\':column.key===\'receiptStatus\'}" scope="col"').replace('<td v-else>', '<td v-else :class="{\'reconciliation-action-cell\':column.key===\'reconciliation\',\'reconciliation-status-cell\':column.key===\'receiptStatus\'}">');
+    template = template.replace(':key="column.key" scope="col"', ':key="column.key" :class="{\'reconciliation-action-cell\':column.key===\'reconciliation\',\'reconciliation-status-cell\':column.key===\'receiptStatus\'}" scope="col"').replace('<td v-else>', '<td v-else :data-label="column.title" :data-key="column.key" :class="{\'reconciliation-action-cell\':column.key===\'reconciliation\',\'reconciliation-status-cell\':column.key===\'receiptStatus\'}">');
     template = template.replace(/<payment-photo-picker[\s\S]*?<\/payment-photo-picker>/, `<template v-else-if="column.key==='paymentPhotos'"></template>`);
     template = template.replace('v-else-if="column.editable && !(account.financialLocked && column.meter)"', `v-else-if="column.editable && !['transferDate','transferLastFive'].includes(column.key)"`);
     // Meter entries and notice previews live together; the accounting table retains bill totals.
     template = template.replaceAll('column in columns', "column in accountColumns").replace(':colspan="columns.filter(c=>c.key!==\'overpaid\'||accounts.some(a=>a.overpaid>0)).length"', ':colspan="accountColumns.length"');
+    template=template.replace('<p class="reconciliation-detail">{{reconciliationText(account)}}</p>', '<details><summary>本期應收明細</summary><p class="reconciliation-detail">{{reconciliationText(account)}}</p></details>');
+    const cashStart=template.indexOf('<section v-if="accounts.length && billingView');
+    const tableStart=template.indexOf('<div v-if="accounts.length && billingView');
+    const tableEnd=template.indexOf('</table>',tableStart)+8;
+    const tableWrapEnd=template.indexOf('</div>',tableEnd)+6;
+    if(cashStart<0||tableStart<cashStart||tableEnd<8)throw Error('Billing layout boundaries changed');
+    const legacySummary=template.slice(cashStart,tableStart);
+    template=template.slice(0,cashStart)+require('./native-layouts.cjs').billing()+`<details v-if="billingView==='accounts'" class="legacy-cash-equation"><summary>查看整月對帳計算與差額說明</summary>${legacySummary}</details>`+template.slice(tableWrapEnd);
+    const mainStatus='<p id="status" class="status"';if(!template.includes(mainStatus))throw Error('Billing status boundary changed');
+    template=template.replace(mainStatus,mainStatus+' :class="{\'status-quiet\':status.includes(\'已讀取\')&&!/(失敗|待核對|尚未|錯誤|未完成)/.test(status)}"');
     template=`<div :class="{'billing-accounts-view':billingView==='accounts'}">${template}</div>`;
   }
   script = script.slice(script.indexOf('const { createApp'));
   script = script.slice(0, script.indexOf('app.config.errorHandler'));
-  script = script.replace('const app = createApp({', 'const component = {\n props: { initialRoom: String }, emits: ["update-data", "busy-change"],\n template: ' + JSON.stringify(template) + ',');
+  script = script.replace('const app = createApp({', 'const component = {\n props: { initialRoom: String, startView: String }, emits: ["update-data", "busy-change"],\n template: ' + JSON.stringify(template) + ',');
   script = script.replace(/\n      \}\);\s*$/, '\n      };');
   script = script.replace(/template: document\.getElementById\('([^']+)'\)\.innerHTML/g, (_, id) => {
     const t = html.match(new RegExp('<template id="' + id + '">([\\s\\S]*?)<\\/template>'))[1];
@@ -66,10 +80,12 @@ for (const [kind, file] of [['tenant','google-tenants.html'], ['billing','google
       watch(tenants, value => emit('update-data', value), { deep: true });
       onMounted(loadTenants);`);
   } else {
+    root=root.replace('["update-data", "busy-change"]','["update-data", "busy-change", "view-change"]');
     root = root.replace('components: { AccountField, PaymentPhotoPicker, MeterPhotoViewer }', 'components: { AccountField, PaymentPhotoPicker, MeterPhotoViewer, MeterWorksheet: RentalComponents.meterWorksheet(api), NoticeBatch: RentalComponents.noticeBatch(api), ReconciliationDialog: RentalComponents.reconciliationDialog(api) }');
-    root = root.replace('const year = ref(0)', "const billingView = ref('accounts');\n const year = ref(0)");
+    root = root.replace('const year = ref(0)', "const billingView = ref(props.startView==='meters'?'meters':'accounts');\n const year = ref(0)");
     root = root.replace('return { reconciliationText,historicalMode, numberFormat, accountFilter, filteredAccounts, cashSummary, year, years,', 'return { reconciliationText,historicalMode, numberFormat, accountFilter, filteredAccounts, cashSummary, displayMonths, changeBillingView, accountColumns, reconciliationRoom, reconciliationAccount, openReconciliation, closeReconciliation, receiptStatus, billingView, onPaymentReconciled, onPaymentFieldSaved, onPaymentSelectionSaved, onMeterFieldSaved, onMeterReconciled, refreshAfterMeter, year, years,');
     root = root.replace('const controlsLocked = computed(() => busy.value || dirtyKeys.size > 0);', 'const controlsLocked = computed(() => busy.value || dirtyKeys.size > 0 || !!reconciliationRoom.value);');
+    root=root.replace("accountFilter.value==='all'||accountFilter.value==='pending'","accountFilter.value==='all'||accountFilter.value==='verified'||accountFilter.value==='pending'").replace("(accountFilter.value==='all'||a.historySettlement","(accountFilter.value==='all'||accountFilter.value==='verified'||a.historySettlement");
     root = root.replace('const filteredAccounts=computed', `const reconciliationRoom=ref('');
     const displayMonths=computed(()=>billingView.value==='meters'?months.value.filter(m=>m%2===1):months.value);
     let lastAccountMonth=0,lastAccountYear=0;
@@ -103,11 +119,42 @@ for (const [kind, file] of [['tenant','google-tenants.html'], ['billing','google
     function onMeterReconciled(records) { accounts.value=validateAccounts(records,month.value);staleRooms.clear();accountsReady.value=true; }
     function refreshAfterMeter(){nextTick(()=>{if(!busy.value&&!dirtyKeys.size)loadAccounts();});}
     onMounted(loadYears);`);
+    root=root.replace('return { reconciliationText,',`const detailRoom=ref(props.initialRoom||''),detailAccount=computed(()=>accounts.value.find(a=>a.room===detailRoom.value));const accountSearch=ref(''),expandedAccounts=reactive(new Set());
+    const displayAccounts=computed(()=>{const needle=accountSearch.value.trim().toLowerCase();return filteredAccounts.value.filter(a=>(accountFilter.value!=='verified'||a.isReceived&&typeof a.receiptTotal==='number')&&(!needle||[a.room,a.name].some(v=>String(v||'').toLowerCase().includes(needle))));});
+    const amountText=v=>typeof v==='number'&&Number.isFinite(v)?'NT$ '+numberFormat.format(v):'—';
+    function toggleAccount(room){expandedAccounts.has(room)?expandedAccounts.delete(room):expandedAccounts.add(room);}
+    const billingTotals=computed(()=>{let due=0,verified=0,pending=0,unknown=0;const groups=new Map();for(const a of accounts.value){if(a.historySettlement==='not_applicable')continue;const key=a.receiptId||a.billingGroup||a.room;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(a);}for(const list of groups.values()){const a=list[0],values=list.map(x=>x.netDue??x.totalDue);const d=a.receiptDue??a.receiptSuggestedAmount??(values.every(v=>typeof v==='number')?values.reduce((s,v)=>s+v,0)+(a.receiptDeposit||0):null);if(typeof d==='number'&&Number.isFinite(d))due+=d;else unknown++;if(a.isReceived&&typeof a.receiptTotal==='number')verified+=a.receiptTotal;else if(typeof d==='number')pending+=d;}return{due,verified,pending,unknown};});
+    watch(()=>[billingView.value,detailRoom.value],()=>emit('view-change',billingView.value==='meters'?'抄表':detailRoom.value?'每月帳務明細':'每月帳務'),{immediate:true});
+    return {detailRoom,detailAccount,accountSearch,expandedAccounts,displayAccounts,amountText,toggleAccount,billingTotals,reconciliationText,`);
     root = root.replace('onMounted(loadYears);' , `watch(controlsLocked, value => emit('busy-change', value), { immediate: true });
       watch(accounts, value => emit('update-data', { year: year.value, month: month.value, accounts: value }), { deep: true });
       onMounted(loadYears);`);
+  }
+  if(kind==='tenant'){
+    root=root.replace('initialRoom: String','initialRoom: String, accounts: Array, paymentPeriod: String, readonlyInline: Boolean').replace('["update-data", "busy-change"]','["update-data", "busy-change", "open-accounts", "request-close"]');
+    root=root.replace("const selectedRoom = ref(props.initialRoom || '');", "const detailTab=ref('data'),editingTenant=ref(false),expandedDetail=ref('');function toggleDetail(title,event){if(event.target.open)expandedDetail.value=title;else if(expandedDetail.value===title)expandedDetail.value='';} const selectedRoom = ref(props.initialRoom || '');");
+    root=root.replace('return {contractKindDraft,', `const allTenantFields=Object.fromEntries([...basicFields,...extraFields,...guarantorFields,noteField].map(f=>[f.key,f]));
+    const fields=keys=>keys.map(k=>allTenantFields[k]);
+    const summaryBasic=fields(['name','registeredAddress','phone','identity','nationalId','birthDate','roomType','rentSubsidy']).map(field=>({...field,title:({name:'姓名',nationalId:'身分證號',birthDate:'生日'})[field.key]||field.title}));
+    const formLeaseFields=fields(['contractKind','startDate','endDate','rent','signingDate','initialReading','defaultTransferLastFive']);
+    const formLeftGroups=[{title:'基本與租約資料',fields:fields(['name','phone','identity','roomType','rentSubsidy'])},{title:'租約與繳費設定',fields:formLeaseFields}];
+    const privateFields=fields(['registeredAddress','nationalId','birthDate']);
+    const formRightGroups=[{title:'同居人資料',fields:fields(['cohabitant','cohabitantPhone','cohabitantIdentity','cohabitantId','cohabitantAddress','cohabitantBirthDate'])},{title:'連帶保證人（丙方）',fields:fields(['guarantorName','guarantorPhone','guarantorId','guarantorBirthDate','guarantorAddress'])},{title:'管理備註',fields:fields(['notes'])},{title:'房間補充資料',fields:fields(['introduction','maintenance'])}];
+    const detailAccounts=computed(()=>(props.accounts||[]).filter(a=>a.room===activeTenant.value?.room));const summaryGroups=computed(()=>[]);
+    const summaryValue=value=>value===null||value===undefined||value===''?'尚未填寫':String(value);
+    watch([moveInPreview,checkoutConfirm,editingTenant,expandedDetail],async()=>{await Vue.nextTick();const dialog=document.querySelector('.tenant-dialog[open]');if(dialog)dialog.scrollTop=0;});
+    function previousTenant(direction){const index=tenants.value.findIndex(t=>t.room===selectedRoom.value),next=tenants.value[index+direction];if(next)selectRoom(next.room);}
+    return {expandedDetail,toggleDetail,readonlyInline:props.readonlyInline,allTenantFields,summaryBasic,formLeaseFields,formLeftGroups,privateFields,formRightGroups,detailAccounts,detailTab,editingTenant,summaryGroups,summaryValue,previousTenant,contractKindDraft,`);
   }
   fs.writeFileSync('public/native-' + kind + '.js', `/** Generated from the tested editor; one native workspace, no iframe. */\nwindow.RentalComponents ||= {};\nwindow.RentalComponents.${kind} = function () {\nconst google = RentalTransport('${kind}');\n${before}${root}\nreturn component;\n};\n`);
   allCss += scopeCss(html.match(/<style>([\s\S]*?)<\/style>/)[1], '.' + kind + '-native') + '\n';
 }
 fs.writeFileSync('public/native-editors.css', allCss);
+
+// Share the exact approved renewal copy and date emphasis with the notice center.
+const tenantSource=fs.readFileSync('public/google-tenants.html','utf8');
+const renewalStart=tenantSource.indexOf('const t=activeTenant.value,valid=');
+const renewalEnd=tenantSource.indexOf("renewalUrl.value=URL.createObjectURL(blob)",renewalStart);
+if(renewalStart<0||renewalEnd<0)throw Error('Renewal renderer boundaries changed');
+const renewalBody=tenantSource.slice(renewalStart,renewalEnd).replace('const t=activeTenant.value,valid=','const valid=');
+fs.writeFileSync('public/renewal-notice.js','/** Generated from google-tenants.html. Approved notice copy has one source. */\nwindow.RentalRenewalNotice={async render(t){'+renewalBody+'canvas.width=1;canvas.height=1;return blob;}};\n');

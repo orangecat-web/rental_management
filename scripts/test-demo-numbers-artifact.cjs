@@ -9,11 +9,11 @@ const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>10
  assert(html.indexOf('production-numbers.js')<html.indexOf('pages-demo.js'));
  const files=[...html.matchAll(/<script[^>]+src="([^"]+)"[^>]*><\/script>/g)].map(m=>m[1]);
  let demoImages=0;const errors=[],external=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
- const dom=new JSDOM(html.replace(/<script[^>]+src=[^>]+><\/script>/g,''),{url:'https://demo.test/rental_management/',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){w.Response=Response;w.HTMLCanvasElement.prototype.getContext=()=>({fillRect(){},fillText(){}});w.HTMLCanvasElement.prototype.toDataURL=()=>{demoImages++;return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==';};w.fetch=async url=>{external.push(String(url));throw Error('Unexpected external request');};w.Storage.prototype.setItem=()=>{throw Error('Demo must not persist data');};}});
+ const dom=new JSDOM(html.replace(/<script[^>]+src=[^>]+><\/script>/g,''),{url:'https://demo.test/rental_management/',runScripts:'dangerously',virtualConsole:vc,beforeParse(w){w.Response=Response;w.HTMLElement.prototype.scrollIntoView=function(){};w.HTMLCanvasElement.prototype.getContext=()=>({fillRect(){},fillText(){}});w.HTMLCanvasElement.prototype.toDataURL=()=>{demoImages++;return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==';};w.fetch=async url=>{external.push(String(url));throw Error('Unexpected external request');};w.Storage.prototype.setItem=()=>{throw Error('Demo must not persist data');};}});
  try{
   const w=dom.window,d=w.document;
   for(const file of files)w.eval(fs.readFileSync(path.join(root,file.replace(/^\.\//,'')),'utf8'));
-  await wait(()=>d.querySelectorAll('.room-card').length===snapshot.tenants.length);
+  await wait(()=>d.querySelector('.today-summary'));const workspace=d.querySelector('#app')._vnode.component.proxy;workspace.navigate('rooms');await wait(()=>d.querySelectorAll('.room-card').length===snapshot.tenants.length);
   const rpc=async(action,args=[],scope='billing')=>{const response=await w.fetch('/api/'+scope+'-rpc',{method:'POST',body:JSON.stringify({action,args})});return {status:response.status,...await response.json()};};
   assert.equal(w.RentalAccess.canWrite,false);
   const publishedYear=Number(snapshot.capturedAt.slice(0,4));assert.equal(snapshot.periods.filter(p=>p.year===publishedYear).length,12,'Published current-year snapshot includes all months');
@@ -28,27 +28,25 @@ const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>10
   for(const report of snapshot.reports){const actual=(await rpc('getXingwuCollectionReport',[report.year])).data;for(const [key,value] of Object.entries(report))assert.deepEqual(actual[key],value);}
   assert.equal((await rpc('saveMonthlyAccountField',[2026,1,'401','actualPaid','1',null])).status,403);
   assert.equal((await rpc('saveTenantChanges',['401',{name:'changed'},'demo-401'],'tenant')).status,403);
-  const nav=label=>[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes(label)).click();
-  const visibleDisabled=label=>{const button=[...d.querySelectorAll('button')].find(b=>b.textContent.trim()===label);assert(button,'Missing management control: '+label);assert(!button.hidden,'Management control must remain visible: '+label);assert(button.disabled,'Demo mutation must stay disabled: '+label);};
+  const nav=label=>workspace.navigate(label);
+  const visibleDisabled=label=>{const b=[...d.querySelectorAll('button')].find(b=>b.textContent.trim()===label);assert(b,'Missing control '+label);assert(!b.hidden);assert(b.disabled,'Mutation must stay disabled '+label);};
   assert(d.querySelector('.access-identity form button').disabled);
-  const manage=d.querySelector('.property-picker button');assert(!manage.hidden&&!manage.disabled);manage.click();await wait(()=>d.querySelector('.property-editor'));
-  for(const label of ['儲存工作區名稱','上傳並套用 Logo','儲存房產','新增房產','儲存房號／房型'])visibleDisabled(label);
-  const logo=d.querySelector('[aria-label="選擇工作區 Logo 圖片"]');assert(logo&&!logo.hidden&&logo.disabled);manage.click();await wait(()=>!d.querySelector('.property-editor'));
-  nav('房客資料');await wait(()=>d.querySelector('.tenant-batch-actions'));
-  await wait(()=>d.querySelector('#tenant-401-cohabitantId'));const cohabitantGroup=d.querySelector('[aria-label="同居人資料"]');assert.equal(cohabitantGroup.querySelectorAll('.editor').length,5);assert.equal(d.querySelector('#tenant-401-cohabitantId').value,'DEMO-COHABITANT-INVALID');assert(d.querySelector('#tenant-401-cohabitantId').readOnly);assert(d.querySelector('#tenant-401-cohabitantBirthDate').readOnly);assert(d.querySelector('#tenant-401-cohabitantAddress').readOnly);assert(!d.querySelector('#tenant-401-cohabitantAddress-city'));assert.equal((await rpc('saveTenantChanges',['401',{cohabitantId:'MODIFIED'},'demo-401'],'tenant')).status,403);assert.equal((await rpc('getTenantData',[],'tenant')).data[0].cohabitantId,'DEMO-COHABITANT-INVALID');
-  const occupied=snapshot.tenants.find(t=>!t.vacant);if(occupied){const room=[...d.querySelectorAll('.room-button')].find(b=>b.textContent.trim().startsWith(occupied.room));assert(room);room.click();await wait(()=>d.querySelector('#tenant-'+occupied.room+'-rent'));}
+  nav('more');await w.Vue.nextTick();await workspace.openSettings('property');await wait(()=>d.querySelector('.property-editor'));for(const label of ['儲存工作區名稱','上傳並套用 Logo','儲存房產','新增房產'])visibleDisabled(label);await workspace.toggleSettings();
+  await workspace.openSettings('rooms');await wait(()=>d.querySelector('.room-settings'));visibleDisabled('儲存房號／房型');await workspace.toggleSettings();
+  const occupied=snapshot.tenants.find(t=>!t.vacant);assert(occupied);workspace.navigate('tenants',occupied.room);await wait(()=>d.querySelector('.tenant-summary'));
+  [...d.querySelectorAll('button')].find(b=>b.textContent.trim()==='編輯房客').click();await wait(()=>d.querySelector('#tenant-'+occupied.room+'-rent'));
   for(const label of ['儲存全部修改','還原全部未儲存','退租','確認入住與更新帳務','同步帳務姓名'])visibleDisabled(label);
-  if(occupied)assert(d.querySelector('.renewal-controls button')&&!d.querySelector('.renewal-controls button').disabled);
-
-  nav('每月帳務');await wait(()=>d.querySelector('.billing-native')?.textContent.includes('已讀取'));
+  const cohabitantGroup=d.querySelector('[aria-label="同居人資料"]');assert.equal(cohabitantGroup.querySelectorAll('.editor').length,6);for(const el of cohabitantGroup.querySelectorAll('input'))assert(el.disabled||el.readOnly);assert(!d.querySelector('#tenant-'+occupied.room+'-cohabitantAddress-city'));
+  [...d.querySelectorAll('button')].find(b=>b.textContent==='返回資料摘要').click();await w.Vue.nextTick();[...d.querySelectorAll('.tenant-detail-tabs button')].find(b=>b.textContent==='租約').click();await w.Vue.nextTick();assert(d.querySelector('.renewal-notice button')&&!d.querySelector('.renewal-notice button').disabled);
+  workspace.closeTenant();await w.Vue.nextTick();nav('accounts');await wait(()=>d.querySelector('.billing-native')?.textContent.includes('已讀取'));
   assert(!d.querySelector('#initializeMonth')||d.querySelector('#initializeMonth').hidden);assert(!d.querySelector('#toggleCreation')||d.querySelector('#toggleCreation').hidden);
   const open=d.querySelector('.reconciliation-action-cell button');assert(open&&!open.disabled);open.click();await wait(()=>d.querySelector('.reconciliation-dialog'));visibleDisabled('儲存對帳資料');assert(d.querySelector('.reconciliation-dialog [aria-label$="實際對帳金額"]').readOnly);d.querySelector('[aria-label="關閉實際對帳"]').click();await wait(()=>!d.querySelector('.reconciliation-dialog'));
-  const originalImages=demoImages;nav('每月支出');await wait(()=>d.querySelector('.expense-status')?.textContent.includes('已讀取'));
-  assert.equal(d.title,'租屋管理 | 每月支出');assert(d.querySelector('.expense-manager').textContent.includes('展示用支出與收據皆為虛構'));assert(d.querySelector('.expense-total').textContent.includes('1,103'));visibleDisabled('新增支出');visibleDisabled('編輯');assert.equal(demoImages,originalImages,'Expense metadata must not render image bytes');
+  const originalImages=demoImages;nav('expenses');await wait(()=>d.querySelector('.expense-status')?.textContent.includes('已讀取'));
+  assert.equal(d.title,'租屋管理 | 每月支出');assert(d.querySelector('.expense-manager').textContent.includes('展示用支出與收據皆為虛構'));assert(d.querySelector('.expense-total').textContent.includes('1,103'));visibleDisabled('新增支出');assert.equal(demoImages,originalImages);
   const expenseYear=Number(d.querySelector('.expense-controls select').value),expenseMonth=Number(d.querySelectorAll('.expense-controls select')[1].value),fakeExpenses=(await rpc('getExpenses',[expenseYear,expenseMonth])).data;
   assert.equal(fakeExpenses.rows.length,4);assert.equal(fakeExpenses.total,1103);assert(fakeExpenses.rows.every(r=>r.notes.includes('虛構')));assert.equal((await rpc('saveExpense',[])).status,403);
-  d.querySelector('.expense-table tbody button').click();await wait(()=>d.querySelector('dialog img'));assert.equal(demoImages,originalImages+1);d.querySelector('[aria-label="關閉圖片預覽"]').click();await wait(()=>!d.querySelector('dialog'));
-  [...d.querySelectorAll('.expense-table button')].find(b=>b.textContent==='檢視明細').click();await wait(()=>d.querySelector('.expense-form'));assert(d.querySelector('.expense-form h2').textContent.includes('支出明細'));for(const field of d.querySelectorAll('.expense-fields input,.expense-fields textarea'))assert(field.disabled,'Demo expense fields must remain disabled');visibleDisabled('預覽儲存');visibleDisabled('作廢這筆支出');d.querySelector('.expense-actions button:last-child').click();await wait(()=>!d.querySelector('.expense-form'));
+  d.querySelector('.expense-table tbody tr').click();await w.Vue.nextTick();visibleDisabled('編輯');visibleDisabled('作廢支出');[...d.querySelectorAll('.expense-detail button')].find(b=>b.textContent.includes('查看收據')).click();await wait(()=>d.querySelector('dialog img'));assert.equal(demoImages,originalImages+1);d.querySelector('[aria-label="關閉圖片預覽"]').click();await wait(()=>!d.querySelector('dialog[open]'));
+  [...d.querySelectorAll('.expense-detail button')].find(b=>b.textContent==='檢視明細').click();await wait(()=>d.querySelector('.expense-form'));for(const e of d.querySelectorAll('.expense-fields input,.expense-fields textarea'))assert(e.disabled);visibleDisabled('預覽儲存');visibleDisabled('作廢這筆支出');
   assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
   console.log('PASS: actual published snapshot artifact shows management controls disabled rather than hidden, opens readonly property/reconciliation views; all source numbers, null/zero, meter records and reports unchanged; synthetic people/expenses only; readonly expense details and on-click gallery; no external API/image requests or writes.');
  }finally{dom.window.close();}

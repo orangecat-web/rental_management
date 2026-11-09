@@ -1,0 +1,81 @@
+/* Final, shared type contract. Keep all UI font sizes and weights here.
+   Important declarations isolate this contract from legacy, generated editor CSS. */
+:root {
+  --type-family: 'Rental Warm TC','Noto Sans CJK TC','PingFang TC','Microsoft JhengHei',sans-serif;
+  --type-regular: 400;
+  --type-bold: 700;
+  --type-body: 18px;
+  --type-small: 16px;
+  --type-control: 20px;
+  --type-nav: 22px;
+  --type-page-title: 44px;
+  --type-section-title: 28px;
+  --type-subtitle: 22px;
+  --type-dialog-title: 26px;
+  --type-stat: 44px;
+  --type-hero: 58px;
+}
+#app,dialog.rental-photo-dialog {
+  font-family: var(--type-family) !important;
+  font-size: var(--type-body) !important;
+  font-weight: var(--type-regular) !important;
+  font-synthesis: none;
+  line-height: 1.5;
+}
+#app :where(*),dialog.rental-photo-dialog :where(*) { font-family: inherit !important; }
+#app :where(div,section,article,nav,p,span,a,li,td,dt,dd,label,legend,small,summary),
+dialog.rental-photo-dialog :where(div,p,span) { font-size: inherit !important; font-weight: inherit !important; }
+#app :where(h1) { font-size: var(--type-page-title) !important; font-weight: var(--type-bold) !important; line-height: 1.25; }
+#app :where(h2),dialog.rental-photo-dialog :where(h2) { font-size: var(--type-section-title) !important; font-weight: var(--type-bold) !important; line-height: 1.35; }
+#app :where(h3) { font-size: var(--type-subtitle) !important; font-weight: var(--type-bold) !important; line-height: 1.4; }
+#app :where(strong,b,th,dt) { font-weight: var(--type-bold) !important; }
+#app :where(button,input,select,textarea),dialog.rental-photo-dialog :where(button) {
+  font-size: var(--type-control) !important; font-weight: var(--type-regular) !important; line-height: 1.4;
+}
+#app :where(button.primary,.rental-button.primary) { font-weight: var(--type-bold) !important; }
+#app .sidebar nav button { font-size: var(--type-nav) !important; }
+#app :is(.tenant-titlebar,.reconciliation-heading,.notice-center-heading) h2 { font-size: var(--type-dialog-title) !important; }
+#app .tenant-titlebar h2 { font-weight: var(--type-bold) !important; }
+#app :is(.student-tag,.receipt-status,.room-lease-label),#app .tenant-heading-badges>span { font-size: var(--type-small) !important; font-weight: var(--type-bold) !important; }
+#app :is(.site-copyright,.bottom-note,.section-hint,.meter-sheet-hint,.address-hint,.report-note,.expense-retention-note,.reconciliation-detail,.readonly-permissions) { font-size: var(--type-small) !important; }
+#app :is(.glass-card>h2,.summary-panel>h3,.tenant-summary summary,.expense-table th,.account-list thead th) { font-weight: var(--type-bold) !important; }
+#app :is(.rent-total>strong,.expense-total strong,.billing-metrics strong,.report-metrics strong) { font-size: var(--type-stat) !important; font-weight: var(--type-bold) !important; line-height: 1.2; }
+#app .rent-total>strong { font-size: var(--type-hero) !important; }
+#app .room-card h3 { font-size: var(--type-section-title) !important; }
+#app :is(.tenant-summary dd,.tenant-summary dt,.tenant-summary summary,.expense-detail dt,.expense-detail dd,.expense-table td,.expense-table td button,.account-fees dt,.account-fees dd) { font-size: var(--type-body) !important; }
+#app :is(.tenant-summary dt,.expense-table td,.expense-table td button) { font-weight: var(--type-bold) !important; }
+#app .tenant-summary .tenant-basic-grid>[data-field=rentSubsidy] { grid-column: auto; }
+/* One image pan area handles wheel/touch/zoom. Neither nested scrollbar is visible. */
+dialog.rental-photo-dialog {
+  display: flex; flex-direction: column; overflow: hidden;
+  max-height: 90dvh; padding: 18px; gap: 12px;
+}
+dialog.rental-photo-dialog:not([open]) { display: none; }
+dialog.rental-photo-dialog>header,dialog.rental-photo-dialog>.receipt-preview-toolbar,dialog.rental-photo-dialog>.photo-gallery { flex: 0 0 auto; margin: 0; }
+dialog.rental-photo-dialog>.receipt-preview-pan { flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-width: none; -ms-overflow-style: none; max-height: none; }
+dialog.rental-photo-dialog .receipt-preview-pan::-webkit-scrollbar { display: none; width: 0; height: 0; }
+dialog.rental-photo-dialog>img { min-height: 0; max-height: 60dvh; object-fit: contain; }
+dialog.rental-photo-dialog>.photo-gallery { max-height: 16dvh; overflow: auto; scrollbar-width: none; }
+dialog.rental-photo-dialog>.photo-gallery::-webkit-scrollbar { display: none; }
+@media(max-width:1100px) {
+  :root { --type-page-title: 34px; --type-section-title: 24px; --type-dialog-title: 24px; --type-stat: 36px; --type-hero: 44px; --type-nav: 18px; }
+}
+@media(max-width:700px) {
+  :root { --type-body: 16px; --type-control: 18px; --type-nav: 16px; --type-page-title: 28px; --type-section-title: 22px; --type-subtitle: 20px; --type-dialog-title: 21px; --type-stat: 32px; --type-hero: 40px; }
+  dialog.rental-photo-dialog { padding: 12px; gap: 8px; }
+}
+/* Semantic labels and values keep their hierarchy when nested in a large stat. */
+:root { --type-currency: 26px; --type-metric-label: 24px; --type-metric-value: 28px; --type-room-number: 36px; }
+#app .rent-total>strong>:is(small,span) { font-size: var(--type-currency) !important; font-weight: var(--type-regular) !important; }
+#app .today-summary>span { font-size: var(--type-metric-label) !important; font-weight: var(--type-bold) !important; }
+#app .today-summary strong { font-size: var(--type-metric-value) !important; }
+#app :is(.pie-key,.receipt-pie>span) { font-size: var(--type-subtitle) !important; font-weight: var(--type-bold) !important; }
+#app :is(.month-progress button,.quick-actions button,.tenant-detail-tabs button) { font-size: var(--type-subtitle) !important; }
+#app :where(button) { font-weight: var(--type-bold) !important; }
+#app :is(.sidebar nav button,.tenant-detail-tabs button) { font-weight: var(--type-regular) !important; }
+#app .room-top strong { font-size: var(--type-room-number) !important; }
+#app .modal-active .room-card h3 { font-size: var(--type-body) !important; }
+#app .tenant-summary .tenant-basic-grid>div[data-field=rentSubsidy] { grid-column: auto; }
+@media(max-width:700px) {
+  :root { --type-currency: 20px; --type-metric-label: 16px; --type-metric-value: 20px; --type-room-number: 30px; }
+}

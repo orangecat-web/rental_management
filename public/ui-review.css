@@ -1,0 +1,95 @@
+/* Shared typography, account menu, tenant summary and monthly ledger review. */
+#app {
+  font-family: 'Rental Warm TC','Noto Sans CJK TC','PingFang TC','Microsoft JhengHei',sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+}
+#app :is(button,input,select,textarea) { font-family: inherit; }
+#app :is(h1,h2,h3,strong,th,dt) { font-weight: 700; }
+#app h1 { font-size: 42px; line-height: 1.3; }
+#app h2 { font-size: 27px; line-height: 1.4; }
+#app h3 { font-size: 22px; line-height: 1.45; }
+#app .sidebar { overflow: visible; position: relative; z-index: 50; }
+#app .access-identity { flex-shrink: 0; overflow: visible; }
+#app details.account-menu {
+  border: 0; padding: 0; margin: 0; background: transparent;
+  box-shadow: none; border-radius: 14px; overflow: visible; max-height: none;
+}
+#app .account-menu>summary {
+  padding: 6px 8px; border: 0; border-radius: 14px; background: transparent;
+  box-shadow: none; color: var(--ink); cursor: pointer; font-weight: 700;
+  gap: 10px; min-height: 48px; white-space: nowrap; list-style: none;
+}
+#app .account-menu>summary:hover,#app .account-menu[open]>summary { background: var(--glass); }
+#app .account-menu>summary:focus-visible { outline: 2px solid var(--accent-bottom); outline-offset: 3px; }
+#app .account-menu>summary:after { content: none; }
+#app .account-menu .account-avatar {
+  width: 36px; height: 36px; padding: 6px; border-radius: 50%;
+  background: linear-gradient(145deg,#e6bf99,#bb8254); color: #fff7eb; stroke: none;
+}
+:root[data-theme="sage"] #app .account-menu .account-avatar { background: linear-gradient(145deg,#94b4a5,#456e60); }
+#app .account-menu .account-chevron { width: 18px; height: 18px; transform: rotate(90deg); }
+#app .account-menu[open] .account-chevron { transform: rotate(-90deg); }
+#app .account-menu-panel { top: calc(100% + 10px); z-index: 100; }
+#app .site-copyright { text-align: center; padding: 10px 20px 24px; font-size: 16px; color: var(--ink); }
+/* A: header bands are a matte apricot wash, rather than a second glass card. */
+:root[data-theme="warm"] #app[data-page="overview"] .glass-card>h2 {
+  background: linear-gradient(100deg,#efcaa571,#f5d5b449);
+  border-bottom: 0; box-shadow: none;
+}
+:root[data-theme="sage"] #app[data-page="overview"] .glass-card>h2 { background: #8aafa72e; border-bottom: 0; }
+/* C: distinct tab segments and consistently framed navigation actions. */
+#app .tenant-detail-tabs { gap: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+#app .tenant-detail-tabs button { min-height: 50px; border: 0; border-right: 1px solid var(--line); border-radius: 12px; font-size: 23px; font-weight: 700; box-shadow: inset 0 1px 1px #fff8; }
+#app .tenant-detail-tabs button:last-child { border-right: 0; }
+#app .tenant-detail-tabs button[aria-pressed="true"] { color: #fff8ea; }
+#app .tenant-prev,#app .tenant-next,#app .close-tenant { border: 1px solid var(--rule); min-height: 44px; background: var(--glass-solid); box-shadow: inset 0 1px 1px #fff8,0 3px 7px #713b1720; }
+#app .point-left { transform: rotate(180deg); }
+#app .tenant-mode { display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--rule); border-radius: 12px; padding: 9px 16px; min-height: 46px; background: var(--glass); font-weight: 700; }
+#app .tenant-mode .ui-icon { width: 26px; height: 26px; }
+#app .tenant-summary dl>div { grid-template-columns: max-content minmax(0,1fr); column-gap: 16px; }
+#app .tenant-summary dt { white-space: nowrap; overflow-wrap: normal; word-break: keep-all; min-width: 5em; }
+#app .tenant-summary dd { overflow-wrap: anywhere; min-width: 0; }
+#app .tenant-summary dl { column-gap: 24px; }
+/* D: stable columns, true chevron icons and a fees / optional deposit / receipt row. */
+#app .billing-search-field { position: relative; flex: 1; min-width: 180px; }
+#app .billing-search-field>.ui-icon { position: absolute; left: 16px; width: 24px; height: 24px; pointer-events: none; }
+#app .billing-search-field>input { width: 100%; padding-left: 50px; }
+#app .account-list { width: 100%; table-layout: fixed; }
+#app .account-list thead th:nth-child(1) { width: 15%; }
+#app .account-list thead th:nth-child(2) { width: 28%; }
+#app .account-list thead th:nth-child(3) { width: 21%; }
+#app .account-list thead th:nth-child(4) { width: 17%; }
+#app .account-list thead th:nth-child(5) { width: 19%; }
+#app .account-list thead th { text-align: center; white-space: nowrap; font-size: 20px; }
+#app .account-list .account-data-row>th { white-space: nowrap; font-size: 24px; }
+#app .account-list .expand-account { background: transparent; border: 0; box-shadow: none; padding: 8px; min-width: 40px; min-height: 44px; margin-right: 8px; }
+#app .expand-account .ui-icon { width: 24px; height: 24px; }
+#app .expand-account[aria-expanded="true"] .ui-icon { transform: rotate(-90deg); }
+#app .account-list .account-name strong { font-size: 20px; }
+#app .account-list .account-money { font-size: 23px; font-weight: 700; text-align: center; }
+#app .account-list .reconciliation-status-cell,#app .account-list .reconciliation-action-cell { text-align: center; }
+#app .account-list .reconciliation-action-cell button { width: 100%; max-width: 190px; min-height: 44px; }
+#app .account-breakdown { grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); align-items: start; }
+#app .account-breakdown.has-deposit { grid-template-columns: minmax(0,1.6fr) minmax(0,.8fr) minmax(0,1fr); }
+#app .account-breakdown>dl { grid-column: auto; }
+#app .account-breakdown>button,#app .account-breakdown>p { grid-column: 1/-1; }
+@media(max-width:1100px) {
+  #app h1 { font-size: 34px; }
+  #app h2 { font-size: 24px; }
+}
+@media(max-width:700px) {
+  #app h1 { font-size: 28px; }
+  #app h2 { font-size: 22px; }
+  #app h3 { font-size: 20px; }
+  #app .account-menu>summary { padding: 4px; gap: 6px; }
+  #app .account-menu .account-avatar { width: 32px; height: 32px; }
+  #app .tenant-detail-tabs button { font-size: 18px; min-height: 46px; }
+  #app .tenant-mode { padding: 7px 10px; font-size: 16px; }
+  #app .tenant-summary dl>div { grid-template-columns: 1fr; gap: 4px; }
+  #app .tenant-summary dt { min-width: 0; }
+  #app .billing-search-field { width: 100%; }
+  #app .account-list { min-width: 720px; }
+  #app .account-breakdown,#app .account-breakdown.has-deposit { grid-template-columns: 1fr 1fr; }
+  #app .account-breakdown>dl { grid-column: 1/-1; }
+}

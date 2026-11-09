@@ -3,6 +3,12 @@ window.RentalNotice = (() => {
   const money = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 2 });
   const close = (a,b) => Math.abs(a-b) < 0.000001;
   const validDate = value => typeof value==='string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value+'T00:00:00Z')) && new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
+  function palette(theme) {
+    const selected=theme || (typeof document==='object'?document.documentElement?.dataset?.theme:'sage');
+    return selected==='warm'
+      ? {ink:'#482719',muted:'#79523b',paper:'#fff4e7',panel:'#f8ddbf',line:'#dfb18c',top:'#ffa75d',bottom:'#ba4915'}
+      : {ink:'#eaf5ee',muted:'#c4dcd5',paper:'#244e50',panel:'#3b6561',line:'#72968c',top:'#7caaa0',bottom:'#426c64'};
+  }
   function validate(data) {
     if(data?.group)throw Error('請使用單房通知。');
     if (!data || !/^\d{4}$/.test(String(data.year)) || !Number.isInteger(data.month) || data.month<1 || data.month>12 || data.month%2!==1 || !/^\d{3,8}$/.test(String(data.room))) throw Error('僅能產生單數月份的單房電費通知。');
@@ -48,23 +54,26 @@ window.RentalNotice = (() => {
       canvas.height = meter ? 1270 + Math.ceil(photoHeight) + (data.arrears>0?65:0) + (data.creditApplied>0?65:0) : 700;
 
       const ctx = canvas.getContext('2d');
-      const font = 'system-ui, sans-serif';
+      const font = '"Rental Warm TC", system-ui, sans-serif';
+      const colors=palette(options.theme);
+      const gradient=ctx.createLinearGradient?.(0,0,canvas.width,canvas.height);
+      if(gradient){gradient.addColorStop(0,colors.paper);gradient.addColorStop(1,colors.panel);}
 
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = gradient || colors.paper;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      function text(content, x, y, size, color = '#294638', bold = false) {
+      function text(content, x, y, size, color = colors.ink, bold = false) {
         ctx.fillStyle = color;
         ctx.font = (bold ? 'bold ' : '') + size + 'px ' + font;
         ctx.textAlign = 'left';
         ctx.fillText(content, x, y);
       }
 
-      text('電費通知', 80, 90, 52, '#294638', true);
+      text('電費通知', 80, 90, 52, colors.ink, true);
       text(data.year + ' 年 ' + data.month + ' 月', 80, 150, 34);
-      text(data.room + ' 房', 80, 240, 70, '#294638', true);
+      text(data.room + ' 房', 80, 240, 70, colors.ink, true);
 
-      ctx.strokeStyle = '#dce3d6';
+      ctx.strokeStyle = colors.line;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(80, 275);
@@ -74,7 +83,7 @@ window.RentalNotice = (() => {
       let y = 340;
 
       function row(label, value, size=34, bold=false, gap=65) {
-        text(label, 80, y, size, '#294638', bold);
+        text(label, 80, y, size, colors.ink, bold);
         ctx.textAlign = 'right';
         ctx.fillText(value, 1000, y);
         ctx.textAlign = 'left';
@@ -91,19 +100,19 @@ window.RentalNotice = (() => {
 
       if(data.arrears>0)row('前期未收累計','NT$ '+money.format(data.arrears));
       if(data.creditApplied>0)row('多收抵扣','− NT$ '+money.format(data.creditApplied));
-      ctx.fillStyle = '#eaf0e3';
+      ctx.fillStyle = colors.panel;
       ctx.fillRect(60, y - 10, 960, 110);
-      text(data.historical?'歷史應繳金額':'應繳金額', 80, y + 60, 38, '#294638', true);
+      text(data.historical?'歷史應繳金額':'應繳金額', 80, y + 60, 38, colors.ink, true);
 
       ctx.textAlign = 'right';
       ctx.fillText('NT$ ' + money.format(data.total), 1000, y + 60);
       ctx.textAlign = 'left';
       y += 165;
-      text('這是本期租金與電費的例行通知，供您核對。',80,y,30,'#52685a');y+=48;
-      text('如有疑問，歡迎與我們聯繫，謝謝您的配合。',80,y,30,'#52685a');y+=83;
+      text('這是本期租金與電費的例行通知，供您核對。',80,y,30,colors.muted);y+=48;
+      text('如有疑問，歡迎與我們聯繫，謝謝您的配合。',80,y,30,colors.muted);y+=83;
 
       if (meter) {
-        text('電費明細', 80, y, 38, '#294638', true);
+        text('電費明細', 80, y, 38, colors.ink, true);
         y += 65;
 
         row(
@@ -122,7 +131,7 @@ window.RentalNotice = (() => {
         );
 
         y += 20;
-        text('本期電表照片', 80, y, 34, '#294638', true);
+        text('本期電表照片', 80, y, 34, colors.ink, true);
         y += 35;
 
         if (photo) {
@@ -131,7 +140,7 @@ window.RentalNotice = (() => {
             photoWidth, photoHeight
           );
         } else {
-          text('尚未提供照片', 80, y + 45, 30, '#687963');
+          text('尚未提供照片', 80, y + 45, 30, colors.muted);
         }
       }
 
@@ -143,5 +152,5 @@ window.RentalNotice = (() => {
     return {canvas,blob,missingPhoto};
   }
   function filename(data) {return data.year+'-'+String(data.month).padStart(2,'0')+'_'+data.room+'_電費通知.jpg'}
-  return {render,filename,validate};
+  return {render,filename,validate,palette};
 })();

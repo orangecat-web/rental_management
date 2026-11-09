@@ -1,0 +1,495 @@
+/* Visual contract for the approved amber / mist-lake boards.
+ * Geometry belongs here; legacy button rules cannot position the switch thumb.
+ * Business components and their save/readback behavior are unchanged.
+ */
+:root {
+  --canvas: #ffdcc7;
+  --ink: #47210f;
+  --muted: #754a34;
+  --glass: rgba(255, 247, 238, .30);
+  --glass-solid: #ffe9da;
+  --line: rgba(255, 255, 255, .92);
+  --rule: rgba(147, 73, 33, .25);
+  --accent-top: #ffae66;
+  --accent-bottom: #db5000;
+  --accent-soft: #ffd6b2;
+  --chart: #dc641d;
+  --chart-pending: #ffc78e;
+  --shadow: 0 9px 20px rgba(172, 77, 24, .18), inset 0 1px 1px #fff9;
+  --glass-highlight: linear-gradient(125deg, #ffffff6b, #ffffff09 58%, #ffffff32);
+}
+:root[data-theme="sage"] {
+  --canvas: #173c40;
+  --ink: #fff4d4;
+  --muted: #e2e8d2;
+  --glass: rgba(51, 85, 80, .28);
+  --glass-dialog: rgba(29, 65, 62, .72);
+  --glass-blur: blur(18px) saturate(115%);
+  --glass-solid: #234b48;
+  --line: rgba(230, 239, 222, .64);
+  --rule: rgba(223, 236, 216, .33);
+  --accent-top: #3c704b;
+  --accent-bottom: #063a25;
+  --accent-soft: rgba(61, 102, 85, .40);
+  --chart: #245744;
+  --chart-pending: #9bbdd3;
+  --shadow: 0 10px 26px #061d2840, inset 0 1px 2px #efffe64a;
+  --glass-highlight: linear-gradient(125deg, #efffe51f, #ffffff02 55%, #e0fff00d);
+}
+body { line-height: 1.45; }
+#app {
+  width: min(92%, 1440px);
+  min-height: 0;
+  margin: 28px auto;
+  background: rgba(255, 249, 241, .24);
+}
+:root[data-theme="sage"] body {
+  background-image: linear-gradient(#173e4024, #0b333c55), url('artwork/sage-lake.webp');
+}
+:root[data-theme="sage"] #app {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+#app .sidebar {
+  padding: 12px 28px;
+  background: var(--glass-highlight), var(--glass);
+  box-shadow: var(--shadow);
+}
+:root[data-theme="sage"] #app .sidebar {
+  background: var(--glass-highlight), var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+#app .workspace-main { padding: 24px 42px 30px; }
+#app .intro { margin-bottom: 20px; }
+#app button, #app .rental-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--glass-highlight), var(--glass);
+  border-color: var(--line);
+  box-shadow: 0 5px 10px #a7562423, inset 0 1px 1px #fff9;
+}
+#app button.primary, #app .rental-button.primary,
+#app .sidebar nav button.active,
+#app .tenant-detail-tabs button[aria-pressed="true"],
+#app .billing-tab-buttons button.selected {
+  background: linear-gradient(155deg, var(--accent-top), var(--accent-bottom));
+  box-shadow: inset 0 1px 1px #fff9, 0 5px 10px #ac4b1733;
+}
+#app .glass-card, #app .room-card, #app .property-editor,
+#app .report-panel, #app .settings-detail, #app .settings-list,
+#app .billing-metrics, #app .expense-detail,
+#app .tenant-summary .summary-panel, #app .tenant-summary details,
+#app .edit-panel, #app .workflow-review,
+#app .reconciliation-evidence, #app .reconciliation-form {
+  background: var(--glass-highlight), var(--glass);
+  border-color: var(--line);
+  box-shadow: var(--shadow);
+}
+#app .glass-card, #app .room-card, #app .property-editor, #app .report-panel,
+#app .tenant-dialog, #app .expense-dialog, #app .reconciliation-dialog,
+#app .notice-center-dialog, dialog.rental-photo-dialog {
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+}
+#app .tenant-dialog, #app .expense-dialog, #app .reconciliation-dialog,
+#app .notice-center-dialog, dialog.rental-photo-dialog {
+  background: var(--glass-highlight), var(--glass-solid);
+  border-color: var(--line);
+  box-shadow: 0 22px 65px #57260740, inset 0 1px 1px #fffc;
+}
+#app .tenant-titlebar, #app .tenant-footer,
+#app .notice-center-heading, #app .reconciliation-heading {
+  background: var(--glass-highlight), var(--glass-solid);
+}
+#app input, #app select, #app textarea {
+  background: linear-gradient(125deg, #ffffff45, #ffffff14), var(--glass);
+  border-color: var(--rule);
+  box-shadow: inset 0 1px 2px #fff8, 0 2px 5px #a4501a12;
+}
+#app .sidebar nav button { font-weight: 600; }
+#app .sidebar nav button:not(.active) { background: transparent; box-shadow: none; }
+#app .glass-card>h2, #app .edit-panel>h3,
+#app .summary-panel>h3, #app .tenant-summary summary {
+  background: linear-gradient(100deg, #ffffff35, #ffffff08);
+  border-bottom-color: var(--rule);
+}
+#app .account-list thead th { background: var(--glass-highlight), var(--glass); }
+#app .account-list tbody, #app .account-list th, #app .account-list td { border-color: var(--rule); }
+#app .account-list .reconciliation-action-cell,
+#app .account-list .reconciliation-status-cell { background: transparent; }
+#app .reconciliation-evidence, #app .reconciliation-form {
+  background: transparent;
+  box-shadow: none;
+}
+#app .receipt-pie {
+  position: relative;
+  background: conic-gradient(from 0deg, var(--chart) var(--verified-angle), var(--chart-pending) 0);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+#app .receipt-pie:after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #ffffff38, transparent 45%, #5a170020);
+  pointer-events: none;
+}
+#app .pie-key i { background: linear-gradient(130deg, #fff3, transparent), var(--chart); }
+#app .pie-key .pending-dot { background: linear-gradient(130deg, #fff3, transparent), var(--chart-pending); }
+#app .theme-switch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 560px;
+  padding: 8px 12px;
+  margin: 0 auto;
+  background: var(--glass-highlight), var(--glass);
+  border-color: var(--line);
+}
+:root[data-theme="sage"] #app .theme-switch { background: none; border-color: transparent; }
+#app .theme-switch>button:not(.apple-switch) {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+}
+#app .theme-switch .apple-switch {
+  position: relative;
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+  width: 84px;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, var(--accent-top), var(--accent-bottom));
+  box-shadow: inset 0 1px 2px #85411522;
+}
+#app .theme-switch .apple-switch>span {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  border-radius: 50%;
+  background: #fff8e8;
+  box-shadow: 0 2px 5px #2c1a1d40, inset 0 1px 1px #fff;
+  transform: translateX(0);
+}
+#app .theme-switch .apple-switch[aria-checked="true"]>span { transform: translateX(40px); }
+:root[data-theme="sage"] #app .quick-actions>button,
+:root[data-theme="sage"] #app .month-progress button {
+  background: linear-gradient(135deg, #c7a39b61, #92797875);
+  border-color: #ecd8c8a3;
+  box-shadow: inset 0 1px 1px #fff5, 0 5px 12px #091f292b;
+}
+@media (min-width: 1101px) {
+  body { font-size: 20px; }
+  #app h1 { font-size: clamp(36px, 3vw, 44px); line-height: 1.2; }
+  #app h2 { font-size: 27px; }
+  #app h3 { font-size: 22px; }
+  #app button, #app .rental-button, #app input, #app select, #app textarea { font-size: 19px; }
+  #app .sidebar nav button { font-size: 23px; min-width: 90px; padding: 8px 20px; }
+  #app .sidebar nav { gap: 14px; }
+  #app .today-summary>span { font-size: 25px; min-height: 76px; }
+  #app .today-summary>span svg { width: 42px; height: 42px; }
+  #app .today-summary strong { font-size: 28px; }
+  #app .glass-card { padding: 18px 24px; }
+  #app .glass-card>h2 { margin: -18px -24px 14px; padding: 8px 24px; }
+  #app .rent-total>strong { font-size: clamp(44px, 4.2vw, 60px); margin: 0 0 12px; line-height: 1.15; }
+  #app .rent-total small { font-size: 24px; }
+  #app .rent-total p { font-size: 19px; }
+  #app .receipt-layout { grid-template-columns: minmax(220px, .9fr) minmax(300px, 1.15fr); gap: 26px; min-height: 285px; padding: 16px 0; }
+  #app .pie-key { font-size: 21px; gap: 20px; }
+  #app .pie-key>div { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 12px; }
+  #app .pie-key strong { grid-column: auto; font-size: 22px; white-space: nowrap; }
+  #app .pie-key i { width: 28px; height: 24px; }
+  #app .pie-key .pie-total { font-size: 23px; }
+  #app .receipt-note { font-size: 18px; }
+  #app .quick-actions>button { font-size: 24px; min-height: 56px; margin-top: 12px; }
+  #app .month-progress { grid-template-columns: 225px 1fr 1fr; }
+  #app .month-progress button { font-size: 22px; }
+  #app .more-grid article>button, #app .more-account a, #app .more-account form>button { font-size: 22px; min-height: 50px; margin: 8px 0; }
+  #app .appearance-body { min-height: 145px; padding: 8px 0; }
+  #app .appearance-body p { font-size: 20px; }
+  #app .theme-switch>button:not(.apple-switch) { font-size: 19px; }
+  #app .room-card h3 { font-size: 22px; }
+  #app .room-number { font-size: 32px; }
+  #app .room-card .room-rent, #app .room-card .room-end { font-size: 18px; }
+  #app .billing-search { gap: 22px; }
+  #app .billing-search>input { flex: 0 1 58%; }
+  #app .billing-search label { flex: 1; }
+  #app .billing-search select { flex: 1; }
+  #app .billing-tab-buttons { width: 100%; }
+  #app .billing-tab-buttons button { font-size: 21px; min-width: 185px; }
+  #app .account-list th, #app .account-list td { font-size: 19px; }
+  #app .account-list .account-name strong { font-size: 20px; }
+  #app .account-list .account-money { font-size: 25px; }
+  #app .billing-metrics strong { font-size: 38px; }
+  #app .tenant-native .editor-label { font-size: 18px; color: var(--ink); }
+  #app .tenant-summary dt, #app .tenant-summary dd { font-size: 18px; }
+  #app .tenant-footer button, #app .reconciliation-footer button { font-size: 19px; }
+  #app .report-panel .report-heading h2, #app .report-panel h3 { font-size: 24px; }
+}
+@media (max-width: 1100px) {
+  #app { width: calc(100% - 32px); margin: 16px; }
+  #app .workspace-main { padding: 24px 24px 116px; }
+  #app .sidebar { padding: 14px 24px; }
+  #app .sidebar nav { background: var(--glass-solid); }
+  #app .theme-switch { gap: 8px; padding: 6px 10px; }
+}
+@media (max-width: 700px) {
+  #app { width: 100%; margin: 0; }
+  #app .workspace-main { padding: 20px 16px 110px; }
+  #app .sidebar { padding: 12px 16px; }
+  #app .theme-switch { grid-template-columns: minmax(0, 1fr) 74px minmax(0, 1fr); gap: 8px; padding: 6px; }
+  #app .theme-switch .apple-switch { width: 74px; }
+  #app .theme-switch .apple-switch[aria-checked="true"]>span { transform: translateX(30px); }
+  #app .theme-switch>button:not(.apple-switch) { font-size: 16px; }
+  #app .quick-actions { background: none; box-shadow: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root, :root[data-theme="sage"] { --glass: var(--glass-solid); }
+  #app .glass-card, #app .room-card, #app dialog, dialog.rental-photo-dialog { backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+/* Cross-page alignment from A, C/K, F, G, H/I/J and PAY. */
+html { background: var(--canvas); }
+body { display: flow-root; isolation: isolate; }
+:root[data-theme="sage"] body:before {
+  content: '';
+  position: fixed;
+  inset: -8px;
+  z-index: -1;
+  background: linear-gradient(#113a3e55, #0a303c66), url('artwork/sage-lake.webp') center / cover;
+  filter: blur(2.5px);
+  pointer-events: none;
+}
+#app .pie-slice-label {
+  position: absolute;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  font-size: 21px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #fff7e5;
+  text-shadow: 0 1px 2px #3e201522;
+}
+#app .pie-slice-label.pending { color: #352710; text-shadow: none; }
+#app .intro-workspace { display: flex; align-items: center; gap: 18px; width: 100%; }
+#app .intro-workspace>.ui-icon { width: 36px; height: 36px; }
+#app .intro-workspace h1 { font-size: 28px; font-weight: 650; }
+#app .intro-workspace select { border-left: 1px solid var(--rule); max-width: 310px; }
+#app .account-role { align-items: center; }
+#app .account-role strong { border-left: 1px solid var(--rule); padding-left: 26px; }
+#app .more-account a, #app .more-account form>button {
+  background: var(--glass-highlight), var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+#app .expense-controls { gap: 14px; }
+#app .expense-controls .expense-total {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 10px;
+  margin: 0;
+  padding: 5px 16px;
+  border: 0;
+  border-left: 1px solid var(--rule);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 18px;
+  white-space: nowrap;
+}
+#app .expense-controls .expense-total strong { font-size: 25px; white-space: nowrap; }
+#app .expense-controls .expense-total span { display: none; }
+#app .expense-controls label { flex-direction: row; align-items: center; }
+#app .expense-controls>.primary { margin-left: auto; }
+#app .expense-split { margin-top: 18px; }
+#app .expense-split .expense-table-scroll { margin-top: 0; }
+#app .expense-detail { border-left: 1px solid var(--rule); border-radius: 0 18px 18px 0; }
+#app .expense-detail dl>div { padding: 8px 0; }
+#app .rental-reports { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+#app .rental-reports>.report-toolbar, #app .rental-reports>.report-scope { margin: 0; }
+#app .rental-reports>.report-status, #app .rental-reports>.report-errors,
+#app .rental-reports>.report-panel, #app .rental-reports>.report-missing { flex-basis: 100%; min-width: 0; }
+#app .rental-reports>.report-panel { margin-top: 0; }
+#app .rental-reports>.electricity-section-nav { margin: 0 0 0 auto; }
+#app .rental-reports .report-controls, #app .rental-reports .report-mode { align-items: center; }
+#app .reconciliation-form>p:not(.payment-cash),
+#app .reconciliation-evidence>p, #app .reconciliation-sheet>.payment-status { font-size: 16px; line-height: 1.5; margin: 8px 0 12px; }
+#app .reconciliation-form .payment-cash { font-size: 18px; margin: 12px 0; }
+#app .tenant-dialog::backdrop, #app .expense-dialog::backdrop, #app .reconciliation-dialog::backdrop {
+  background: #472d232b;
+  backdrop-filter: blur(3px);
+}
+@media (min-width: 1101px) {
+  #app .tenant-dialog { width: min(1020px, 71vw); margin-left: auto; margin-right: 4vw; }
+  #app .main.modal-active .room-filters { width: 240px; display: grid; grid-template-columns: 1fr; gap: 10px; }
+  #app .main.modal-active .room-filters>* { width: 100%; min-width: 0; }
+  #app .main.modal-active .room-grid { width: 240px; grid-template-columns: 1fr; gap: 12px; }
+  #app .main.modal-active .room-card { grid-template-columns: 55px minmax(0,1fr) 10px; padding: 12px; gap: 10px; }
+  #app .main.modal-active .room-card .room-top>.ui-icon,
+  #app .main.modal-active .room-card .room-end,
+  #app .main.modal-active .room-card .room-rent,
+  #app .main.modal-active .room-card .unpaid-label { display: none; }
+  #app .main.modal-active .room-card h3 { font-size: 18px; }
+  #app .main.modal-active .room-card .room-number { font-size: 25px; }
+  #app .reconciliation-dialog { width: min(1120px, calc(100vw - 100px)); }
+}
+@media (min-width: 1280px) {
+  #app .room-year-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1100px) {
+  #app .expense-controls .expense-total { order: 3; flex: 1 0 100%; border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: var(--glass); }
+  #app .intro-workspace { flex-wrap: wrap; gap: 12px; }
+  #app .intro-workspace h1 { font-size: 25px; }
+}
+@media (max-width: 700px) {
+  #app .pie-slice-label { font-size: 16px; }
+  #app .intro-workspace h1 { flex: 1; font-size: 23px; }
+  #app .intro-workspace select { width: 100%; max-width: none; }
+  #app .expense-detail { border: 1px solid var(--line); border-radius: 18px; }
+  #app .rental-reports { gap: 12px; }
+  #app .rental-reports>.report-toolbar, #app .rental-reports>.report-scope,
+  #app .rental-reports>.electricity-section-nav { flex-basis: 100%; margin: 0; }
+}
+#app .room-filters label { flex-direction: row; }
+#app .room-card { min-height: 128px; padding: 12px 22px; }
+#app .room-card h3 { font-weight: 700; margin-bottom: 2px; }
+#app .room-top svg { width: 39px; height: 32px; color: var(--ink); }
+#app .room-card p { margin: 2px 0; line-height: 1.3; }
+#app .room-status-line { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
+#app .room-status-line .unpaid-label { margin: 0; font-size: 16px; color: var(--ink); }
+#app .room-card .lease-label { background: #a56842d9; }
+#app .room-card.lease-near .lease-label, #app .room-card.lease-soon .lease-label { background: #ce782bcf; }
+:root[data-theme="sage"] #app .room-card .lease-label { background: #6d9675ba; }
+#app .bottom-note { justify-content: flex-start; }
+@media (min-width: 1101px) {
+  #app .room-filters .room-search { flex: 1; max-width: 48%; }
+  #app .room-filters select { width: 155px; min-width: 120px; }
+  #app .account-list thead th:first-child { width: 12%; }
+  #app .account-list thead th:nth-child(2) { width: 28%; }
+  #app .account-list thead th:nth-child(3) { width: 22%; }
+  #app .account-list thead th:nth-child(4) { width: 18%; }
+  #app .account-list thead th:nth-child(5) { width: 20%; }
+  #app .account-list .reconciliation-action-cell button { width: 100%; min-width: 145px; }
+}
+@media (max-width: 700px) {
+  #app .room-card { min-height: 122px; padding: 14px; }
+  #app .room-top svg { width: 32px; height: 28px; }
+}
+#app .billing-native { padding: 0; margin: 0; background: transparent; }
+#app .billing-search label { flex-direction: row; justify-content: flex-start; }
+#app .billing-search select { min-width: 150px; }
+#app .billing-tabs, #app .billing-search { margin-bottom: 12px; }
+#app .billing-metrics { padding: 12px 0; }
+#app .month-progress>h2 {
+  margin: 0;
+  padding: 0 20px 0 0;
+  border: 0;
+  border-right: 1px solid var(--rule);
+  border-radius: 0;
+  background: none;
+  align-self: stretch;
+  align-items: center;
+}
+@media (min-width: 1101px) {
+  dialog.rental-photo-dialog button { font-size: 19px; }
+}
+@media (max-width: 700px) {
+  #app .month-progress>h2 { border-right: 0; border-bottom: 1px solid var(--rule); padding: 0 0 10px; }
+}
+/* L: name / phone, identity / ID, full-width address, then birthday. */
+#app .detail-editing .editor[data-field$="Address"] { grid-column: 1 / -1; }
+#app .detail-editing .address-controls {
+  display: grid;
+  grid-template-columns: 150px 150px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+#app .detail-editing .address-controls .address-hint { grid-column: 1 / -1; }
+#app .settings-detail .property-row { display: grid; grid-template-columns: 1fr; gap: 14px; }
+#app .settings-detail .property-row>label { display: grid; grid-template-columns: 145px minmax(0, 1fr); align-items: center; gap: 14px; }
+#app .settings-list { max-height: 65dvh; overflow: auto; }
+@media (max-width: 700px) {
+  #app .detail-editing .address-controls { grid-template-columns: 1fr; }
+  #app .settings-detail .property-row>label { grid-template-columns: 1fr; gap: 6px; }
+  #app .settings-list { max-height: 300px; }
+}
+#app .billing-native .status:empty { display: none; }
+@media (prefers-reduced-transparency: reduce) {
+  #app :is(.tenant-dialog, .expense-dialog, .reconciliation-dialog, .notice-center-dialog),
+  dialog.rental-photo-dialog { backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #app button, #app .apple-switch>span { transition: none; }
+}
+
+/* Sage surfaces share one translucent material across the workspace. */
+:root[data-theme="sage"] #app :is(.glass-card,.room-card,.property-editor,
+  .settings-detail,.settings-list,.billing-metrics,.expense-detail,.expense-state,
+  .expense-table-scroll,.account-table-scroll,.readonly-room-detail,
+  .rent-chart-panel,.rent-report-foot,.room-year-card,.signing-layout>article,
+  .signing-summary>p,.today-summary>span),
+:root[data-theme="sage"] #app .rental-reports>.report-panel:not(#rent-statistics):not(.signing-report),
+:root[data-theme="sage"] #app .sidebar {
+  background: var(--glass-highlight),var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+/* Inner sections inherit the same tint without an opaque header or extra blur. */
+:root[data-theme="sage"] #app :is(.tenant-summary .summary-panel,.tenant-summary details,
+  .edit-panel,.workflow-review,.signing-cards>article) {
+  background: var(--glass-highlight),var(--glass);
+}
+:root[data-theme="sage"] #app :is(.tenant-dialog,.expense-dialog,.reconciliation-dialog,
+  .notice-center-dialog,.chart-legend-dialog),
+:root[data-theme="sage"] dialog.rental-photo-dialog {
+  background: var(--glass-highlight),var(--glass-dialog);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+:root[data-theme="sage"] #app :is(.tenant-titlebar,.tenant-footer,
+  .notice-center-heading,.reconciliation-heading),
+:root[data-theme="sage"] dialog.rental-photo-dialog header {
+  background: var(--glass-highlight),var(--glass);
+}
+@media (max-width:1100px) {
+  /* Blur a separate layer so the fixed bottom navigation keeps its viewport anchor. */
+  :root[data-theme="sage"] #app .sidebar { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  :root[data-theme="sage"] #app .sidebar::before {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    border-radius: inherit; pointer-events: none;
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  }
+  :root[data-theme="sage"] #app .sidebar nav {
+    background: var(--glass-highlight),var(--glass-dialog);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+  }
+}
+@media (prefers-reduced-transparency:reduce) {
+  :root[data-theme="sage"] { --glass: var(--glass-solid); --glass-dialog: var(--glass-solid); --glass-blur: none; --glass-highlight: linear-gradient(transparent,transparent); }
+}

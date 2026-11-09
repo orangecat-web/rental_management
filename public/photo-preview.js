@@ -24,6 +24,8 @@ window.RentalPhotoPreview=(()=>{
       if(options.zoom){const toolbar=document.createElement('div');toolbar.className='receipt-preview-toolbar';
         for(const [label,handler] of [['上一張',options.previous],['下一張',options.next],['放大',()=>{zoom=Math.min(3,zoom+.5);if(imageNode)imageNode.style.width=(zoom*100)+'%';}],['縮小',()=>{zoom=Math.max(1,zoom-.5);if(imageNode)imageNode.style.width=(zoom*100)+'%';}]]){const control=document.createElement('button');control.type='button';control.textContent=label;control.disabled=!handler;control.addEventListener('click',()=>handler?.());toolbar.append(control);}dialog.append(toolbar);
       }
+      let gallery=null;
+      if(Number.isInteger(options.total)&&options.total>0){gallery=document.createElement('footer');gallery.className='photo-gallery';const count=document.createElement('p');count.textContent='第 '+((options.index||0)+1)+' 張／共 '+options.total+' 張';gallery.append(count);const choices=document.createElement('div');choices.className='photo-gallery-choices';for(let i=0;i<options.total;i++){const choice=document.createElement('button');choice.type='button';choice.textContent='▧ '+(i+1);choice.setAttribute('aria-label','查看第 '+(i+1)+' 張圖片');choice.setAttribute('aria-pressed',String(i===(options.index||0)));choice.disabled=!options.onSelect;choice.addEventListener('click',()=>options.onSelect?.(i));choices.append(choice);}gallery.append(choices);}
       document.body.append(dialog);
       if(typeof dialog.showModal==='function')dialog.showModal();else dialog.setAttribute('open','');
       button.focus();
@@ -34,7 +36,7 @@ window.RentalPhotoPreview=(()=>{
         if(typeof data!=='string'||!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(data))throw Error('圖片回應格式不正確。');
         const image=document.createElement('img');image.alt=title;
         image.addEventListener('error',()=>{if(ticket===generation&&dialog){image.removeAttribute('src');image.remove();message.textContent='圖片無法顯示，請關閉後再點選連結重試。';}});
-        image.src=data;imageNode=image;message.textContent='';if(options.zoom){const pan=document.createElement('div');pan.className='receipt-preview-pan';image.style.width='100%';image.style.maxWidth='none';pan.append(image);dialog.append(pan);}else dialog.append(image);
+        image.src=data;imageNode=image;message.textContent='';if(options.zoom){const pan=document.createElement('div');pan.className='receipt-preview-pan';image.style.width='100%';image.style.maxWidth='none';pan.append(image);dialog.append(pan);}else dialog.append(image);if(gallery)dialog.append(gallery);
       }catch(error){if(ticket===generation&&dialog)message.textContent='無法預覽：'+error.message;}
     }
     return {open,close};

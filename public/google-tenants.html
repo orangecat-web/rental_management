@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>房客資料</title>
+  <script src="appearance.js"></script><script src="notice-renderer.js"></script><title>房客資料</title>
   <style>
     :root { font-size: 16px; color-scheme: light; --ink: #203e32; --muted: #6b7b72; --line: #e1e8df; --green: #284e3d; --paper: #fff; }
     * { box-sizing: border-box; }
@@ -239,7 +239,7 @@
 
   <!-- 模板只使用本檔固定內容；試算表資料以 v-model／文字插值綁定。 -->
   <template id="tenant-field-template">
-    <div class="editor" :class="{ multiline: field.multiline, phone: field.type === 'tel' }">
+    <div class="editor" :data-field="field.key" :class="{ multiline: field.multiline, phone: field.type === 'tel' }">
       <label v-if="showTitle" class="editor-label" :for="inputId">{{ field.title }}</label>
       <div v-if="cohabitantReadonly" :id="inputId" class="tenant-data-value">{{draft || '—'}}</div>
       <textarea v-else-if="field.multiline" ref="inputElement" :id="inputId"
@@ -521,9 +521,9 @@
             const paragraphs=[['房號：'+t.room,40],['感謝您一直以來的入住與配合，也謝謝您對房屋的愛惜與照顧。',36],['租約到期日：'+t.endDate,56,'bold'],['我們依例提前與您聯繫，了解後續的居住安排。',36],['我們很歡迎您繼續入住！方便時，再麻煩您告訴我們是否有續租的意願；如果還在考慮，或有任何租屋相關問題，也歡迎隨時聊聊。',36],['有意續租的話，我們會再與您確認續約內容及方便的簽約時間。若您已有其他居住規劃，也可以告訴我們，我們會再與您協調退租及點交事宜。',36],['謝謝您的配合，期待繼續為您提供安心舒適的居住環境 😊',36]];
             const lines=[];let y=270;
             for(const [text,size,weight=''] of paragraphs){const font=(weight?weight+' ':'')+size+'px sans-serif',lineHeight=Math.max(60,Math.ceil(size*1.5));c.font=font;for(const paragraph of text.split('\n')){let line='';for(const character of Array.from(paragraph)){if(line&&c.measureText(line+character).width>1060){lines.push({text:line,font,y});y+=lineHeight;line='';}line+=character;}lines.push({text:line,font,y});y+=lineHeight;}y+=30;}
-            canvas.height=y+30;c.fillStyle='#ffffff';c.fillRect(0,0,canvas.width,canvas.height);c.fillStyle='#284e3d';c.fillRect(0,0,1200,180);
+            canvas.height=y+30;const colors=window.RentalNotice.palette();c.fillStyle=colors.paper;c.fillRect(0,0,canvas.width,canvas.height);const header=c.createLinearGradient(0,0,1200,180);header.addColorStop(0,colors.top);header.addColorStop(1,colors.bottom);c.fillStyle=header;c.fillRect(0,0,1200,180);
             c.fillStyle='#ffffff';c.font='bold 48px sans-serif';c.fillText('租約例行提醒與續租意願確認',60,112);
-            c.fillStyle='#284e3d';for(const line of lines){c.font=line.font;c.fillText(line.text,70,line.y);}
+            c.fillStyle=colors.ink;for(const line of lines){c.font=line.font;c.fillText(line.text,70,line.y);}
             const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('圖片產生失敗');renewalUrl.value=URL.createObjectURL(blob);renewalMessage.value='圖片已產生，請下載後人工聯絡房客。';}catch(e){renewalMessage.value=e.message;}}
           const fieldEditors=new Map(),contacts=ref([]),savedContacts=ref([]),checkoutConfirm=ref(false);
           const contractKindDraft=ref(''),leaseYears=ref('1'),leaseTermMessage=ref('');let resettingLease=false,leaseYearsChosen=false;
@@ -542,7 +542,7 @@
           async function saveAll(){
             if(!writeAllowed()||loading.value||pendingSaves.value||!activeTenant.value||!dirtyKeys.size)return;
             const start=fieldEditors.get('startDate'),end=fieldEditors.get('endDate');if((start?.dirty||end?.dirty)&&start?.draft&&end?.draft&&leaseYearCount(start.draft,end.draft)===null){status.value='租期須至少一年，並以一年、兩年、三年等整年計算。';return;}
-            const article=document.querySelector('[aria-label="房客資料編輯"]');if(article&&[...article.querySelectorAll('input,textarea,select')].some(el=>!el.reportValidity()))return;
+            const article=document.querySelector('[aria-label="房客資料編輯"]'),invalid=article&&[...article.querySelectorAll('input,textarea,select')].find(el=>!el.checkValidity());if(invalid){for(let parent=invalid.parentElement;parent&&parent!==article;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;invalid.reportValidity();return;}
             const changes={};for(const [key,editor] of fieldEditors){if(!editor.dirty)continue;changes[key]=key==='contractLinks'?(editor.draft.trim()?[editor.draft.trim()]:[]):(['phone','cohabitantPhone','guarantorPhone'].includes(key)?formatPhone(editor.draft):String(editor.draft??''));}
             if(JSON.stringify(contacts.value)!==JSON.stringify(savedContacts.value))changes.emergencyContacts=contacts.value.map(c=>({...c,phone:formatPhone(c.phone)}));
             if(Object.hasOwn(changes,'initialReading')&&contractKindDraft.value!=='新約'){status.value='初始電表僅供新入住填寫，請先選擇新約。';return;}
@@ -556,6 +556,7 @@
 
 
           const basicFields = [
+            { key: 'rentSubsidy', title: '租補', radio: true, options: ['有', '無'] },
             { key: 'roomType', title: '房型', radio:true, options: ['套房', '雅房'] },
             { key: 'name', title: '居住者' },
             { key: 'phone', title: '電話', type: 'tel' },
@@ -581,6 +582,7 @@
             { key: 'signingDate', title: '簽約日', type: 'date' },
             { key: 'defaultTransferLastFive', title: '預設轉帳後五碼' },
             { key: 'cohabitant', label: '同居人姓名', title: '姓名' },
+            { key: 'cohabitantIdentity', label: '同居人身分', title: '身分', radio:true, options:['一般','學生'] },
             { key: 'cohabitantPhone', label: '同居人電話', title: '電話', type: 'tel' },
             { key: 'cohabitantAddress', label: '同居人戶籍地址', title: '戶籍地址' },
             { key: 'cohabitantId', label: '同居人身分證字號', title: '身分證字號' },
@@ -591,7 +593,7 @@
           const extraGroups = [
             {title:'承租人資料',keys:['registeredAddress','nationalId','birthDate']},
             {title:'租約與繳費設定',keys:['contractKind','signingDate','initialReading','defaultTransferLastFive']},
-            {title:'同居人資料',keys:['cohabitant','cohabitantPhone','cohabitantAddress','cohabitantId','cohabitantBirthDate']},
+            {title:'同居人資料',keys:['cohabitant','cohabitantPhone','cohabitantIdentity','cohabitantAddress','cohabitantId','cohabitantBirthDate']},
             {title:'房間補充資料',keys:['introduction','maintenance']}
           ].map(group=>({title:group.title,fields:group.keys.map(key=>extraFields.find(field=>field.key===key))}));
           function setDirty(room, field, value) {

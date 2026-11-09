@@ -1,0 +1,158 @@
+/* Approved warm A / B only. Other pages and sage keep their existing styles. */
+@font-face {
+  font-family: 'Rental Warm TC';
+  src: url('fonts/rental-warm-tc-400.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Rental Warm TC';
+  src: url('fonts/rental-warm-tc-700.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+:root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) {
+  --ink: #3b1e11;
+  --text: #3b1e11;
+  font-family: 'Rental Warm TC', 'Noto Sans CJK TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+}
+:root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) :is(button,input,select) { font-family: inherit; }
+:root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) h1 { font-weight: 700; letter-spacing: .015em; }
+:root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) :is(h2,h3,strong) { font-weight: 700; }
+:root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) .sidebar { padding-inline: 42px; }
+:root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) .sidebar nav button { font-weight: 400; }
+:root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) .property-picker select { font-weight: 700; }
+:root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) .access-identity summary>.account-avatar {
+  width: 34px;
+  height: 34px;
+  padding: 5px;
+  border-radius: 50%;
+  background: linear-gradient(145deg,#e6bf99,#bb8254);
+  color: #fff7eb;
+  stroke: none;
+}
+:root[data-theme="warm"] #app[data-page="overview"] .brand:has(.brand-icon) { display: none; }
+:root[data-theme="warm"] #app[data-page="overview"] .today-summary>span { font-weight: 700; }
+:root[data-theme="warm"] #app[data-page="overview"] .today-summary>span .ui-icon { width: 42px; height: 44px; }
+:root[data-theme="warm"] #app[data-page="overview"] .rent-total>strong { font-weight: 700; letter-spacing: .005em; }
+:root[data-theme="warm"] #app[data-page="overview"] .rent-total small { font-weight: 500; }
+:root[data-theme="warm"] #app[data-page="overview"] .rent-total p { font-weight: 400; letter-spacing: .025em; }
+:root[data-theme="warm"] #app[data-page="overview"] .receipt-pie { background: none; box-shadow: none; }
+:root[data-theme="warm"] #app[data-page="overview"] .receipt-pie:after { display: none; }
+:root[data-theme="warm"] #app[data-page="overview"] .warm-receipt-pie { display: block; width: 100%; height: 100%; }
+:root[data-theme="warm"] #app[data-page="overview"] .pie-key { font-weight: 700; }
+:root[data-theme="warm"] #app[data-page="overview"] .verified-dot { background: linear-gradient(145deg,#ffad60,#cb541c); }
+:root[data-theme="warm"] #app[data-page="overview"] .pending-dot { background: linear-gradient(145deg,#ffe1b4,#ffcc94); }
+:root[data-theme="warm"] #app[data-page="overview"] .quick-actions>button { font-weight: 700; border-radius: 14px; }
+:root[data-theme="warm"] #app[data-page="overview"] .quick-actions>button:not(.primary) {
+  border-color: #d9a779;
+  background: linear-gradient(135deg,#fff7e79c,#ffe0bc85);
+  box-shadow: 0 5px 8px #a76a3026,inset 0 1px 1px #fff;
+}
+:root[data-theme="warm"] #app[data-page="overview"] .quick-actions>button>.ui-icon:not(.quick-arrow) { width: 36px; height: 38px; }
+:root[data-theme="warm"] #app[data-page="overview"] .quick-actions .quick-arrow { width: 22px; height: 28px; margin-left: auto; }
+:root[data-theme="warm"] #app[data-page="overview"] .month-progress { box-shadow: 0 8px 16px #ac652a25,inset 0 1px 1px #fff9; }
+:root[data-theme="warm"] #app[data-page="overview"] .month-progress>h2 .ui-icon { width: 37px; height: 38px; }
+:root[data-theme="warm"] #app[data-page="overview"] .month-progress>button {
+  min-height: 48px;
+  border: 1px solid #fff9;
+  border-radius: 16px;
+  box-shadow: inset 0 1px 2px #ffffff85;
+  font-weight: 700;
+}
+:root[data-theme="warm"] #app[data-page="overview"] .month-progress>button:first-of-type { background: linear-gradient(115deg,#edbf8c50,#e8b99d75); }
+:root[data-theme="warm"] #app[data-page="overview"] .month-progress>button:last-of-type { background: linear-gradient(115deg,#f3d1ac61,#e9b99e65); }
+:root[data-theme="warm"] #app[data-page="rooms"] .brand-icon .ui-icon { color: #955e35; width: 36px; height: 38px; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-filters { font-weight: 700; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-filters label { font-weight: 700; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-filters select { font-weight: 700; border-color: #dfb99b; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-search input::placeholder { color: #5a301c; font-weight: 500; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-card {
+  border: 1px solid #fff6dfeb;
+  box-shadow: 0 6px 12px #bb7c4526,inset 0 1px 1px #fff9;
+  border-radius: 20px;
+}
+:root[data-theme="warm"] #app[data-page="rooms"] .room-top { gap: 8px; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-top .ui-icon { width: 40px; height: 36px; color: #794a24; stroke: none; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-number { font-weight: 700; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-card h3 { font-weight: 700; }
+:root[data-theme="warm"] #app[data-page="rooms"] .student-tag { font-size: 16px; font-weight: 700; padding: 1px 12px; background: #eec49e80; }
+:root[data-theme="warm"] #app[data-page="rooms"] .lease-label { font-weight: 400; padding: 1px 14px; background: linear-gradient(145deg,#b58a61,#98704e); }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-card :is(.room-rent,.room-end) { font-weight: 400; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-card :is(.room-rent,.room-end)>.ui-icon { width: 21px; height: 23px; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-card .room-arrow { width: 20px; height: 27px; }
+:root[data-theme="warm"] #app[data-page="rooms"] .move-in-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 150px;
+  padding: 2px 18px;
+  margin-top: 7px;
+  border: 1px solid #d8aa7d;
+  border-radius: 11px;
+  background: linear-gradient(130deg,#fff7eab0,#ffdbb67a);
+  box-shadow: inset 0 1px 1px #fff;
+  font-weight: 700;
+}
+:root[data-theme="warm"] #app[data-page="rooms"] .bottom-note { font-weight: 400; }
+@media(min-width:1101px) {
+  :root[data-theme="warm"] #app[data-page="overview"] h1 { font-size: 42px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .glass-card>h2 { font-size: 27px; line-height: 1.35; }
+  :root[data-theme="warm"] #app[data-page="overview"] .rent-total>strong { font-size: 58px; line-height: 1.15; }
+  :root[data-theme="warm"] #app[data-page="overview"] .rent-total small { font-size: 26px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .rent-total p { font-size: 18px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .quick-actions>button { font-size: 26px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .month-progress>h2 { font-size: 28px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .month-progress>button { font-size: 24px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] h1 { font-size: 44px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-filters :is(input,select) { font-size: 21px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-card { padding-block: 10px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-card h3 { font-size: 26px; line-height: 1.25; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-number { font-size: 34px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-card .room-rent { font-size: 20px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-card .room-end { font-size: 19px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .move-in-link { font-size: 21px; }
+}
+@media(max-width:1100px) {
+  :root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) .sidebar { padding-inline: 24px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .rent-total>strong { font-size: 44px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .rent-total small { font-size: 22px; }
+}
+@media(max-width:700px) {
+  :root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) .sidebar { padding-inline: 16px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .rent-total>strong { font-size: 40px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .quick-actions .quick-arrow { display: none; }
+  :root[data-theme="warm"] #app[data-page="overview"] .month-progress>button { min-height: 44px; padding: 8px; font-size: 16px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-top .ui-icon { width: 32px; height: 29px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-card h3 { font-size: 21px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .move-in-link { min-width: 130px; font-size: 18px; }
+}
+@font-face {
+  font-family: 'Rental Warm Display';
+  src: url('fonts/rental-warm-tc-800.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
+:root[data-theme="warm"] #app:is([data-page="overview"], [data-page="rooms"]) h1,
+:root[data-theme="warm"] #app[data-page="overview"] .rent-total>strong {
+  font-family: 'Rental Warm Display', 'Rental Warm TC', sans-serif;
+  font-weight: 800;
+}
+:root[data-theme="warm"] #app[data-page="overview"] .rent-total small { font-family: 'Rental Warm TC',sans-serif; font-weight: 400; }
+:root[data-theme="warm"] #app[data-page="rooms"] .room-card :is(.room-rent,.room-end) { font-weight: 700; }
+@media(min-width:1101px) {
+  :root[data-theme="warm"] #app[data-page="overview"] .pie-key { font-size: 23px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .pie-key strong { font-size: 24px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .pie-total { font-size: 26px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .month-progress>h2 { font-size: 30px; }
+  :root[data-theme="warm"] #app[data-page="overview"] .month-progress>button { font-size: 26px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-card h3 { font-size: 27px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-number { font-size: 35px; }
+  :root[data-theme="warm"] #app[data-page="rooms"] .room-card .room-rent { font-size: 21px; }
+}

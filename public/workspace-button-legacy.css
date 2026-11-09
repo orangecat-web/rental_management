@@ -1,0 +1,2 @@
+/* Keep legacy pages unchanged; the redesigned workspace owns button placement. */
+@import url('buttons.css') layer(legacy-buttons);

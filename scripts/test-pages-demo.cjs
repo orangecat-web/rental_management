@@ -40,17 +40,20 @@ const server = http.createServer((req, res) => {
         w.Date = class extends RealDate { constructor(...args) { super(...(args.length ? args : ['2026-10-18T00:00:00Z'])); } };
         w.Storage.prototype.setItem = () => { throw Error('Demo must not persist records'); };
         // No photo pixels are validated here; verify fixture shape and shared renderer validation.
-        w.HTMLCanvasElement.prototype.getContext = () => ({ fillRect() {}, measureText(t) { return {width:Array.from(t).length*36}; }, fillText(t) {renewalPaint.push({text:t,font:this.font});} });
+        w.HTMLCanvasElement.prototype.getContext = () => ({ fillRect() {},createLinearGradient(){return {addColorStop(){}}}, measureText(t) { return {width:Array.from(t).length*36}; }, fillText(t) {renewalPaint.push({text:t,font:this.font});} });
         w.URL.createObjectURL=()=> 'blob:renewal-demo';w.URL.revokeObjectURL=()=>{};w.HTMLCanvasElement.prototype.toBlob=cb=>cb(new w.Blob(['synthetic']));
         w.HTMLCanvasElement.prototype.toDataURL = () => 'data:image/png;base64,ZGVtbw==';
       }
     });
     const w = dom.window, d = w.document;
-    await wait(() => d.querySelectorAll('.room-card').length === 15);assert(d.querySelector('nav button').textContent.includes('房間總覽'));[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('收租統計')).click();await wait(()=>d.querySelectorAll('.room-year-card').length===15);assert(w.location.search.includes('view=reports'));[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('房間總覽')).click();await wait(() => d.querySelectorAll('.room-card').length === 15);assert(!new URL(w.location.href).searchParams.has('view'));
+    await wait(()=>d.querySelector('.today-summary'));assert(d.querySelector('.sidebar nav button').textContent.includes('今天'));
+    const vm=d.querySelector('#app')._vnode.component.proxy;
+    vm.openReport('electricity');await wait(()=>d.querySelectorAll('.room-year-card').length===15);assert(w.location.search.includes('view=reports'));
+    vm.navigate('rooms');await wait(()=>d.querySelectorAll('.room-card').length===15);assert(new URL(w.location.href).searchParams.get('view')==='rooms');
     assert(d.querySelector('.pages-demo-banner').textContent.includes('虛構資料'));
     assert.equal(w.RentalAccess.state.role, 'viewer');
     assert.equal(w.RentalAccess.canWrite, false);
-    assert(d.querySelector('[aria-label="查看 506 房"]').textContent.includes('NT$ 0'));
+    assert(d.querySelector('[aria-label="查看 506 房"]').textContent.includes('月租：0 元'));
     assert(d.querySelector('.access-identity form button').disabled);
     for (const el of d.querySelectorAll('script[src],link[rel="stylesheet"],a[href]')) {
       const href = el.src || el.href;
@@ -89,34 +92,38 @@ const server = http.createServer((req, res) => {
     assert.equal((await w.fetch('https://example.invalid/api/session')).status, 403);
     assert.equal((await w.fetch('/rental_management/api/unknown')).status, 403);
     d.querySelector('[aria-label="查看 506 房"]').click();
+    await wait(()=>d.querySelector('.tenant-summary'));[...d.querySelectorAll('button')].find(b=>b.textContent.trim()==='編輯房客').click();
     await wait(() => d.querySelector('#tenant-506-rent'));
     assert(d.querySelector('#tenant-506-rent').readOnly);
     const identity=d.querySelector('[name=tenant-506-identity]:checked');assert(identity.disabled);assert.equal(identity.value,'學生');
     assert.deepEqual([...d.querySelectorAll('[name=tenant-506-identity]')].map(o=>o.value),['一般','學生','管理人']);
     assert.equal((await rpc('saveTenantField',['506','identity','管理人','學生'],'tenant')).response.status,403);
-    [...d.querySelectorAll('.room-button')].find(b=>b.textContent.trim().startsWith('508')).click();
+    for(let step=0;step<2;step++){[...d.querySelectorAll('.tenant-native button')].find(b=>b.textContent.includes('下一間')).click();await w.Vue.nextTick();}
     await wait(()=>d.querySelector('[name=tenant-508-identity]:checked'));assert.equal(d.querySelector('[name=tenant-508-identity]:checked').value,'管理人');
-    assert(d.querySelector('.tenant-heading .student-tag').textContent.includes('管理人'));assert(d.querySelector('[aria-label="508 房續約"]'));assert(d.querySelector('[aria-label="508 房續約"]').disabled);
-    [...d.querySelectorAll('button')].find(b=>b.textContent==='預覽續約通知圖片').click();await wait(()=>d.querySelector('.renewal-download'));assert(d.querySelector('.renewal-download').download.includes('508'));assert(renewalPaint.map(p=>p.text).join('').includes('我們很歡迎您繼續入住！'));assert(renewalPaint.map(p=>p.text).join('').includes('協調退租及點交事宜。'));assert(renewalPaint.find(p=>p.text.startsWith('租約到期日：')).font==='bold 56px sans-serif');assert(d.querySelectorAll('.room-lease-label').length>0);
+    assert(d.querySelector('[aria-label="508 房續約"]').disabled);
+    [...d.querySelectorAll('button')].find(b=>b.textContent==='返回資料摘要').click();await w.Vue.nextTick();
+    assert(d.querySelector('.tenant-heading-badges').textContent.includes('管理人'));
+    [...d.querySelectorAll('.tenant-detail-tabs button')].find(b=>b.textContent==='租約').click();await w.Vue.nextTick();
+    [...d.querySelectorAll('button')].find(b=>b.textContent==='預覽續約通知圖片').click();await wait(()=>d.querySelector('.renewal-download'));assert(d.querySelector('.renewal-download').download.includes('508'));
     assert.equal((await rpc('saveTenantChanges',['508',{identity:'一般'},'demo-508'],'tenant')).response.status,403);
     assert.equal((await rpc('checkoutTenant',['508','demo-508'],'tenant')).response.status,403);
     assert.equal((await rpc('saveRoomSetting',['add','601','','套房',''],'tenant')).response.status,403);
     assert((await rpc('getRoomSettings',[],'tenant')).result.data.length===15);
-    const navigate = label => [...d.querySelectorAll('nav button')].find(b => b.textContent.includes(label)).click();
-    navigate('每月帳務');
+    const navigate=label=>label==='收租統計'?vm.openReport('electricity'):vm.navigate(label==='每月帳務'?'accounts':label==='房間總覽'?'rooms':label);
+    vm.closeTenant();await w.Vue.nextTick();navigate('每月帳務');
     await wait(() => d.querySelector('.billing-native')?.textContent.includes('已讀取 15 筆帳務'));
     assert.equal(d.querySelector('#month').options.length, 12);
     const month = d.querySelector('#month'); month.value = '11'; month.dispatchEvent(new w.Event('change', { bubbles: true }));
     await wait(() => d.querySelector('.billing-native')?.textContent.includes('11 月｜已讀取'));
-    assert(!d.querySelector('.billing-native a[href*="notice.html"]'));[...d.querySelectorAll('.billing-tab-buttons button')].find(b=>b.textContent==='電表抄錄與通知').click();await wait(()=>d.querySelector('.meter-sheet'));assert.deepEqual([...d.querySelector('#month').options].map(o=>Number(o.value)),[1,3,5,7,9,11]);
+    assert(!d.querySelector('.billing-native a[href*="notice.html"]'));[...d.querySelectorAll('.billing-tab-buttons button')].find(b=>b.textContent==='抄表').click();await wait(()=>d.querySelector('.meter-sheet'));assert.deepEqual([...d.querySelector('#month').options].map(o=>Number(o.value)),[1,3,5,7,9,11]);
     const noticeLink = d.querySelector('.meter-sheet a[href*="notice.html"]');
     assert(noticeLink.href.startsWith(base + 'notice.html?'));
-    [...d.querySelectorAll('.billing-tab-buttons button')].find(b=>b.textContent==='帳務資料').click();await w.Vue.nextTick();assert.equal(d.querySelector('#month').options.length,12);
+    [...d.querySelectorAll('.billing-tab-buttons button')].find(b=>b.textContent==='帳務明細').click();await w.Vue.nextTick();assert.equal(d.querySelector('#month').options.length,12);
     d.querySelector('[aria-label="401 房實際對帳"]').click();await wait(()=>d.querySelector('.reconciliation-dialog'));assert(d.querySelector('[aria-label="401 房實際對帳金額"]').readOnly);assert(![...d.querySelectorAll('.reconciliation-dialog button')].find(b=>b.textContent==='儲存對帳資料').hidden);assert([...d.querySelectorAll('.reconciliation-dialog button')].find(b=>b.textContent==='儲存對帳資料').disabled);d.querySelector('[aria-label="關閉實際對帳"]').click();await wait(()=>!d.querySelector('.reconciliation-dialog'));
     navigate('收租統計');
     await wait(() => d.querySelectorAll('.room-year-card').length === 15);
     assert.equal(d.querySelector('#workspace-error').hidden, true);
-    const select=d.querySelector('[aria-label="選擇房產"]');assert.equal(select.options.length,2);select.value='p-00000000-0000-4000-8000-000000000002';select.dispatchEvent(new w.Event('change',{bubbles:true}));await w.Vue.nextTick();await wait(()=>[...d.querySelectorAll('nav button')].find(b=>b.textContent.includes('房間總覽'))?.disabled===false);navigate('房間總覽');await wait(()=>d.querySelectorAll('.room-card').length===2);assert(d.querySelector('.room-card').textContent.includes('601'));assert(!d.querySelector('.room-card').textContent.includes('401'));assert.equal((await rpc('saveRentalProperty',['workspace','default','','changed','',0],'tenant')).response.status,403);
+    const select=d.querySelector('[aria-label="選擇房產"]');assert.equal(select.options.length,2);select.value='p-00000000-0000-4000-8000-000000000002';select.dispatchEvent(new w.Event('change',{bubbles:true}));await w.Vue.nextTick();await wait(()=>[...d.querySelectorAll('.sidebar nav button')].find(b=>b.textContent.includes('房間'))?.disabled===false);navigate('房間總覽');await wait(()=>d.querySelectorAll('.room-card').length===2);assert(d.querySelector('.room-card').textContent.includes('601'));assert(!d.querySelector('.room-card').textContent.includes('401'));assert.equal((await rpc('saveRentalProperty',['workspace','default','','changed','',0],'tenant')).response.status,403);
 
     assert.deepEqual(networkApi, [], 'No API calls should reach even the static host');
     assert.deepEqual(errors, []);

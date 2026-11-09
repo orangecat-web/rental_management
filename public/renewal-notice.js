@@ -1,0 +1,9 @@
+/** Generated from google-tenants.html. Approved notice copy has one source. */
+window.RentalRenewalNotice={async render(t){const valid=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'')&&new Date(v+'T00:00:00Z').toISOString().slice(0,10)===v;if(!t||!valid(t.endDate))throw Error('請先填妥租約到期日。');const canvas=document.createElement('canvas');canvas.width=1200;const c=canvas.getContext('2d');if(!c)throw Error('無法產生通知圖片。');
+            const paragraphs=[['房號：'+t.room,40],['感謝您一直以來的入住與配合，也謝謝您對房屋的愛惜與照顧。',36],['租約到期日：'+t.endDate,56,'bold'],['我們依例提前與您聯繫，了解後續的居住安排。',36],['我們很歡迎您繼續入住！方便時，再麻煩您告訴我們是否有續租的意願；如果還在考慮，或有任何租屋相關問題，也歡迎隨時聊聊。',36],['有意續租的話，我們會再與您確認續約內容及方便的簽約時間。若您已有其他居住規劃，也可以告訴我們，我們會再與您協調退租及點交事宜。',36],['謝謝您的配合，期待繼續為您提供安心舒適的居住環境 😊',36]];
+            const lines=[];let y=270;
+            for(const [text,size,weight=''] of paragraphs){const font=(weight?weight+' ':'')+size+'px sans-serif',lineHeight=Math.max(60,Math.ceil(size*1.5));c.font=font;for(const paragraph of text.split('\n')){let line='';for(const character of Array.from(paragraph)){if(line&&c.measureText(line+character).width>1060){lines.push({text:line,font,y});y+=lineHeight;line='';}line+=character;}lines.push({text:line,font,y});y+=lineHeight;}y+=30;}
+            canvas.height=y+30;const colors=window.RentalNotice.palette();c.fillStyle=colors.paper;c.fillRect(0,0,canvas.width,canvas.height);const header=c.createLinearGradient(0,0,1200,180);header.addColorStop(0,colors.top);header.addColorStop(1,colors.bottom);c.fillStyle=header;c.fillRect(0,0,1200,180);
+            c.fillStyle='#ffffff';c.font='bold 48px sans-serif';c.fillText('租約例行提醒與續租意願確認',60,112);
+            c.fillStyle=colors.ink;for(const line of lines){c.font=line.font;c.fillText(line.text,70,line.y);}
+            const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('圖片產生失敗');canvas.width=1;canvas.height=1;return blob;}};

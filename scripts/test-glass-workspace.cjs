@@ -1,0 +1,31 @@
+/** Real Vue with synthetic responses: appearance is the only permitted browser preference. */
+const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM,VirtualConsole}=require('jsdom');
+const wait=async f=>{for(let i=0;i<1000;i++){if(f())return;await new Promise(r=>setTimeout(r,5));}throw Error('Glass workspace timeout');};
+(async()=>{
+ const html=fs.readFileSync('public/index.html','utf8'),scripts=[...html.matchAll(/<script[^>]+src="([^"]+)"[^>]*><\/script>/g)].map(m=>m[1]),calls=[],errors=[],preferences=[];
+ const tenants=['401','504','505','506'].map(room=>({room,version:'v1',name:'合成房客 '+room,identity:'一般',rent:room==='506'?0:4800,contractLinks:[],phone:'0900000000',cohabitantIdentity:'學生'}));
+ const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+ const dom=new JSDOM(html.replace(/<script[^>]+src=[^>]+><\/script>/g,''),{url:'https://rental.test/',runScripts:'outside-only',virtualConsole:vc});const w=dom.window,d=w.document;
+ const originalSet=w.Storage.prototype.setItem;w.Storage.prototype.setItem=function(key,value){preferences.push([key,value]);originalSet.call(this,key,value);};
+ w.fetch=async(url,options)=>{if(url==='/api/session')return{ok:true,json:async()=>({ok:true,data:{authenticated:true,canWrite:true,role:'manager',email:'fake@example.test',provider:'sites'}})};
+ const c=JSON.parse(options.body);calls.push(c);assert(c.action.startsWith('get'),'No automatic writes');let data;
+ if(c.action==='getWorkspaceLogo')data={version:'',dataUrl:''};
+ else if(c.action==='getRentalProperties')data={revision:0,workspaceName:'合成工作區',items:[{id:'default',name:'合成房產',archived:false}]};
+ else if(c.action==='getRoomSetupState')data={confirmed:true,rooms:[],count:4};
+ else if(c.action==='getTenantData')data=tenants;
+ else if(c.action==='getAvailableBillingYears')data=[2026];
+ else if(c.action==='getAvailableBillingMonths')data=[1,3,11];
+ else if(c.action==='getMonthlyAccounts')data=[{room:'401',netDue:4800,receiptDeposit:9600,isReceived:false},{room:'504',receiptId:'shared',isReceived:true,receiptTotal:10000},{room:'505',receiptId:'shared',isReceived:true,receiptTotal:10000},{room:'506',netDue:null,isReceived:true,receiptTotal:null}].map(a=>({...a,year:c.args[0],month:c.args[1]}));
+ else throw Error('Unexpected '+c.action);return{ok:true,json:async()=>({ok:true,data})};};
+ for(const script of scripts)w.eval(fs.readFileSync('public/'+script,'utf8'));
+ await wait(()=>d.querySelector('#app')._vnode?.component);const vm=d.querySelector('#app')._vnode.component.proxy;
+ await wait(()=>vm.accountsReady);assert.deepEqual(JSON.parse(JSON.stringify(vm.receiptSummary)),{verified:10000,pending:14400,total:24400,unknown:1},'Shared receipts count once; deposits included; unknown is not zero');assert.equal(vm.totalRent,14400);
+ assert.deepEqual([...d.querySelectorAll('.sidebar nav button')].map(b=>b.textContent.trim()),['今天','房間','帳務','支出','更多']);assert(!d.querySelector('.room-card'),'Today has no extra room/todo list');
+ vm.navigate('rooms');await w.Vue.nextTick();d.querySelector('.room-card').click();await wait(()=>d.querySelector('.tenant-summary'));assert(d.querySelector('.tenant-dialog').hasAttribute('open'));assert.equal(d.querySelector('.tenant-summary input'),null,'Detail opens as text');
+ [...d.querySelectorAll('.tenant-footer button')].find(b=>b.textContent==='編輯房客').click();await w.Vue.nextTick();const input=d.querySelector('#tenant-401-name');input.value='保留這份未儲存輸入';input.dispatchEvent(new w.Event('input',{bubbles:true}));await wait(()=>vm.editorBusy);
+ const before=calls.length;vm.setTheme('sage');await w.Vue.nextTick();assert.equal(input.value,'保留這份未儲存輸入');assert.equal(d.documentElement.dataset.theme,'sage');assert.equal(calls.length,before,'Appearance neither reads nor writes tenant data');vm.closeTenant();assert(d.querySelector('.tenant-dialog').hasAttribute('open'),'Dirty close cannot discard input');
+ [...d.querySelectorAll('button')].find(b=>b.textContent==='還原全部未儲存').click();await wait(()=>!vm.editorBusy);vm.closeTenant();await w.Vue.nextTick();assert(!d.querySelector('.tenant-dialog').hasAttribute('open'));
+ vm.setTheme('warm');vm.setTheme('invalid');assert.equal(vm.theme,'warm');assert.deepEqual(preferences,[['rental-appearance','sage'],['rental-appearance','warm']]);assert(d.querySelector('#workspace-error').hidden);assert.deepEqual(errors,[]);dom.window.close();
+ const css=fs.readFileSync('public/glass-workspace.css','utf8');for(const m of css.matchAll(/font-size\s*:\s*([\d.]+)(px|rem)/g))assert(Number(m[1])>=(m[2]==='px'?16:1));
+ console.log('PASS: real dual-theme Vue navigation, deposit/shared/unknown receipt pie, text-first tenant modal, draft-safe appearance and close, preference-only storage, backend periods, no implicit writes, minimum fonts.');
+})().catch(e=>{console.error(e);process.exit(1)});

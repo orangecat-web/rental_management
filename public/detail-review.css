@@ -1,0 +1,103 @@
+/* C / D / F: match the approved data layout and segmented controls. */
+#app .tenant-titlebar { gap: 12px; padding: 14px 20px; }
+#app .tenant-titlebar h2 { flex: 1 1 auto; margin: 0; font-size: 25px; white-space: normal; }
+#app .tenant-titlebar .tenant-prev { border-right: 1px solid var(--rule); }
+#app .tenant-heading-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#app .tenant-heading-badges>span { padding: 4px 10px; border-radius: 8px; background: var(--accent-soft); font-size: 16px; font-weight: 700; white-space: nowrap; }
+#app .tenant-heading-badges>.tenant-occupancy { background: linear-gradient(175deg,var(--accent-top),var(--accent-bottom)); color: #fff8ee; }
+#app .tenant-heading-badges>.vacant { background: var(--glass); color: var(--muted); }
+#app .tenant-body { padding: 16px 20px; }
+#app .tenant-titlebar :is(.tenant-prev,.tenant-next,.close-tenant) { border-radius: 10px; min-height: 40px; padding: 5px 10px; box-shadow: inset 0 1px 1px #fffa,0 2px 4px #85411c1a; }
+#app .tenant-detail-tabs { border: 0; overflow: visible; border-radius: 12px; margin-bottom: 12px; }
+#app .tenant-detail-tabs button { background: var(--glass); border: 1px solid var(--line); border-radius: 12px; font-size: 23px; font-weight: 400; min-height: 46px; }
+#app .tenant-detail-tabs button[aria-pressed=true] { background: linear-gradient(175deg,var(--accent-top),var(--accent-bottom)); box-shadow: inset 0 1px 1px #fff9,0 2px 5px #85411c18; }
+#app .tenant-summary .summary-panel { padding: 6px 8px; margin: 8px 0; border-radius: 16px; }
+#app .tenant-summary .summary-panel>h3 { padding: 4px 12px; margin: 0; border: 0; border-radius: 10px; background: linear-gradient(100deg,var(--accent-soft),transparent); font-size: 22px; }
+#app .tenant-summary dl { padding: 5px 8px; column-gap: 14px; row-gap: 4px; }
+#app .tenant-summary dl>div { border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; padding: 0; gap: 0; grid-template-columns: 132px minmax(0,1fr); background: var(--glass); }
+#app .tenant-summary dt { padding: 5px 12px; min-width: 0; background: var(--accent-soft); font-size: 18px; }
+#app .tenant-summary dd { padding: 5px 14px; font-size: 18px; line-height: 1.45; }
+#app .tenant-summary dl:not(.tenant-basic-grid)>div { grid-template-columns: max-content minmax(0,1fr); }
+#app .tenant-summary .tenant-basic-grid>div:last-child { grid-column: 1; }
+#app .tenant-footer button { border-radius: 10px; min-height: 44px; }
+/* D: fees and status stay compact; payment dates / cash evidence remain accessible below. */
+#app .account-list .expand-account { border: 0; border-radius: 0; outline-offset: 0; box-shadow: none; min-width: 32px; min-height: 40px; padding: 4px; }
+#app .account-list .expand-account:focus-visible { outline: 2px solid var(--accent-bottom); border-radius: 8px; }
+#app .account-breakdown { grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); padding: 12px 24px; gap: 22px; }
+#app .account-breakdown.has-deposit { grid-template-columns: minmax(0,1.6fr) minmax(0,.8fr) minmax(0,1fr); }
+#app .account-fees h3 { font-size: 18px; margin: 0 0 4px; }
+#app .account-fees dl>div { padding: 0 0 0 24px; line-height: 1.45; }
+#app .account-fees dt,#app .account-fees dd { font-size: 18px; }
+#app .account-fees-total { border-top: 1px solid var(--rule); margin-top: 4px; font-weight: 700; }
+#app .account-breakdown>:is(.account-deposit,.account-receipt-state) { text-align: center; align-self: center; }
+#app .account-receipt-state { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+#app .account-extra { background: transparent; box-shadow: none; border: 0; margin: 6px 0 0; }
+#app .account-extra>summary { cursor: pointer; color: var(--muted); font-size: 16px; padding: 6px 12px; }
+#app .account-extra>dl { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; padding: 6px 12px; }
+#app .account-extra>dl>div { display: flex; justify-content: space-between; gap: 14px; }
+#app .account-extra>p { padding: 0 12px; }
+/* F: same hierarchy, consistent SVG icons, and on-demand receipt viewing. */
+#app[data-page=expenses] .intro h1 { font-size: 44px; font-weight: 700; }
+#app .expense-controls { gap: 18px; margin-bottom: 18px; }
+#app .expense-controls>label { font-size: 23px; font-weight: 700; }
+#app .expense-controls>label select { min-width: 105px; font-size: 23px; }
+#app .expense-controls>button { font-size: 23px; min-height: 50px; }
+#app .expense-controls .expense-total { margin: 0; padding: 0 0 0 24px; background: transparent; border: 0; border-left: 1px solid var(--rule); border-radius: 0; font-size: 23px; font-weight: 700; }
+#app .expense-total strong { font-size: 38px; font-weight: 700; }
+#app .expense-total>span { display: block; font-size: 16px; font-weight: 400; }
+#app .expense-split { grid-template-columns: 1.1fr 1fr; gap: 18px; }
+#app .expense-table-scroll,#app .expense-detail { min-height: 470px; }
+#app .expense-table th { font-size: 25px; font-weight: 700; padding: 12px 28px; }
+#app .expense-table td { font-size: 25px; font-weight: 700; padding: 16px 28px; }
+#app .expense-table td:nth-child(1) { white-space: nowrap; }
+#app .expense-table td:last-child { text-align: right; }
+#app .expense-table td button { font-size: 23px; font-weight: 700; background: transparent; border: 0; box-shadow: none; padding: 0; }
+#app .expense-table .ui-icon { width: 24px; height: 24px; margin-left: 10px; flex-shrink: 0; }
+#app .expense-detail { padding: 0 24px 18px; }
+#app .expense-detail>h2 { margin: 0 -24px 10px; padding: 10px 24px; font-size: 28px; font-weight: 700; background: var(--glass); border-bottom: 1px solid var(--line); }
+#app .expense-detail dl>div { grid-template-columns: 130px minmax(0,1fr); padding: 5px 0; }
+#app .expense-detail dt,#app .expense-detail dd { font-size: 22px; }
+#app .expense-detail dt { font-weight: 400; }
+#app .expense-detail dd { font-weight: 700; }
+#app .expense-evidence { margin-top: 14px; padding: 18px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+#app .expense-detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-top: 16px; }
+#app .expense-detail-actions button { font-size: 22px; min-height: 50px; }
+#app .expense-detail-actions .primary { background: var(--accent-soft); color: var(--ink); box-shadow: none; }
+#app .expense-retention-note { display: flex; align-items: center; gap: 10px; font-size: 18px; margin: 14px 0 0; }
+#app .expense-controls .ui-icon,#app .expense-detail .ui-icon { width: 26px; height: 26px; flex-shrink: 0; }
+@media(max-width:1200px) {
+  #app .tenant-heading-badges { order: 5; width: 100%; padding-left: 0; }
+  #app .expense-controls .expense-total { border-left: 0; padding-left: 0; }
+  #app .expense-controls>label,#app .expense-controls>button,#app .expense-controls>label select { font-size: 20px; }
+  #app .expense-table th,#app .expense-table td { padding: 14px; font-size: 21px; }
+  #app .expense-table td button { font-size: 21px; }
+}
+@media(max-width:700px) {
+  #app .tenant-titlebar h2 { font-size: 21px; }
+  #app .tenant-body { padding: 12px; }
+  #app .tenant-heading-badges { gap: 6px; }
+  #app .tenant-detail-tabs button { font-size: 18px; }
+  #app .tenant-summary dl>div,#app .tenant-summary dl:not(.tenant-basic-grid)>div { grid-template-columns: 1fr; }
+  #app .tenant-summary dt,#app .tenant-summary dd { font-size: 16px; }
+  #app .account-breakdown,#app .account-breakdown.has-deposit { grid-template-columns: 1fr; padding: 12px; gap: 12px; }
+  #app .account-breakdown>:is(.account-deposit,.account-receipt-state) { border: 0; padding: 0; width: 100%; }
+  #app .account-extra>dl { grid-template-columns: 1fr; }
+  #app[data-page=expenses] .intro h1 { font-size: 28px; }
+  #app .expense-split { grid-template-columns: 1fr; }
+  #app .expense-table-scroll,#app .expense-detail { min-height: 0; }
+  #app .expense-detail { padding-inline: 16px; }
+  #app .expense-detail>h2 { margin-inline: -16px; padding-inline: 16px; font-size: 24px; }
+  #app .expense-detail dl>div { grid-template-columns: 95px minmax(0,1fr); }
+  #app .expense-detail dt,#app .expense-detail dd { font-size: 18px; }
+  #app .expense-detail-actions { gap: 10px; }
+  #app .expense-detail-actions button { font-size: 18px; }
+}
+/* Override the earlier compact expense summary at its original specificity. */
+#app .expense-controls .expense-total strong { font-size: 44px; line-height: 1.15; }
+#app .expense-split { align-items: stretch; }
+#app .expense-detail { border: 1px solid var(--line); border-radius: 20px; }
+#app .expense-controls .expense-total { margin-left: 0; }
+@media(max-width:700px) {
+  #app .expense-controls .expense-total strong { font-size: 32px; }
+  #app .expense-split { align-items: start; }
+}

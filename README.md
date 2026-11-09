@@ -1,3 +1,5 @@
+> 2026-11-09：[雙色毛玻璃介面同步與驗證](docs/GLASS_UI_SYNC_20261109.md)。
+
 # 租務管理 / Rent_Demo
 
 Vue 房客、收租、電表與照片工作區。現有測試站：https://orange-rental-desk.orangecat1120.chatgpt.site/
