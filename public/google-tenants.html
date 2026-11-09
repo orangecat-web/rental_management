@@ -240,7 +240,7 @@
   <!-- 模板只使用本檔固定內容；試算表資料以 v-model／文字插值綁定。 -->
   <template id="tenant-field-template">
     <div class="editor" :data-field="field.key" :class="{ multiline: field.multiline, phone: field.type === 'tel' }">
-      <label v-if="showTitle" class="editor-label" :for="inputId">{{ field.title }}<span v-if="field.key==='initialReading'&&initialMeterAllowed">（必填）</span></label>
+      <label v-if="showTitle" class="editor-label" :for="inputId">{{ field.title }}<span v-if="field.key==='initialReading'&&initialMeterAllowed" aria-label="必填">＊</span></label>
       <div v-if="cohabitantReadonly" :id="inputId" class="tenant-data-value">{{draft || '—'}}</div>
       <textarea v-else-if="field.multiline" ref="inputElement" :id="inputId"
         v-model="draft" rows="3" maxlength="2000" :aria-label="label"
