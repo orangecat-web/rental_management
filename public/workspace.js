@@ -4,7 +4,7 @@
   async function start(){if(!await RentalAccess.ready)return;
   const tenantApi = RentalTransport('tenant');
   const app = createApp({
-    components: { ExpenseManager: RentalComponents.expenses ? RentalComponents.expenses() : {template:'<p>支出元件尚未載入。</p>'}, TenantEditor: RentalAccess.secureComponent(RentalComponents.tenant()), BillingEditor: RentalAccess.secureComponent(RentalComponents.billing()), RentalReports: RentalComponents.reports() },
+    components: { DepositManager: RentalComponents.deposits ? RentalComponents.deposits() : {template:'<p>押金元件尚未載入，請重新讀取。</p>'}, ExpenseManager: RentalComponents.expenses ? RentalComponents.expenses() : {template:'<p>支出元件尚未載入。</p>'}, TenantEditor: RentalAccess.secureComponent(RentalComponents.tenant()), BillingEditor: RentalAccess.secureComponent(RentalComponents.billing()), RentalReports: RentalComponents.reports() },
     setup() {
       const query = new URLSearchParams(location.search);
       const readonlyMode=window.RentalPublic===true,readonlyTab=ref('data');
@@ -25,7 +25,7 @@
       async function openExpense(){navigate('expenses');await nextTick();expenseEditor.value?.queueCreate();}
 
       window.RentalPropertyContext={id:query.get('property')||'default'};
-      const page = ref(query.get('view') === 'expenses'&&(RentalAccess.canWrite||window.RentalDemo||window.RentalPublic) ? 'expenses' : query.get('view') === 'reports' ? 'reports' : query.get('view') === 'accounts' ? 'accounts' : query.get('view') === 'tenants' ? 'tenants' : ['rooms','more'].includes(query.get('view')) ? query.get('view') : 'overview');
+      const page = ref(query.get('view')==='deposits'?'deposits':query.get('view') === 'expenses'&&(RentalAccess.canWrite||window.RentalDemo||window.RentalPublic) ? 'expenses' : query.get('view') === 'reports' ? 'reports' : query.get('view') === 'accounts' ? 'accounts' : query.get('view') === 'tenants' ? 'tenants' : ['rooms','more'].includes(query.get('view')) ? query.get('view') : 'overview');
       const propertyCompatible=ref(false),propertyReady=ref(false),propertyBusy=ref(false),propertyOpen=ref(false),propertyError=ref(''),properties=ref([]),propertyRevision=ref(0),workspaceName=ref('私人管理工作區'),workspaceDraft=ref(''),newPropertyName=ref(''),newPropertyFolder=ref(''),propertyDelete=ref(null),propertyEpoch=ref(0),activeProperty=ref(window.RentalPropertyContext.id);let newPropertyId='';
       const editingProperty=computed(()=>properties.value.find(p=>p.id===(settingsPropertyId.value||activeProperty.value))||properties.value[0]);
       const roomLoading=ref(false),roomSetup=ref(null),roomStep=ref(0),roomMessage=ref(''),newRoom=ref(''),newRoomType=ref('套房'),roomAction=ref(null);
@@ -61,7 +61,7 @@
       const roomPayment=room=>currentAccounts.value.find(a=>a.room===room);
       const roomFilter=ref('all'),leaseFilter=ref('all');const search = ref(''), selectedRoom = ref(''), editorBusy = ref(false), navigationMessage = ref('');
       const nav = [{id:'overview',label:'今天',icon:'M5 4h14v17H5z M8 2v5 M16 2v5 M5 10h14'},{id:'rooms',label:'房間',icon:'M3 20V8 M3 15h18v5 M3 11h18v4 M7 8h4v3'},{id:'accounts',label:'帳務',icon:'M3 6c0-3 7-3 7 0s-7 3-7 0 M3 6v12c0 3 7 3 7 0V6 M14 10c0-3 7-3 7 0s-7 3-7 0 M14 10v8c0 3 7 3 7 0v-8'},{id:'expenses',label:'支出',icon:'M5 3h14v18l-3-2-4 2-4-2-3 2z M8 8h8 M8 12h6'},{id:'more',label:'更多',icon:'M5 12h.01 M12 12h.01 M19 12h.01'}];
-      const title = computed(() => propertyOpen.value?({property:'房產與工作區',rooms:'房間設定',branding:'名稱與 Logo'})[settingsSection.value]:({overview:'今天・本月概況',rooms:readonlyMode?'公開租屋資訊':'房間列表',tenants:'房間列表',accounts:billingHeading.value,expenses:'每月支出',more:'更多',reports:({rent:'租金與實收',signing:'簽約款與歷史核對',electricity:'用電統計'})[reportSection.value]})[page.value]||nav.find(item => item.id === (page.value==='tenants'?'rooms':page.value))?.label || (page.value==='reports'?'統計與報表':'租務管理'));
+      const title = computed(() => propertyOpen.value?({property:'房產與工作區',rooms:'房間設定',branding:'名稱與 Logo'})[settingsSection.value]:({overview:'今天・本月概況',rooms:readonlyMode?'公開租屋資訊':'房間列表',tenants:'房間列表',accounts:billingHeading.value,expenses:'每月支出',deposits:'押金與退租結算',more:'更多',reports:({rent:'租金與實收',signing:'簽約款與歷史核對',electricity:'用電統計'})[reportSection.value]})[page.value]||nav.find(item => item.id === (page.value==='tenants'?'rooms':page.value))?.label || (page.value==='reports'?'統計與報表':'租務管理'));
       watch(title, value => { document.title = '租屋管理 | ' + value; }, {immediate:true});
       watch([page,propertyOpen],([value,settings])=>{document.getElementById('app').dataset.page=settings?'settings':value;},{immediate:true});
       const subtitles = { rooms:'查看房間、房客與租約，點選房間開啟詳細資料。', more:'外觀、統計與工作區設定。', expenses:'獨立記錄日常現金支出，不併入租金、電費或收租統計。', reports: '租金收繳、全部用電與單房趨勢，在這裡一起掌握。', overview: '從房間開始，整理房客、租約與每月帳務。', tenants: '基本資料、聯絡方式與合約，在同一處查看與修改。', accounts: '收款、抄表、照片與電費通知，都從這裡處理。' };
@@ -118,7 +118,7 @@
         history.replaceState(null, '', url.pathname + url.search);
       }
       watch(page,async value=>{await nextTick();if(value!=='tenants'&&tenantDialog.value?.open){if(typeof tenantDialog.value.close==='function')tenantDialog.value.close();else tenantDialog.value.removeAttribute('open');}if(value==='tenants'&&tenantDialog.value&&!tenantDialog.value.open)typeof tenantDialog.value.showModal==='function'?tenantDialog.value.showModal():tenantDialog.value.setAttribute('open','');});
-      onMounted(() => {if(page.value==='tenants')nextTick(()=>{if(tenantDialog.value&&!tenantDialog.value.open){if(typeof tenantDialog.value.showModal==='function')tenantDialog.value.showModal();else tenantDialog.value.setAttribute('open','');}});
+      onMounted(() => {window.addEventListener('rental-open-deposits',event=>{navigate('deposits',event.detail?.room||'');});if(page.value==='tenants')nextTick(()=>{if(tenantDialog.value&&!tenantDialog.value.open){if(typeof tenantDialog.value.showModal==='function')tenantDialog.value.showModal();else tenantDialog.value.setAttribute('open','');}});
         loadWorkspaceLogo();
         loadProperties().then(()=>{if(propertyReady.value&&['overview','rooms','tenants'].includes(page.value))loadOverview();});
         window.addEventListener('beforeunload', event => { if (editorBusy.value) { event.preventDefault(); event.returnValue = ''; } });

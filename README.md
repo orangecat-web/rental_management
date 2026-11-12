@@ -1,3 +1,5 @@
+> 最新：[押金與退租結算唯讀展示](docs/DEPOSIT_SETTLEMENT_DEMO.md)。
+
 > 2026-11-09：[雙色毛玻璃介面同步與驗證](docs/GLASS_UI_SYNC_20261109.md)。
 
 # 租務管理 / Rent_Demo

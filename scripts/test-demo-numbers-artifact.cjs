@@ -25,7 +25,12 @@ const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>10
    const rows=(await rpc('getMonthlyAccounts',[period.year,period.month])).data;assert.equal(rows.length,period.accounts.length);
    for(const original of period.accounts){const row=rows.find(a=>a.room===original.room);for(const [key,value] of Object.entries(original))assert.deepEqual(row[key],value,'Snapshot field differs: '+key);assert(['空房',''].includes(row.name)||row.name.startsWith('示範房客'));assert.equal(row.paymentScreenshot,'');}
   }
-  for(const report of snapshot.reports){const actual=(await rpc('getXingwuCollectionReport',[report.year])).data;for(const [key,value] of Object.entries(report))assert.deepEqual(actual[key],value);}
+  for(const report of snapshot.reports){const actual=(await rpc('getXingwuCollectionReport',[report.year])).data;for(const [key,value] of Object.entries(report)){if(['knownCashTotal','cashTotal'].includes(key)){const excluded=report.signing.reduce((sum,s)=>{const a=snapshot.periods.find(p=>p.year===report.year&&p.month===s.month)?.accounts.find(a=>a.room===s.room);return sum+(typeof s.cash==='number'?Math.max(0,s.cash-(typeof a?.effectivePaid==='number'?a.effectivePaid:0)):0);},0);assert.equal(actual[key],value===null?null:Math.max(0,value-excluded));}else assert.deepEqual(actual[key],value);} }
+  workspace.navigate('deposits');await wait(()=>d.querySelector('.deposit-summary'));assert(d.querySelector('.deposit-summary').textContent.includes('12,000'));
+  const depositRpc=await rpc('getDepositWorkspace');assert.equal(depositRpc.data.items.length,2);assert.equal((await rpc('saveDepositChange',[{},'x','x'])).status,403);assert.equal((await rpc('confirmDepositCheckout',[{},'x','x'])).status,403);
+  for(const button of d.querySelectorAll('.deposit-actions button'))assert(button.disabled,'Deposit writes stay visible but disabled');
+  const depositSelect=d.querySelector('.deposit-toolbar select');depositSelect.value=depositSelect.options[1].value;depositSelect.dispatchEvent(new w.Event('change',{bubbles:true}));await w.Vue.nextTick();assert(d.querySelector('.deposit-history').textContent.includes('末期電費小計 NT$ 250'));assert(d.querySelector('.deposit-history').textContent.includes('其他扣款小計 NT$ 200'));
+  workspace.navigate('rooms');await wait(()=>d.querySelector('.room-card'));
   assert.equal((await rpc('saveMonthlyAccountField',[2026,1,'401','actualPaid','1',null])).status,403);
   assert.equal((await rpc('saveTenantChanges',['401',{name:'changed'},'demo-401'],'tenant')).status,403);
   const nav=label=>workspace.navigate(label);
@@ -48,6 +53,6 @@ const wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>10
   d.querySelector('.expense-table tbody tr').click();await w.Vue.nextTick();visibleDisabled('編輯');visibleDisabled('作廢支出');[...d.querySelectorAll('.expense-detail button')].find(b=>b.textContent.includes('查看收據')).click();await wait(()=>d.querySelector('dialog img'));assert.equal(demoImages,originalImages+1);d.querySelector('[aria-label="關閉圖片預覽"]').click();await wait(()=>!d.querySelector('dialog[open]'));
   [...d.querySelectorAll('.expense-detail button')].find(b=>b.textContent==='檢視明細').click();await wait(()=>d.querySelector('.expense-form'));for(const e of d.querySelectorAll('.expense-fields input,.expense-fields textarea'))assert(e.disabled);visibleDisabled('預覽儲存');visibleDisabled('作廢這筆支出');
   assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
-  console.log('PASS: actual published snapshot artifact shows management controls disabled rather than hidden, opens readonly property/reconciliation views; all source numbers, null/zero, meter records and reports unchanged; synthetic people/expenses only; readonly expense details and on-click gallery; no external API/image requests or writes.');
+  console.log('PASS: actual published snapshot artifact shows management controls disabled rather than hidden, opens readonly property/reconciliation views; original snapshot retained with deposit-free monthly cash/report projections; null/zero and meter records retained; synthetic people/expenses only; readonly expense details and on-click gallery; no external API/image requests or writes.');
  }finally{dom.window.close();}
 })().catch(e=>{console.error(e.message);process.exitCode=1;});
