@@ -3,10 +3,13 @@
   window.RentalDemo=true;
   const nativeFetch = window.fetch.bind(window);
   const formatPhone=v=>/^09\d{8}$/.test(v)?v.slice(0,4)+'-'+v.slice(4,7)+'-'+v.slice(7):v;
+  // Fixed fictional cast, keyed by room so snapshot ordering cannot change a person's display name.
+  const fictionalNames=Object.freeze({'401':'郝開心','402':'吳煩惱','403':'錢多多','404':'梅問題','405':'余有閒','406':'石在好','407':'田蜜蜜','408':'范特西','409':'何家歡','501':'包租安','502':'湯圓圓','503':'花生糖','504':'鍾意你','505':'賴床安','506':'鄭有錢','507':'蘇適圈','508':'胡椒鹽','601':'郝運來','602':'游自在'});
+  const nameFor=room=>fictionalNames[room]||'甄有緣';
   const rooms = ['401','402','403','404','405','406','407','501','502','503','504','505','506','507','508'];
   const tenants = rooms.map((room, i) => ({
-    rentSubsidy:i%2?'有':'無',cohabitantIdentity:i===0?'學生':'',cohabitant:i===0?'示範同居人':'',cohabitantPhone:i===0?'0900000098':'',cohabitantAddress:i===0?'桃園市龜山區測試用虛構路1號（非真實地址）':'',cohabitantId:i===0?'DEMO-COHABITANT-INVALID':'',cohabitantBirthDate:i===0?'2000-02-29':'',
-    registeredAddress:'示範市範例區虛構路 1 號',nationalId:'DEMO-INVALID',birthDate:'2000-01-01',guarantorName:'示範保證人',guarantorAddress:'示範地址（非真實）',guarantorId:'DEMO-INVALID',guarantorBirthDate:'1970-01-01',guarantorPhone:'0900000099',vacant:false,version:'demo-'+room,contractKind:i%2?'新約':'續約',emergencyContacts:i===0?[{name:'示範聯絡人甲',phone:'0900000001'},{name:'示範聯絡人乙',phone:'0900000002'}]:[],room, roomType: i === 14 ? '' : i % 2 === 0 ? '套房' : '雅房', name: '示範房客 ' + String.fromCharCode(65 + i),
+    rentSubsidy:i%2?'有':'無',cohabitantIdentity:i===0?'學生':'',cohabitant:i===0?'何睦睦':'',cohabitantPhone:i===0?'0900000098':'',cohabitantAddress:i===0?'桃園市龜山區測試用虛構路1號（非真實地址）':'',cohabitantId:i===0?'DEMO-COHABITANT-INVALID':'',cohabitantBirthDate:i===0?'2000-02-29':'',
+    registeredAddress:'示範市範例區虛構路 1 號',nationalId:'DEMO-INVALID',birthDate:'2000-01-01',guarantorName:'包安心',guarantorAddress:'示範地址（非真實）',guarantorId:'DEMO-INVALID',guarantorBirthDate:'1970-01-01',guarantorPhone:'0900000099',vacant:false,version:'demo-'+room,contractKind:i%2?'新約':'續約',emergencyContacts:i===0?[{name:'郝照應',phone:'0900000001'},{name:'常聯絡',phone:'0900000002'}]:[],room, roomType: i === 14 ? '' : i % 2 === 0 ? '套房' : '雅房', name: nameFor(room),
     phone: '09000000' + String(i).padStart(2, '0'),
     rent: room === '506' ? 0 : 5800 + (i % 4) * 200,
     initialMeterReading: i === 0 ? 1000 : i === 12 ? 0 : null, contractDate: i === 0 ? '2026-08-15' : i === 12 ? '2026-06-15' : '',
@@ -21,19 +24,19 @@
   if(numbers){
     if(numbers.version!==1||numbers.source!=='production-numbers'||numbers.personalData!=='synthetic')throw Error('數值快照格式不正確。');
     const fake=tenants.map(t=>({...t}));
-    const replacements=numbers.tenants.map((n,i)=>{const t=fake.find(t=>t.room===n.room)||fake[i%fake.length];return {...t,room:n.room,version:'demo-'+n.room,name:n.vacant?'':t.name||'示範房客 '+n.room,rent:n.rent,vacant:n.vacant,roomType:n.roomType??t.roomType,initialMeterReading:null,initialReading:null,phone:n.vacant?'':t.phone};});
+    const replacements=numbers.tenants.map((n,i)=>{const t=fake.find(t=>t.room===n.room)||fake[i%fake.length];return {...t,room:n.room,version:'demo-'+n.room,name:n.vacant?'':nameFor(n.room),rent:n.rent,vacant:n.vacant,roomType:n.roomType??t.roomType,initialMeterReading:null,initialReading:null,phone:n.vacant?'':t.phone};});
     tenants.splice(0,tenants.length,...replacements);rooms.splice(0,rooms.length,...replacements.map(t=>t.room));
   }
   function numericalAccounts(year,month){
     const period=numbers.periods.find(p=>p.year===year&&p.month===month);if(!period)throw Error('正式快照沒有此月份，不補造資料。');
     const report=numbers.reports.find(r=>r.year===year);
     return period.accounts.map(a=>{const t=tenants.find(t=>t.room===a.room),signing=report?.signing.find(s=>s.room===a.room&&s.month===month),deposit=signing?.deposit??0,recorded=a.effectivePaid;
-      return {...a,name:a.vacant?'空房':t?.name||'示範房客 '+a.room,notes:'示範備註；帳務數字取自正式快照。',transferLastFive:'01234',paymentScreenshot:'',depositSeparated:true,receiptDeposit:0,receiptTotal:recorded,receiptRecordedAmount:recorded,actualPaid:recorded,receiptDue:a.netDue,receiptSuggestedAmount:a.netDue,receiptAmountReady:!a.meter||a.meter.currentReading!==null,isReceived:recorded!==null&&recorded!==undefined,receiptConfirmed:recorded!==null&&recorded!==undefined?'是':'否',receiptEditable:true,financialLocked:false};
+      return {...a,name:a.vacant?'空房':t?.name||nameFor(a.room),notes:'示範備註；帳務數字取自正式快照。',transferLastFive:'01234',paymentScreenshot:'',depositSeparated:true,receiptDeposit:0,receiptTotal:recorded,receiptRecordedAmount:recorded,actualPaid:recorded,receiptDue:a.netDue,receiptSuggestedAmount:a.netDue,receiptAmountReady:!a.meter||a.meter.currentReading!==null,isReceived:recorded!==null&&recorded!==undefined,receiptConfirmed:recorded!==null&&recorded!==undefined?'是':'否',receiptEditable:true,financialLocked:false};
     });
   }
   // Independent fictitious deposits, never imported from the financial snapshot or Google.
   function demoDeposits(propertyId){
-    const isSecond=propertyId===demoProperty,room=isSecond?'601':rooms[0],name=isSecond?'示範房產 B 房客 1':tenants[0].name||'示範房客 A',oldName='示範前房客（虛構）';
+    const isSecond=propertyId===demoProperty,room=isSecond?'601':rooms[0],name=isSecond?nameFor('601'):tenants[0].name||nameFor(room),oldName='曾住過';
     const settlement={date:'2026-11-10',rentMode:'preserve',electricityDisposition:'separate',electricity:{previous:1000,current:1050,unitPrice:5,usage:50,subtotal:250},other:[{reason:'示範清潔費',amount:200}],otherSubtotal:200,deductionTotal:450,deposit:12000,balance:11550,payoutType:'refund'};
     return {version:'D'.repeat(43),legacy:[],items:[{room,leaseId:'A'.repeat(43),name,startDate:'2026-01-01',active:true,received:12000,depositKnown:true,pending:false,settlement:null,paid:false,balance:12000,events:[{id:'demo-deposit-opening',kind:'opening',data:{date:'2026-01-01',amount:12000,notes:'純假資料：示範保管押金，不代表正式收款。'}}]},{room,leaseId:'B'.repeat(43),name:oldName,startDate:'2025-01-01',active:false,received:12000,depositKnown:true,pending:false,settlement,paid:false,balance:11550,events:[{id:'demo-old-opening',kind:'opening',data:{date:'2025-01-01',amount:12000,notes:'純假資料示範'}},{id:'demo-old-checkout',kind:'checkout',data:{...settlement,notes:'純假資料示範退租結算'}}]}]};
   }
@@ -104,7 +107,7 @@
     if(!['default',demoProperty].includes(propertyId))throw Error('展示房產不存在。');
     if(action==='getDepositWorkspace')return demoDeposits(propertyId);
     if(['getExpenseYears','getExpenses','getExpenseReceipt'].includes(action))return demoExpenseRead(action,args,propertyId);
-    if(propertyId===demoProperty){if(action==='getTenantData')return tenants.slice(0,2).map((t,i)=>({...t,room:String(601+i),name:'示範房產 B 房客 '+(i+1)}));if(action==='getRoomSettings')return [{room:'601',roomType:'套房',inactive:false,occupied:true,version:'demo-b-601'},{room:'602',roomType:'雅房',inactive:false,occupied:true,version:'demo-b-602'}];if(action==='getAvailableBillingYears')return [2026];if(action==='getAvailableBillingMonths')return [];if(action==='getRentalSiteCapabilities')return {version:2,billing:true};throw Error('此示範房產尚無帳務資料。');}
+    if(propertyId===demoProperty){if(action==='getTenantData')return tenants.slice(0,2).map((t,i)=>({...t,room:String(601+i),name:nameFor(String(601+i))}));if(action==='getRoomSettings')return [{room:'601',roomType:'套房',inactive:false,occupied:true,version:'demo-b-601'},{room:'602',roomType:'雅房',inactive:false,occupied:true,version:'demo-b-602'}];if(action==='getAvailableBillingYears')return [2026];if(action==='getAvailableBillingMonths')return [];if(action==='getRentalSiteCapabilities')return {version:2,billing:true};throw Error('此示範房產尚無帳務資料。');}
 
     if(scope==='tenant'&&action==='previewTenantBillingNames'){const t=tenants.find(t=>t.room===args[0]);if(!t)throw Error('房號不存在。');return {room:t.room,name:t.name,startDate:t.startDate,endDate:t.endDate,changes:[],version:'demo-name-preview'};}
     if (scope === 'tenant' && action === 'getTenantData') return tenants;
