@@ -62,7 +62,7 @@ for (const file of ['index.html', 'notice.html']) {
     .replace('目前為檢視者，可查看資料、照片與報表。', '展示版僅供瀏覽，可切換房間、月份與報表。照片為示意圖。');
   html = html.replace(/<a v-if="access.provider==='sites'"[\s\S]*?<\/form>/, '<form @submit.prevent><button type="submit" disabled aria-disabled="true" title="Demo 展示：無需登出">登出</button></form>');
   html=html.replace('v-write type="button" @click="propertyOpen=!propertyOpen"','type="button" @click="propertyOpen=!propertyOpen"').replace('<label v-if="access.canWrite">選擇 Logo 圖片','<label>選擇 Logo 圖片');
-  if(numbers)html=html.replace('全部為虛構資料，僅供瀏覽；未連接 Google，不會儲存修改。','帳務、押金與支出數值取自正式快照；個資與照片為虛構。資料更新：'+new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',dateStyle:'short',timeStyle:'short'}).format(new Date(numbers.capturedAt))+'。修改功能停用，不會儲存。').replace('DEMO · 虛構資料','DEMO · 正式數值／示範個資').replace('資料來源：內建虛構範例','資料來源：正式數值快照／示範個資');
+  if(numbers)html=html.replace('全部為虛構資料，僅供瀏覽；未連接 Google，不會儲存修改。','帳務、押金與支出數值取自正式快照；個資與照片為虛構資料。資料更新：'+new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',dateStyle:'short',timeStyle:'short'}).format(new Date(numbers.capturedAt))+'。修改功能停用，不會儲存。').replace('DEMO · 虛構資料','DEMO · 正式數值／示範個資').replace('資料來源：內建虛構範例','資料來源：正式數值快照／示範個資');
   fs.writeFileSync(path.join(out, file), html);
 }
 fs.writeFileSync(path.join(out, '.nojekyll'), '');
