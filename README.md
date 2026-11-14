@@ -1,3 +1,5 @@
+> 最新：[共用收據 WebP 介面同步](docs/RECEIPTS_WEBP_DEMO.md)。
+
 > 最新：[正式帳務、押金與支出數值同步](docs/FINANCIAL_SNAPSHOT_SYNC.md)。
 
 > 最新：[押金與退租結算唯讀展示](docs/DEPOSIT_SETTLEMENT_DEMO.md)。
