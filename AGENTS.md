@@ -63,3 +63,8 @@ User accepted acceptance expenses and authorized cross-site sync. Demo expenses 
 ## Monthly expense claims authorized 2026-11-14
 
 User explicitly selected one reimbursement-request status per whole property/month below expense subtotal: default unclaimed, claimed requires a valid date. Persist optional metadata only on explicit manager save; no read-time schema/data changes or payment inference. Preserve expenses and evidence, warn rather than reset claimed metadata after monthly expense changes, keep scope/version/journal guards and readonly Demo/public policy. See docs/EXPENSE_MONTH_CLAIMS.md.
+
+
+## Repair records authorized 2026-11-15
+
+User approved the repairs wireframe and implementation: independent property repair records under More, read-only room history with legacy text retained, date/area/item/amount required, optional notes/vendor/contact/photos and existing-expense link without double counting. Preserve tenant/financial data, explicit manager writes only, optional read-free schema creation, full original-name GAS replacement, readonly landlord/Demo and synthetic-only public snapshot projection. See docs/REPAIR_RECORDS.md.

@@ -147,7 +147,7 @@
     .address-hint { flex: 1 0 100%; margin: 0; color: var(--muted); font-size: 16px; }
   </style>
 <link rel="stylesheet" href="buttons.css">
-</head>
+<script src="repairs.js"></script></head>
 <body>
 
   <p id="boot-status" class="page" role="status">正在載入房客管理頁……</p>
@@ -201,7 +201,7 @@
 
 
 
-      <section class="form-section" aria-label="管理備註">
+      <section class="form-section" aria-label="房間維護整修紀錄"><h3>房間維護整修紀錄</h3><room-repair-history :key="activeTenant.room" history-only :room="activeTenant.room" :legacy="activeTenant.maintenance||''"></room-repair-history></section><section class="form-section" aria-label="管理備註">
         <div class="section-heading"><h3>管理備註</h3></div>
         <tenant-field :ref="el=>registerField('notes',el)" :tenant="activeTenant" :field="noteField" :blocked="loading"
           @save-start="startSave" @save-end="finishSave"
@@ -481,7 +481,7 @@
       function leaseReminder(room){if(room.vacant||!/^\d{4}-\d{2}-\d{2}$/.test(room.endDate||''))return null;const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const start=new Date(today+'T00:00:00Z'),end=new Date(room.endDate+'T00:00:00Z');if(!Number.isFinite(+end))return null;if(end<start)return {level:'expired',text:'已到期，請辦理續約'};const plus=n=>{const d=new Date(start);const day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+n);const max=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,max));return d;};if(end<=plus(1))return {level:'urgent',text:'一個月內到期，請確認續約'};if(end<=plus(3))return {level:'soon',text:'三個月內到期'};return null;}
       window.RentalLeaseReminder=leaseReminder;
       const app = createApp({
-        components: { TenantField, TenantContract },
+        components: { TenantField, TenantContract, RoomRepairHistory: window.RentalComponents?.repairs ? window.RentalComponents.repairs() : {template:'<p>請從更多查看修繕紀錄。</p>'} },
         setup() {
           const tenants = ref([]);
           const loading = ref(false);
@@ -597,7 +597,7 @@
             {title:'承租人資料',keys:['registeredAddress','nationalId','birthDate']},
             {title:'租約與繳費設定',keys:['contractKind','signingDate','initialReading','defaultTransferLastFive']},
             {title:'同居人資料',keys:['cohabitant','cohabitantPhone','cohabitantIdentity','cohabitantAddress','cohabitantId','cohabitantBirthDate']},
-            {title:'房間補充資料',keys:['introduction','maintenance']}
+            {title:'房間補充資料',keys:['introduction']}
           ].map(group=>({title:group.title,fields:group.keys.map(key=>extraFields.find(field=>field.key===key))}));
           function setDirty(room, field, value) {
             const key = room + ':' + field;

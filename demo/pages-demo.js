@@ -108,6 +108,8 @@
     if(action==='getRentalProperties')return demoProperties;
     if(!['default',demoProperty].includes(propertyId))throw Error('展示房產不存在。');
     if(action==='getDepositWorkspace')return demoDeposits(propertyId);
+    if(action==='getRepairs'&&numbers?.repairs&&propertyId!==demoProperty)return {rows:numbers.repairs.rows.map((r,i)=>({...r,id:'R-'+String(i+1).padStart(8,'0')+'-0000-4000-8000-000000000001',item:'修繕項目 '+(i+1)+'（虛構名稱）',notes:'同步數值；虛構修繕說明',vendor:'虛構維修廠商',phone:'0900000000',expenseId:'',photoCount:0,version:'D'.repeat(43),lastRequestId:''})),pendingCount:numbers.repairs.pendingCount};
+    if(action==='getRepairs')return {rows:[{id:'R-00000000-0000-4000-8000-000000000001',date:'2026-11-15',room:propertyId===demoProperty?'601':'401',item:'更換水龍頭（虛構範例）',amount:1200,notes:'修繕展示資料，非真實紀錄。',vendor:'水到渠成維修行（虛構）',phone:'0900000000',expenseId:'',photoCount:0,voided:false,version:'D'.repeat(43),lastRequestId:''}],pendingCount:0};
     if(['getExpenseYears','getExpenses','getExpenseReceipt'].includes(action))return demoExpenseRead(action,args,propertyId);
     if(propertyId===demoProperty){if(action==='getTenantData')return tenants.slice(0,2).map((t,i)=>({...t,room:String(601+i),name:nameFor(String(601+i))}));if(action==='getRoomSettings')return [{room:'601',roomType:'套房',inactive:false,occupied:true,version:'demo-b-601'},{room:'602',roomType:'雅房',inactive:false,occupied:true,version:'demo-b-602'}];if(action==='getAvailableBillingYears')return [2026];if(action==='getAvailableBillingMonths')return [];if(action==='getRentalSiteCapabilities')return {version:2,billing:true};throw Error('此示範房產尚無帳務資料。');}
 

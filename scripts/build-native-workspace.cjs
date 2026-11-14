@@ -139,7 +139,7 @@ for (const [kind, file] of [['tenant','google-tenants.html'], ['billing','google
     const formLeaseFields=fields(['contractKind','startDate','endDate','rent','signingDate','initialReading','defaultTransferLastFive']);
     const formLeftGroups=[{title:'基本與租約資料',fields:fields(['name','phone','identity','roomType','rentSubsidy'])},{title:'租約與繳費設定',fields:formLeaseFields}];
     const privateFields=fields(['registeredAddress','nationalId','birthDate']);
-    const formRightGroups=[{title:'同居人資料',fields:fields(['cohabitant','cohabitantPhone','cohabitantIdentity','cohabitantId','cohabitantAddress','cohabitantBirthDate'])},{title:'連帶保證人（丙方）',fields:fields(['guarantorName','guarantorPhone','guarantorId','guarantorBirthDate','guarantorAddress'])},{title:'管理備註',fields:fields(['notes'])},{title:'房間補充資料',fields:fields(['introduction','maintenance'])}];
+    const formRightGroups=[{title:'同居人資料',fields:fields(['cohabitant','cohabitantPhone','cohabitantIdentity','cohabitantId','cohabitantAddress','cohabitantBirthDate'])},{title:'連帶保證人（丙方）',fields:fields(['guarantorName','guarantorPhone','guarantorId','guarantorBirthDate','guarantorAddress'])},{title:'管理備註',fields:fields(['notes'])},{title:'房間補充資料',fields:fields(['introduction'])}];
     const detailAccounts=computed(()=>(props.accounts||[]).filter(a=>a.room===activeTenant.value?.room));const summaryGroups=computed(()=>[]);
     const summaryValue=value=>value===null||value===undefined||value===''?'尚未填寫':String(value);
     watch([moveInPreview,checkoutConfirm,editingTenant,expandedDetail],async()=>{await Vue.nextTick();const dialog=document.querySelector('.tenant-dialog[open]');if(dialog)dialog.scrollTop=0;});

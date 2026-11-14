@@ -1,3 +1,5 @@
+> 最新：[獨立修繕紀錄與房間歷史列表](docs/REPAIR_RECORDS.md)。
+
 > 最新：[每月支出整月請款狀態與日期](docs/EXPENSE_MONTH_CLAIMS.md)。
 
 > 最新：[共用收據 WebP 介面同步](docs/RECEIPTS_WEBP_DEMO.md)。

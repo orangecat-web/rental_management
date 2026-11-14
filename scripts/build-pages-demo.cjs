@@ -18,7 +18,7 @@ const assets = [
   'native-tenant.js', 'native-billing.js', 'billing-transport.js',
   'photo-preview.js', 'meter-worksheet.js', 'payment-worksheet.js', 'notice-renderer.js',
   'notice-zip.js', 'notice-batch.js', 'report-data.js', 'report-charts.js',
-  'rental-reports.js', 'expenses.js','deposits.js','deposits.css', 'workspace.js',
+  'rental-reports.js', 'repairs.js', 'expenses.js','deposits.js','deposits.css', 'workspace.js',
   'appearance.js','glass-workspace.css','design-fidelity.css','detail-review.css','reports-review.css','typography.css','ui-review.css','warm-ab.css','workspace-button-legacy.css','ui-icons.svg','warm-ab-icons.svg','renewal-notice.js',
   'artwork/amber-waves.svg','artwork/sage-lake.webp','fonts/rental-warm-tc-400.woff2','fonts/rental-warm-tc-700.woff2','fonts/rental-warm-tc-800.woff2'
 ];

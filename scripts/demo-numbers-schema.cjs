@@ -42,13 +42,18 @@ function depositWorkspace(d){
  const legacy=d.legacy.map(v=>{if(!room(v.room)||!Number.isInteger(v.year)||v.year<1900||!Number.isInteger(v.month)||v.month<1||v.month>12||!money(v.expected)||v.expected===null||!money(v.confirmed))throw Error('Invalid legacy deposit');return pick(v,['room','year','month','expected','confirmed']);});
  return {items,legacy};
 }
+function repairWorkspace(value){
+ if(!value||!Array.isArray(value.rows)||!Number.isInteger(value.pendingCount)||value.pendingCount<0)throw Error('Invalid repairs');
+ return {rows:value.rows.map(r=>{const out=pick(r,['date','room','amount','voided']);if(!date(out.date)||!out.date||!(room(out.room)||out.room==='公共區域')||!money(out.amount)||out.amount===null||typeof out.voided!=='boolean')throw Error('Invalid repair numeric fields');return out;}),pendingCount:value.pendingCount};
+}
 function validateSnapshot(s){
  if(!s||s.version!==1||s.source!=='production-numbers'||s.personalData!=='synthetic'||typeof s.capturedAt!=='string'||!Number.isFinite(Date.parse(s.capturedAt))||!Array.isArray(s.tenants)||!Array.isArray(s.periods)||!Array.isArray(s.reports))throw Error('Invalid snapshot');
  const clean={version:1,source:s.source,personalData:s.personalData,capturedAt:s.capturedAt,tenants:s.tenants.map(tenant),periods:s.periods.map(p=>{if(!Number.isInteger(p.year)||p.year<1900||p.year>9999||!Number.isInteger(p.month)||p.month<1||p.month>12||!Array.isArray(p.accounts)||!p.accounts.length)throw Error('Invalid snapshot period');const rows=p.accounts.map(a=>account(a,p.year,p.month));if(new Set(rows.map(a=>a.room)).size!==rows.length)throw Error('Duplicate account room');return {year:p.year,month:p.month,accounts:rows};}),reports:s.reports.map(r=>report(r,r.year))};
  if(!clean.tenants.length||!clean.periods.length||new Set(clean.tenants.map(t=>t.room)).size!==clean.tenants.length||new Set(clean.periods.map(p=>p.year+'|'+p.month)).size!==clean.periods.length)throw Error('Duplicate/empty snapshot scope');
  if(Object.hasOwn(s,'expenses')){if(!Array.isArray(s.expenses))throw Error('Invalid expenses');clean.expenses=s.expenses.map(expensePeriod);if(new Set(clean.expenses.map(p=>p.year+'|'+p.month)).size!==clean.expenses.length)throw Error('Duplicate expense period');}
  if(Object.hasOwn(s,'deposits'))clean.deposits=depositWorkspace(s.deposits);
+ if(Object.hasOwn(s,'repairs'))clean.repairs=repairWorkspace(s.repairs);
  if(Object.hasOwn(s,'financialProjection')){if(s.financialProjection!=='deposit-separated-v1')throw Error('Invalid financial projection');clean.financialProjection=s.financialProjection;}
  if(JSON.stringify(clean)!==JSON.stringify(s))throw Error('Snapshot contains unapproved or unordered fields');return clean;
 }
-module.exports={account,tenant,report,expensePeriod,depositWorkspace,validateSnapshot};
+module.exports={repairWorkspace,account,tenant,report,expensePeriod,depositWorkspace,validateSnapshot};
