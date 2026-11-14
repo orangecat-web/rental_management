@@ -10,3 +10,10 @@ assert.equal(account({...raw,dueDate:'10'},2026,1).dueDate,'10');assert.throws((
 const planned=account({...raw,planned:true,historySettlement:'planned'},2026,1);assert.equal(planned.planned,true);assert.equal(planned.historySettlement,'planned');
 
 assert.equal(account({...raw,historySettlement:'not_applicable'},2026,1).historySettlement,'not_applicable');
+const {expensePeriod,depositWorkspace}=require('./demo-numbers-schema.cjs');
+const expense=expensePeriod({year:2026,month:11,total:42,pendingCount:0,rows:[{date:'2026-11-01',unitPrice:21,quantity:2,amount:42,receiptCount:1,voided:false,item:'PRIVATE_NAME',notes:'PRIVATE_PHONE',receiptIds:['PRIVATE_DRIVE']}]});
+assert(!JSON.stringify(expense).includes('PRIVATE'));assert.equal(expense.rows[0].amount,42);assert.throws(()=>expensePeriod({...expense,total:0}));
+const deposits=depositWorkspace({items:[{room:'401',name:'PRIVATE_NAME',identity:'PRIVATE_ID',active:true,received:100,depositKnown:true,pending:false,settlement:null,paid:false,balance:100,events:[{id:'PRIVATE_EVENT',kind:'opening',data:{date:'2026-11-01',amount:100,notes:'PRIVATE_NAME'}}]}],legacy:[{id:'PRIVATE',room:'401',year:2026,month:1,expected:100,confirmed:null}]});
+assert(!JSON.stringify(deposits).includes('PRIVATE'));assert.equal(deposits.items[0].received,100);assert.equal(deposits.legacy[0].confirmed,null);
+const full={...s,expenses:[expense],deposits,financialProjection:'deposit-separated-v1'};assert.deepEqual(validateSnapshot(full),full);assert.throws(()=>validateSnapshot({...full,deposits:{...deposits,name:'PRIVATE'}}));
+console.log('PASS: deposit and expense monetary snapshot strips nested people/notes/file identifiers, preserves unknown cash, and validates totals and exact allowlists.');

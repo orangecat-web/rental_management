@@ -47,6 +47,7 @@ const style = path.join(out, 'style.css');
 fs.writeFileSync(style, fs.readFileSync(style, 'utf8').replace(/@import\s+url\([^)]*\);?/g, ''));
 fs.copyFileSync(path.join(root, 'demo/pages-demo.js'), path.join(out, 'pages-demo.js'));
 fs.copyFileSync(path.join(root, 'demo/pages-demo.css'), path.join(out, 'pages-demo.css'));
+if(numbers?.expenses){const p=path.join(out,'expenses.js');fs.writeFileSync(p,fs.readFileSync(p,'utf8').replace('展示用支出與收據皆為虛構，不取自正式資料。','支出數值取自正式快照；品名、備註與收據圖片為虛構。'));}
 if(numbers)fs.writeFileSync(path.join(out,'production-numbers.js'),'/** Allowlisted production numbers; synthetic people only. */\nwindow.RentalDemoNumbers='+JSON.stringify(numbers)+';\n');
 for (const file of ['index.html', 'notice.html']) {
   let html = fs.readFileSync(path.join(out, file), 'utf8');
@@ -61,7 +62,7 @@ for (const file of ['index.html', 'notice.html']) {
     .replace('目前為檢視者，可查看資料、照片與報表。', '展示版僅供瀏覽，可切換房間、月份與報表。照片為示意圖。');
   html = html.replace(/<a v-if="access.provider==='sites'"[\s\S]*?<\/form>/, '<form @submit.prevent><button type="submit" disabled aria-disabled="true" title="Demo 展示：無需登出">登出</button></form>');
   html=html.replace('v-write type="button" @click="propertyOpen=!propertyOpen"','type="button" @click="propertyOpen=!propertyOpen"').replace('<label v-if="access.canWrite">選擇 Logo 圖片','<label>選擇 Logo 圖片');
-  if(numbers)html=html.replace('全部為虛構資料，僅供瀏覽；未連接 Google，不會儲存修改。','帳務數字取自正式資料快照；個資與照片為虛構資料。完整顯示操作介面；修改功能停用，不會儲存。').replace('DEMO · 虛構資料','DEMO · 正式數值／示範個資').replace('資料來源：內建虛構範例','資料來源：正式數值快照／示範個資');
+  if(numbers)html=html.replace('全部為虛構資料，僅供瀏覽；未連接 Google，不會儲存修改。','帳務、押金與支出數值取自正式快照；個資與照片為虛構。資料更新：'+new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',dateStyle:'short',timeStyle:'short'}).format(new Date(numbers.capturedAt))+'。修改功能停用，不會儲存。').replace('DEMO · 虛構資料','DEMO · 正式數值／示範個資').replace('資料來源：內建虛構範例','資料來源：正式數值快照／示範個資');
   fs.writeFileSync(path.join(out, file), html);
 }
 fs.writeFileSync(path.join(out, '.nojekyll'), '');
