@@ -17,3 +17,5 @@ const deposits=depositWorkspace({items:[{room:'401',name:'PRIVATE_NAME',identity
 assert(!JSON.stringify(deposits).includes('PRIVATE'));assert.equal(deposits.items[0].received,100);assert.equal(deposits.legacy[0].confirmed,null);
 const full={...s,expenses:[expense],deposits,financialProjection:'deposit-separated-v1'};assert.deepEqual(validateSnapshot(full),full);assert.throws(()=>validateSnapshot({...full,deposits:{...deposits,name:'PRIVATE'}}));
 console.log('PASS: deposit and expense monetary snapshot strips nested people/notes/file identifiers, preserves unknown cash, and validates totals and exact allowlists.');
+
+const claimExpense=expensePeriod({...expense,claim:{status:'claimed',date:'2026-11-20',claimedTotal:42,stale:false,pending:false,version:'PRIVATE_VERSION',lastRequestId:'PRIVATE_ID'}});assert.equal(claimExpense.claim.status,'claimed');assert(!JSON.stringify(claimExpense).includes('PRIVATE'));assert.throws(()=>expensePeriod({...expense,claim:{...claimExpense.claim,date:''}}));assert.throws(()=>expensePeriod({...expense,claim:{...claimExpense.claim,date:'2026-02-30'}}));

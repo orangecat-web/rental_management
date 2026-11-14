@@ -58,3 +58,8 @@ Keep all management components visible in the Demo; disable mutations instead of
 ## Monthly expenses sync authorized 2026-10-28
 
 User accepted acceptance expenses and authorized cross-site sync. Demo expenses and receipt illustrations must be entirely synthetic and independent of production numeric snapshot. Keep all controls visible with mutations/uploads disabled; allow readonly details and on-click gallery only. Never copy production expense records, receipt IDs/bytes, GAS installers, private API/configuration into this repository. Preserve unrelated public Demo features and existing numerical snapshot. See docs/MONTHLY_EXPENSES.md.
+
+
+## Monthly expense claims authorized 2026-11-14
+
+User explicitly selected one reimbursement-request status per whole property/month below expense subtotal: default unclaimed, claimed requires a valid date. Persist optional metadata only on explicit manager save; no read-time schema/data changes or payment inference. Preserve expenses and evidence, warn rather than reset claimed metadata after monthly expense changes, keep scope/version/journal guards and readonly Demo/public policy. See docs/EXPENSE_MONTH_CLAIMS.md.

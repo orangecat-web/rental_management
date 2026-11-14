@@ -24,7 +24,7 @@ function expensePeriod(p){
  if(!p||!Number.isInteger(p.year)||p.year<1900||p.year>9999||!Number.isInteger(p.month)||p.month<1||p.month>12||!Array.isArray(p.rows)||!money(p.total)||p.total===null||!Number.isInteger(p.pendingCount)||p.pendingCount<0)throw Error('Invalid expense period');
  const rows=p.rows.map(r=>{if(!date(r.date)||!r.date.startsWith(p.year+'-'+String(p.month).padStart(2,'0')+'-')||['unitPrice','quantity','amount'].some(k=>!money(r[k])||r[k]===null)||!Number.isInteger(r.receiptCount)||r.receiptCount<0||typeof r.voided!=='boolean')throw Error('Invalid expense number');return pick(r,['date','unitPrice','quantity','amount','receiptCount','voided']);});
  if(Math.abs(rows.filter(r=>!r.voided).reduce((n,r)=>n+r.amount,0)-p.total)>.005)throw Error('Invalid expense total');
- return {year:p.year,month:p.month,total:p.total,pendingCount:p.pendingCount,rows};
+ const out={year:p.year,month:p.month,total:p.total,pendingCount:p.pendingCount,rows};if(Object.hasOwn(p,'claim')){const c=p.claim;if(!c||!['unclaimed','claimed'].includes(c.status)||!date(c.date)||c.status==='claimed'&&!c.date||c.status==='unclaimed'&&c.date!==''||!money(c.claimedTotal)||c.status==='claimed'&&c.claimedTotal===null||c.status==='unclaimed'&&c.claimedTotal!==null||typeof c.stale!=='boolean'||typeof c.pending!=='boolean')throw Error('Invalid monthly claim');out.claim=pick(c,['status','date','claimedTotal','stale','pending']);}return out;
 }
 const signedMoney=v=>typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=1e12;
 function depositWorkspace(d){

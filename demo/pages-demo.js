@@ -94,7 +94,7 @@
   }
   function demoExpenseRead(action,args,propertyId){
     if(action==='getExpenseYears')return expenseYears();
-    if(action==='getExpenses'){const rows=demoExpenses(args[0],args[1],propertyId);return {rows,total:rows.filter(r=>!r.voided).reduce((sum,r)=>sum+r.amount,0),pendingCount:numbers?.expenses&&propertyId!==demoProperty?numbers.expenses.find(p=>p.year===args[0]&&p.month===args[1])?.pendingCount||0:0};}
+    if(action==='getExpenses'){const rows=demoExpenses(args[0],args[1],propertyId),claim=numbers?.expenses&&propertyId!==demoProperty?numbers.expenses.find(p=>p.year===args[0]&&p.month===args[1])?.claim:null;return {claim:{status:'unclaimed',date:'',claimedTotal:null,stale:false,pending:false,...claim,version:'D'.repeat(43),lastRequestId:''},rows,total:rows.filter(r=>!r.voided).reduce((sum,r)=>sum+r.amount,0),pendingCount:numbers?.expenses&&propertyId!==demoProperty?numbers.expenses.find(p=>p.year===args[0]&&p.month===args[1])?.pendingCount||0:0};}
     if(action==='getExpenseReceipt'){
       const match=/^E-[a-f0-9-]+-(\d{4})(\d{2})(\d{6})$/.exec(args[0]||'');if(!match)throw Error('示範收據不存在。');
       const row=demoExpenses(Number(match[1]),Number(match[2]),propertyId).find(r=>r.id===args[0]);if(!row||row.version!==args[2]||!Number.isInteger(args[1])||args[1]<0||args[1]>=row.receiptCount)throw Error('示範收據不存在。');
