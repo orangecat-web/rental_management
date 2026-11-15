@@ -15,6 +15,7 @@ function account(row,year,month){
  if(Object.hasOwn(row,'occupantKey')){if(typeof row.occupantKey!=='string'||!/^[-\w]{43}$/.test(row.occupantKey))throw Error('Invalid anonymous identity');out.occupantKey=row.occupantKey;}
  if(Object.hasOwn(row,'receiptConfirmed')){if(!['是','否',''].includes(row.receiptConfirmed))throw Error('Invalid receipt confirmation');out.receiptConfirmed=row.receiptConfirmed;}
  if(row.meter==null)out.meter=null;else{out.meter=pick(row.meter,[...meterNumeric,...meterDates]);if(meterNumeric.some(k=>Object.hasOwn(out.meter,k)&&!money(out.meter[k]))||meterDates.some(k=>Object.hasOwn(out.meter,k)&&!date(out.meter[k])))throw Error('Invalid meter number/date');}
+ const group=row.receiptGroup||(typeof row.receiptId==='string'&&row.receiptId?require('node:crypto').createHash('sha256').update('monthly-export|'+row.receiptId).digest('hex'):'');if(group){if(typeof group!=='string'||! /^[a-f0-9]{64}$/.test(group))throw Error('Invalid anonymous receipt group');out.receiptGroup=group;}
  return out;
 }
 function tenant(row){if(!room(row?.room)||!money(row.rent)||typeof row.vacant!=='boolean')throw Error('Invalid room numeric record');const out={room:row.room,rent:row.rent,vacant:row.vacant};if(['套房','雅房',''].includes(row.roomType))out.roomType=row.roomType;return out;}
