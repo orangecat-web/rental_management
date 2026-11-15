@@ -1,3 +1,5 @@
+> 最新：[每月紀錄圖片匯出](docs/MONTHLY_IMAGE_EXPORT.md)。
+
 > 最新：[獨立修繕紀錄與房間歷史列表](docs/REPAIR_RECORDS.md)。
 
 > 最新：[每月支出整月請款狀態與日期](docs/EXPENSE_MONTH_CLAIMS.md)。

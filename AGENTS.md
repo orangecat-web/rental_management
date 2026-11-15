@@ -68,3 +68,7 @@ User explicitly selected one reimbursement-request status per whole property/mon
 ## Repair records authorized 2026-11-15
 
 User approved the repairs wireframe and implementation: independent property repair records under More, read-only room history with legacy text retained, date/area/item/amount required, optional notes/vendor/contact/photos and existing-expense link without double counting. Preserve tenant/financial data, explicit manager writes only, optional read-free schema creation, full original-name GAS replacement, readonly landlord/Demo and synthetic-only public snapshot projection. See docs/REPAIR_RECORDS.md.
+
+
+## Monthly image export authorized 2026-11-15
+User approved in-memory rent/expense image export, explicitly excluding reimbursement-request status. Existing read RPCs only; never infer unknown cash or add deposits/duplicate shared receipts. Export of selected operational fields by explicit user download is authorized; no persistent browser storage or automatic uploads. Sync shared UI and readonly Demo. See docs/MONTHLY_IMAGE_EXPORT.md.

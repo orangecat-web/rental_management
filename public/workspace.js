@@ -4,7 +4,7 @@
   async function start(){if(!await RentalAccess.ready)return;
   const tenantApi = RentalTransport('tenant');
   const app = createApp({
-    components: { RepairManager: RentalComponents.repairs ? RentalComponents.repairs() : {template:'<p>修繕元件尚未載入。</p>'}, DepositManager: RentalComponents.deposits ? RentalComponents.deposits() : {template:'<p>押金元件尚未載入，請重新讀取。</p>'}, ExpenseManager: RentalComponents.expenses ? RentalComponents.expenses() : {template:'<p>支出元件尚未載入。</p>'}, TenantEditor: RentalAccess.secureComponent(RentalComponents.tenant()), BillingEditor: RentalAccess.secureComponent(RentalComponents.billing()), RentalReports: RentalComponents.reports() },
+    components: { MonthlyExport: RentalComponents.monthlyExport ? RentalComponents.monthlyExport() : {template:'<span></span>'}, RepairManager: RentalComponents.repairs ? RentalComponents.repairs() : {template:'<p>修繕元件尚未載入。</p>'}, DepositManager: RentalComponents.deposits ? RentalComponents.deposits() : {template:'<p>押金元件尚未載入，請重新讀取。</p>'}, ExpenseManager: RentalComponents.expenses ? RentalComponents.expenses() : {template:'<p>支出元件尚未載入。</p>'}, TenantEditor: RentalAccess.secureComponent(RentalComponents.tenant()), BillingEditor: RentalAccess.secureComponent(RentalComponents.billing()), RentalReports: RentalComponents.reports() },
     setup() {
       const query = new URLSearchParams(location.search);
       const readonlyMode=window.RentalPublic===true,readonlyTab=ref('data');
