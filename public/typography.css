@@ -74,7 +74,6 @@ dialog.rental-photo-dialog>.photo-gallery::-webkit-scrollbar { display: none; }
 #app :where(button) { font-weight: var(--type-bold) !important; }
 #app :is(.sidebar nav button,.tenant-detail-tabs button) { font-weight: var(--type-regular) !important; }
 #app .room-top strong { font-size: var(--type-room-number) !important; }
-#app .modal-active .room-card h3 { font-size: var(--type-body) !important; }
 #app .tenant-summary .tenant-basic-grid>div[data-field=rentSubsidy] { grid-column: auto; }
 @media(max-width:700px) {
   :root { --type-currency: 20px; --type-metric-label: 16px; --type-metric-value: 20px; --type-room-number: 30px; }

@@ -299,6 +299,7 @@ const { createApp, ref, reactive, computed, watch, onMounted, onBeforeUnmount } 
             {title:'房間補充資料',keys:['introduction']}
           ].map(group=>({title:group.title,fields:group.keys.map(key=>extraFields.find(field=>field.key===key))}));
           function setDirty(room, field, value) {
+            if(window.RentalAccess?.canWrite===false)value=false;
             const key = room + ':' + field;
             if (value) dirtyKeys.add(key); else dirtyKeys.delete(key);
           }

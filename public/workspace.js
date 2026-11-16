@@ -7,7 +7,8 @@
     components: { MonthlyExport: RentalComponents.monthlyExport ? RentalComponents.monthlyExport() : {props:['period','blocked'],template:'<span></span>'}, RepairManager: RentalComponents.repairs ? RentalComponents.repairs() : {template:'<p>修繕元件尚未載入。</p>'}, DepositManager: RentalComponents.deposits ? RentalComponents.deposits() : {template:'<p>押金元件尚未載入，請重新讀取。</p>'}, ExpenseManager: RentalComponents.expenses ? RentalComponents.expenses() : {template:'<p>支出元件尚未載入。</p>'}, TenantEditor: RentalAccess.secureComponent(RentalComponents.tenant()), BillingEditor: RentalAccess.secureComponent(RentalComponents.billing()), RentalReports: RentalComponents.reports() },
     setup() {
       const query = new URLSearchParams(location.search);
-      const readonlyMode=window.RentalPublic===true,readonlyTab=ref('data');
+      // Share room cards and modal layout across roles; RentalPublic/access/transport still enforce readonly.
+      const readonlyMode=false,readonlyTab=ref('data');
       const warmIcons=new Set(['bed','building','calendar','home','clipboard','flag','person','search','tag','bolt','plus','refresh','chevron','info']);function pageIcon(name){return theme.value==='warm'&&!propertyOpen.value&&['overview','rooms'].includes(page.value)&&warmIcons.has(name)?'warm-ab-icons.svg#'+name:'ui-icons.svg#'+name;}
       function warmPiePath(start,end){const point=t=>[120+119*Math.sin(t*2*Math.PI),120-119*Math.cos(t*2*Math.PI)],a=point(start),b=point(end);return 'M120 120 L'+a.join(' ')+' A119 119 0 '+(end-start>.5?1:0)+' 1 '+b.join(' ')+' Z';}
       function selectReadonlyRoom(room){selectedRoom.value=room;readonlyTab.value='data';}

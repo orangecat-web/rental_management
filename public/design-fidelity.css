@@ -345,17 +345,7 @@ body { display: flow-root; isolation: isolate; }
   backdrop-filter: blur(3px);
 }
 @media (min-width: 1101px) {
-  #app .tenant-dialog { width: min(1020px, 71vw); margin-left: auto; margin-right: 4vw; }
-  #app .main.modal-active .room-filters { width: 240px; display: grid; grid-template-columns: 1fr; gap: 10px; }
-  #app .main.modal-active .room-filters>* { width: 100%; min-width: 0; }
-  #app .main.modal-active .room-grid { width: 240px; grid-template-columns: 1fr; gap: 12px; }
-  #app .main.modal-active .room-card { grid-template-columns: 55px minmax(0,1fr) 10px; padding: 12px; gap: 10px; }
-  #app .main.modal-active .room-card .room-top>.ui-icon,
-  #app .main.modal-active .room-card .room-end,
-  #app .main.modal-active .room-card .room-rent,
-  #app .main.modal-active .room-card .unpaid-label { display: none; }
-  #app .main.modal-active .room-card h3 { font-size: 18px; }
-  #app .main.modal-active .room-card .room-number { font-size: 25px; }
+  #app .tenant-dialog { width: min(1020px, 71vw); margin-left: auto; margin-right: auto; }
   #app .reconciliation-dialog { width: min(1120px, calc(100vw - 100px)); }
 }
 @media (min-width: 1280px) {
